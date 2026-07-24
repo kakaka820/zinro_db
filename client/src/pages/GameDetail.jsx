@@ -10,6 +10,10 @@ export default function GameDetail() {
   const [participants, setParticipants] = useState([])
   const [day,          setDay]          = useState(1)
 
+  const [pPlayerText,  setPPlayerText]  = useState('')
+  const [pFiltered,    setPFiltered]    = useState([])
+  const [pShowList,    setPShowList]    = useState(false)
+  
   // 参加者追加フォーム
   const [pPlayerId, setPPlayerId] = useState('')
   const [pRoleId,   setPRoleId]   = useState('')
@@ -94,37 +98,81 @@ export default function GameDetail() {
       <h1>試合 #{id} 記録</h1>
 
       {/* ── 参加者 ── */}
-      <div className="card">
-        <h2>参加者・役職</h2>
-        <form onSubmit={addParticipant}>
-          <select value={pPlayerId} onChange={e => setPPlayerId(e.target.value)} required>
-            <option value="">プレイヤーを選択</option>
-            {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <select value={pRoleId} onChange={e => setPRoleId(e.target.value)} required>
-            <option value="">役職を選択</option>
-            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
-          <label>
-            <input type="checkbox" checked={pSurvived} onChange={e => setPSurvived(e.target.checked)} />
-            　生存
-          </label>
-          <button type="submit">追加</button>
-        </form>
-        <table>
-          <thead><tr><th>プレイヤー</th><th>役職</th><th>陣営</th><th>生存</th></tr></thead>
-          <tbody>
-            {participants.map(p => (
-              <tr key={p.id}>
-                <td>{p.player_name}</td>
-                <td>{p.role_name}</td>
-                <td><span className={`tag ${p.team}`}>{p.team}</span></td>
-                <td>{p.survived ? '✅' : '❌'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+<div className="card">
+  <h2>参加者・役職</h2>
+  <form onSubmit={addParticipant}>
+    <div style={{ position: 'relative' }}>
+      <input
+        value={pPlayerText}
+        onChange={e => {
+          const val = e.target.value
+          setPPlayerText(val)
+          setPPlayerId('')
+          if (val.trim()) {
+            const filtered = players.filter(p =>
+              p.name.includes(val)
+            )
+            setPFiltered(filtered)
+            setPShowList(true)
+          } else {
+            setPShowList(false)
+          }
+        }}
+        onBlur={() => setTimeout(() => setPShowList(false), 150)}
+        placeholder="プレイヤー名を入力"
+        required
+      />
+      {pShowList && pFiltered.length > 0 && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, background: '#fff',
+          border: '1px solid #ccc', borderRadius: 4, zIndex: 10, minWidth: 180
+        }}>
+          {pFiltered.map(p => (
+            <div
+              key={p.id}
+              style={{ padding: '6px 12px', cursor: 'pointer' }}
+              onMouseDown={() => {
+                setPPlayerId(p.id)
+                setPPlayerText(p.name)
+                setPShowList(false)
+              }}
+            >
+              {p.name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+    <select value={pRoleId} onChange={e => setPRoleId(e.target.value)} required>
+      <option value="">役職を選択</option>
+      {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+    </select>
+    <label>
+      <input type="checkbox" checked={pSurvived} onChange={e => setPSurvived(e.target.checked)} />
+      　生存
+    </label>
+    <button type="submit">追加</button>
+  </form>
+  <table>
+    <thead><tr><th>プレイヤー</th><th>役職</th><th>陣営</th><th>生存</th><th></th></tr></thead>
+    <tbody>
+      {participants.map(p => (
+        <tr key={p.id}>
+          <td>{p.player_name}</td>
+          <td>{p.role_name}</td>
+          <td><span className={`tag ${p.team}`}>{p.team}</span></td>
+          <td>{p.survived ? '✅' : '❌'}</td>
+          <td>
+            <button className="secondary" onClick={async () => {
+              await api.del(`/participants/${p.id}`)
+              loadParticipants()
+            }}>削除</button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
       {/* ── 日付選択 ── */}
       <div className="card">
