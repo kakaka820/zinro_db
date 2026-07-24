@@ -239,28 +239,47 @@ export default function GameDetail() {
         </form>
       </div>
 
-      {/* ── 投票 ── */}
+            {/* ── 投票 ── */}
       <div className="card">
         <h2>{day}日目：投票</h2>
         <form onSubmit={addVote}>
-          <select value={vVoterId} onChange={e => setVVoterId(e.target.value)} required>
-            <option value="">投票した人</option>
-            {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-          </select>
-          <select value={vTargetId} onChange={e => setVTargetId(e.target.value)} required>
-            <option value="">投票先</option>
-            {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-          </select>
-          <select value={vType} onChange={e => setVType(e.target.value)}>
-            <option value="normal">通常投票</option>
-            <option value="runoff">決選投票</option>
-          </select>
-          {day === 1 && (
-            <input type="number" min="1" value={vVoteOrder} onChange={e => setVVoteOrder(e.target.value)}
-              placeholder="投票順（初日のみ）" style={{ width: 150 }} />
+          {day === 1 ? (
+            <>
+              <select value={vVoterId} onChange={e => setVVoterId(e.target.value)} required>
+                <option value="">投票した人</option>
+                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
+              </select>
+              <select value={vTargetId} onChange={e => setVTargetId(e.target.value)} required>
+                <option value="">投票先</option>
+                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
+              </select>
+              <select value={vType} onChange={e => setVType(e.target.value)}>
+                <option value="normal">通常投票</option>
+                <option value="runoff">決選投票</option>
+              </select>
+              <input type="number" min="1" value={vVoteOrder} onChange={e => setVVoteOrder(e.target.value)}
+                placeholder="投票順（初日のみ）" style={{ width: 150 }} />
+              <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
+                placeholder="受けた順番" style={{ width: 120 }} />
+            </>
+          ) : (
+            <>
+              <select value={vTargetId} onChange={e => setVTargetId(e.target.value)} required>
+                <option value="">投票先</option>
+                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
+              </select>
+              <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
+                placeholder="受けた順番" style={{ width: 120 }} />
+              <select value={vType} onChange={e => setVType(e.target.value)}>
+                <option value="normal">通常投票</option>
+                <option value="runoff">決選投票</option>
+              </select>
+              <select value={vVoterId} onChange={e => setVVoterId(e.target.value)} required>
+                <option value="">投票した人</option>
+                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
+              </select>
+            </>
           )}
-          <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
-            placeholder="受けた順番" style={{ width: 120 }} />
           <button type="submit">記録</button>
         </form>
       </div>
