@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
 
 // ── 投票マトリクス ────────────────────────────────────────────────
-function VoteMatrix({ participants, votes, label }) {
+function VoteMatrix({ participants, votes, label, showVoteOrder }) {
   const sorted = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
@@ -72,13 +72,15 @@ function VoteMatrix({ participants, votes, label }) {
             </tr>
 
             {/* 最下行：vote_order（2日目以降は自然と空欄） */}
-            <tr>
-              {sorted.map(p => (
-                <td key={p.id} style={{ ...cell, color: '#666' }}>
-                  {getVoteOrder(p.id)}
-                </td>
-              ))}
-            </tr>
+            {showVoteOrder && (
+  <tr>
+    {sorted.map(p => (
+      <td key={p.id} style={{ ...cell, color: '#666' }}>
+        {getVoteOrder(p.id)}
+      </td>
+    ))}
+  </tr>
+)}
           </tbody>
         </table>
       </div>
@@ -196,17 +198,19 @@ export default function GameView() {
         {votes.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
           <>
             <VoteMatrix
-              participants={participants}
-              votes={normalVotes}
-              label={runoffVotes.length > 0 ? '通常投票' : null}
-            />
-            {runoffVotes.length > 0 && (
-              <VoteMatrix
-                participants={participants}
-                votes={runoffVotes}
-                label="決選投票"
-              />
-            )}
+  participants={participants}
+  votes={normalVotes}
+  label={runoffVotes.length > 0 ? '通常投票' : null}
+  showVoteOrder={day === 1}
+/>
+{runoffVotes.length > 0 && (
+  <VoteMatrix
+    participants={participants}
+    votes={runoffVotes}
+    label="決選投票"
+    showVoteOrder={day === 1}
+  />
+)}
           </>
         )}
       </div>
