@@ -136,23 +136,30 @@ export default function GameDetail() {
   // 吊り追加
   const addExecution = async (e) => {
     e.preventDefault()
+    const target = eType === 'none' ? null : resolveParticipant(eParticipantId)
+    if (eType !== 'none' && !target) {
+      alert('吊られた人が見つかりません（番号か名前で入力してください）')
+      return
+    }
     await api.post('/executions', {
       game_id: Number(id),
       day_number: day,
-      participant_id: eType === 'none' ? null : Number(eParticipantId),
+      participant_id: target ? target.id : null,
       execution_type: eType,
     })
-        setEParticipantId(''); setEType('normal')
+    setEParticipantId(''); setEType('normal')
     loadExecutions()
   }
+
 
   // 噛み追加
   const addNightKill = async (e) => {
     e.preventDefault()
+    const target = nParticipantId.trim() ? resolveParticipant(nParticipantId) : null
     await api.post('/night-kills', {
       game_id: Number(id),
       day_number: day,
-      participant_id: nParticipantId ? Number(nParticipantId) : null,
+      participant_id: target ? target.id : null,
     })
     setNParticipantId('')
     loadNightKills()
