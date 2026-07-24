@@ -22,10 +22,11 @@ export default function GameDetail() {
   const [pPlayerId, setPPlayerId] = useState('')
   const [pRoleId,   setPRoleId]   = useState('')
   const [pSurvived, setPSurvived] = useState(false)
+  const [pNumber,   setPNumber]   = useState('')
 
   // 投票フォーム
-  const [vVoterId,       setVVoterId]       = useState('')
-  const [vTargetId,      setVTargetId]      = useState('')
+  const [vVoterInput,    setVVoterInput]    = useState('')
+  const [vTargetInput,   setVTargetInput]   = useState('')
   const [vType,          setVType]          = useState('normal')
   const [vVoteOrder,     setVVoteOrder]     = useState('')
   const [vReceiveOrder,  setVReceiveOrder]  = useState('')
