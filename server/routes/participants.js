@@ -31,5 +31,15 @@ router.delete('/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+  // 参加者更新
+router.put('/:id', async (req, res) => {
+  const { role_id, survived } = req.body;
+  const result = await pool.query(
+    `UPDATE game_participants SET role_id = $1, survived = $2 WHERE id = $3 RETURNING *`,
+    [role_id, survived, req.params.id]
+  );
+  res.json(result.rows[0]);
+});
+  
   return router;
 };
