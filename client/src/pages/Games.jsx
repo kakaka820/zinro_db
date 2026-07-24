@@ -88,7 +88,7 @@ export default function Games() {
                     onChange={() => toggleSelect(g.id)} />
                 </td>
               )}
-              <td>{g.id}</td>
+              <td><Link to={`/games/${g.id}/view`}>{g.id}</Link></td>
               <td>{g.played_at?.slice(0, 10)}</td>
               <td>{g.result ?? '—'}</td>
               <td>{g.notes ?? '—'}</td>
