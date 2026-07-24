@@ -33,10 +33,10 @@ router.delete('/:id', async (req, res) => {
 
   // 参加者更新
 router.put('/:id', async (req, res) => {
-  const { role_id, survived } = req.body;
+  const { role_id, survived, participant_number } = req.body;
   const result = await pool.query(
-    `UPDATE game_participants SET role_id = $1, survived = $2 WHERE id = $3 RETURNING *`,
-    [role_id, survived, req.params.id]
+    `UPDATE game_participants SET role_id = $1, survived = $2, participant_number = $3 WHERE id = $4 RETURNING *`,
+    [role_id, survived, participant_number ?? null, req.params.id]
   );
   res.json(result.rows[0]);
 });
