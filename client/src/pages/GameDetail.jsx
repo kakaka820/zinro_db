@@ -124,8 +124,8 @@ export default function GameDetail() {
       game_id: Number(id),
       day_number: day,
       vote_type: vType,
-      voter_id: Number(vVoterId),
-      target_id: Number(vTargetId),
+      voter_id: voter.id,
+      target_id: target.id,
       vote_order:    day === 1 && vVoteOrder    ? Number(vVoteOrder)    : null,
       receive_order: vReceiveOrder ? Number(vReceiveOrder) : null,
     })
@@ -318,22 +318,18 @@ export default function GameDetail() {
               <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
                 placeholder="受けた順番" style={{ width: 120 }} />
             </>
-          ) : (
+                    ) : (
             <>
-              <select value={vTargetId} onChange={e => setVTargetId(e.target.value)} required>
-                <option value="">投票先</option>
-                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-              </select>
+              <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
+                placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
               <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
                 placeholder="受けた順番" style={{ width: 120 }} />
               <select value={vType} onChange={e => setVType(e.target.value)}>
                 <option value="normal">通常投票</option>
                 <option value="runoff">決選投票</option>
               </select>
-              <select value={vVoterId} onChange={e => setVVoterId(e.target.value)} required>
-                <option value="">投票した人</option>
-                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-              </select>
+              <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
+                placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
             </>
           )}
                     <button type="submit">記録</button>
@@ -374,11 +370,9 @@ export default function GameDetail() {
             <option value="random">ランダム吊り</option>
             <option value="none">吊りなし</option>
           </select>
-          {eType !== 'none' && (
-            <select value={eParticipantId} onChange={e => setEParticipantId(e.target.value)} required>
-              <option value="">吊られた人</option>
-              {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-            </select>
+                    {eType !== 'none' && (
+            <input value={eParticipantId} onChange={e => setEParticipantId(e.target.value)}
+              placeholder="吊られた人（番号or名前）" style={{ width: 200 }} required />
           )}
                     <button type="submit">記録</button>
         </form>
@@ -404,10 +398,8 @@ export default function GameDetail() {
       <div className="card">
         <h2>{day}日目：噛み結果</h2>
         <form onSubmit={addNightKill}>
-          <select value={nParticipantId} onChange={e => setNParticipantId(e.target.value)}>
-            <option value="">噛まれた人（GJはそのまま記録）</option>
-            {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-          </select>
+                    <input value={nParticipantId} onChange={e => setNParticipantId(e.target.value)}
+            placeholder="噛まれた人（番号or名前、GJは空欄）" style={{ width: 240 }} />
                     <button type="submit">記録</button>
         </form>
 
