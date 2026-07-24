@@ -223,13 +223,21 @@ export default function GameDetail() {
       <input type="checkbox" checked={pSurvived} onChange={e => setPSurvived(e.target.checked)} />
       　生存
     </label>
+        <input
+      type="number" min="1"
+      value={pNumber}
+      onChange={e => setPNumber(e.target.value)}
+      placeholder="番号"
+      style={{ width: 70 }}
+    />
     <button type="submit">追加</button>
   </form>
   <table>
-    <thead><tr><th>プレイヤー</th><th>役職</th><th>陣営</th><th>生存</th><th></th></tr></thead>
+        <thead><tr><th>番号</th><th>プレイヤー</th><th>役職</th><th>陣営</th><th>生存</th><th></th></tr></thead>
     <tbody>
   {participants.map(p => (
-    <tr key={p.id}>
+        <tr key={p.id}>
+      <td>{p.participant_number ?? '―'}</td>
       <td>{p.player_name}</td>
       <td>
         {editingId === p.id ? (
