@@ -18,5 +18,19 @@ module.exports = (pool) => {
     res.json(result.rows[0]);
   });
 
+  // 試合削除（複数まとめて）
+  router.delete('/', async (req, res) => {
+    const { ids } = req.body;  // ids: number[]
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids は空でない配列で指定してください' });
+    }
+    await pool.query(
+      `DELETE FROM games WHERE id = ANY($1::int[])`,
+      [ids]
+    );
+    res.json({ deleted: ids.length });
+  });
+
+
   return router;
 };
