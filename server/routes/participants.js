@@ -15,12 +15,12 @@ module.exports = (pool) => {
     res.json(result.rows);
   });
 
-  // 参加者登録
+   // 参加者登録
   router.post('/', async (req, res) => {
-    const { game_id, player_id, role_id, survived } = req.body;
+    const { game_id, player_id, role_id, survived, participant_number } = req.body;
     const result = await pool.query(
-      'INSERT INTO game_participants (game_id, player_id, role_id, survived) VALUES ($1, $2, $3, $4) RETURNING *',
-      [game_id, player_id, role_id, survived ?? false]
+      'INSERT INTO game_participants (game_id, player_id, role_id, survived, participant_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [game_id, player_id, role_id, survived ?? false, participant_number ?? null]
     );
     res.json(result.rows[0]);
   });
