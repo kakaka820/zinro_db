@@ -128,7 +128,7 @@ export default function GameDetail() {
       voter_id: voter.id,
       target_id: target.id,
       vote_order:    day === 1 && vVoteOrder    ? Number(vVoteOrder)    : null,
-      receive_order: vReceiveOrder ? Number(vReceiveOrder) : null,
+      receive_order: day !== 1 && vReceiveOrder ? Number(vReceiveOrder) : null,
     })
     setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder('')
     loadVotes()
@@ -324,14 +324,16 @@ export default function GameDetail() {
               </select>
               <input type="number" min="1" value={vVoteOrder} onChange={e => setVVoteOrder(e.target.value)}
                 placeholder="投票順（初日のみ）" style={{ width: 150 }} />
-              <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
+              {day !== 1 && (
+  <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
                 placeholder="受けた順番" style={{ width: 120 }} />
             </>
                     ) : (
             <>
               <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
                 placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
-              <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
+              {day !== 1 && (
+  <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
                 placeholder="受けた順番" style={{ width: 120 }} />
               <select value={vType} onChange={e => setVType(e.target.value)}>
                 <option value="normal">通常投票</option>
