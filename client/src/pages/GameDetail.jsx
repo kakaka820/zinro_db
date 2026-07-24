@@ -305,14 +305,10 @@ export default function GameDetail() {
         <form onSubmit={addVote}>
           {day === 1 ? (
             <>
-              <select value={vVoterId} onChange={e => setVVoterId(e.target.value)} required>
-                <option value="">投票した人</option>
-                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-              </select>
-              <select value={vTargetId} onChange={e => setVTargetId(e.target.value)} required>
-                <option value="">投票先</option>
-                {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
-              </select>
+             <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
+                placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
+              <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
+                placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
               <select value={vType} onChange={e => setVType(e.target.value)}>
                 <option value="normal">通常投票</option>
                 <option value="runoff">決選投票</option>
