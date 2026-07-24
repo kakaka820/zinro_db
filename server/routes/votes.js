@@ -19,15 +19,29 @@ module.exports = (pool) => {
   });
 
   // 投票登録
-  router.post('/', async (req, res) => {
-    const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order } = req.body;
-    const result = await pool.query(
-      `INSERT INTO votes (game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [game_id, day_number, vote_type ?? 'normal', voter_id, target_id, vote_order ?? null, receive_order ?? null]
+router.post('/', async (req, res) => {
+  const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order } = req.body;
+
+  let finalReceiveOrder = receive_order ?? null;
+
+  // 初日は vote_order から自動計算
+  if (Number(day_number) === 1 && vote_order != null) {
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM votes
+       WHERE game_id = $1 AND day_number = $2 AND vote_type = $3
+         AND target_id = $4 AND vote_order < $5`,
+      [game_id, day_number, vote_type ?? 'normal', target_id, vote_order]
     );
-    res.json(result.rows[0]);
-  });
+    finalReceiveOrder = parseInt(countResult.rows[0].count, 10) + 1;
+  }
+
+  const result = await pool.query(
+    `INSERT INTO votes (game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [game_id, day_number, vote_type ?? 'normal', voter_id, target_id, vote_order ?? null, finalReceiveOrder]
+  );
+  res.json(result.rows[0]);
+});
 
   return router;
 };
