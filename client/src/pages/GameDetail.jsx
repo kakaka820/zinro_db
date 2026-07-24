@@ -340,8 +340,24 @@ export default function GameDetail() {
               {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
             </select>
           )}
-          <button type="submit">記録</button>
+                    <button type="submit">記録</button>
         </form>
+
+        {executions.filter(e => e.day_number === day).length > 0 && (
+          <table style={{ marginTop: 12 }}>
+            <thead>
+              <tr><th>種別</th><th>吊られた人</th></tr>
+            </thead>
+            <tbody>
+              {executions.filter(e => e.day_number === day).map(e => (
+                <tr key={e.id}>
+                  <td>{e.execution_type === 'normal' ? '通常吊り' : e.execution_type === 'random' ? 'ランダム吊り' : '吊りなし'}</td>
+                  <td>{participants.find(p => String(p.id) === String(e.participant_id))?.player_name ?? '―'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* ── 噛み ── */}
@@ -352,9 +368,26 @@ export default function GameDetail() {
             <option value="">噛まれた人（GJはそのまま記録）</option>
             {participants.map(p => <option key={p.id} value={p.id}>{p.player_name}</option>)}
           </select>
-          <button type="submit">記録</button>
+                    <button type="submit">記録</button>
         </form>
+
+        {nightKills.filter(n => n.day_number === day).length > 0 && (
+          <table style={{ marginTop: 12 }}>
+            <thead>
+              <tr><th>噛まれた人</th></tr>
+            </thead>
+            <tbody>
+              {nightKills.filter(n => n.day_number === day).map(n => (
+                <tr key={n.id}>
+                  <td>{participants.find(p => String(p.id) === String(n.participant_id))?.player_name ?? 'GJ'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
+  )
+}
   )
 }
