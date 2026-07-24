@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../api'
+import COSection from './COSection'
 
 export default function GameDetail() {
   const { id } = useParams()
@@ -165,11 +166,26 @@ export default function GameDetail() {
     setNParticipantId('')
     loadNightKills()
   }
-
+const [activeTab, setActiveTab] = useState('log')
   return (
     <div>
       <h1>試合 #{id} 記録</h1>
-
+{/* ── タブ切替 ── */}       {/* ← 追加ここから */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button
+          onClick={() => setActiveTab('log')}
+          style={{ fontWeight: activeTab === 'log' ? 'bold' : 'normal' }}
+        >
+          投票・吊り・噛み
+        </button>
+        <button
+          onClick={() => setActiveTab('co')}
+          style={{ fontWeight: activeTab === 'co' ? 'bold' : 'normal' }}
+        >
+          CO状況
+        </button>
+      </div>                        {/* ← 追加ここまで */}
+      {activeTab === 'log' && (
       {/* ── 参加者 ── */}
 <div className="card">
   <h2>参加者・役職</h2>
@@ -431,6 +447,6 @@ export default function GameDetail() {
           </table>
         )}
       </div>
+        )}
     </div>
   )
-}
