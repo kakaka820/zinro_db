@@ -42,7 +42,12 @@ export default function GameDetail() {
     api.get(`/participants/game/${id}`).then(setParticipants)
 
   const loadVotes = () =>
-    api.get(`/votes/game/${id}/day/${day}`).then(setVotes)
+  api.get(`/votes/game/${id}/day/${day}`)
+    .then(data => {
+      console.log('votes取得結果:', data)
+      setVotes(data)
+    })
+    .catch(err => console.error('votesエラー:', err))
 
   useEffect(() => {
     api.get('/players').then(setPlayers)
