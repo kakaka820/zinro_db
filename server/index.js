@@ -12,11 +12,6 @@ app.use(cors({
 app.options('*', cors());
 app.use(express.json());
 
-app.use('/co-events',      require('./routes/coEvents')(pool));
-app.use('/seer-results',   require('./routes/seerResults')(pool));
-app.use('/medium-results', require('./routes/mediumResults')(pool));
-app.use('/knight-guards',  require('./routes/knightGuards')(pool));
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -39,6 +34,10 @@ app.use('/participants', require('./routes/participants')(pool));
 app.use('/votes',        require('./routes/votes')(pool));
 app.use('/executions',   require('./routes/executions')(pool));
 app.use('/night-kills',  require('./routes/nightKills')(pool));
+app.use('/co-events',      require('./routes/coEvents')(pool));
+app.use('/seer-results',   require('./routes/seerResults')(pool));
+app.use('/medium-results', require('./routes/mediumResults')(pool));
+app.use('/knight-guards',  require('./routes/knightGuards')(pool));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
