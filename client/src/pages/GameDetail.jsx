@@ -317,8 +317,6 @@ export default function GameDetail() {
           </table>
         )}
       </div>
-        </form>
-      </div>
 
       {/* ── 吊り ── */}
       <div className="card">
