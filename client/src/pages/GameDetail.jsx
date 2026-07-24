@@ -313,21 +313,18 @@ export default function GameDetail() {
         <h2>{day}日目：投票</h2>
         <form onSubmit={addVote}>
           {day === 1 ? (
-            <>
-             <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
-                placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
-              <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
-                placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
-              <select value={vType} onChange={e => setVType(e.target.value)}>
-                <option value="normal">通常投票</option>
-                <option value="runoff">決選投票</option>
-              </select>
-              <input type="number" min="1" value={vVoteOrder} onChange={e => setVVoteOrder(e.target.value)}
-                placeholder="投票順（初日のみ）" style={{ width: 150 }} />
-              {day !== 1 && (
-  <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
-                placeholder="受けた順番" style={{ width: 120 }} />
-            </>
+  <>
+    <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
+      placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
+    <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
+      placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
+    <select value={vType} onChange={e => setVType(e.target.value)}>
+      <option value="normal">通常投票</option>
+      <option value="runoff">決選投票</option>
+    </select>
+    <input type="number" min="1" value={vVoteOrder} onChange={e => setVVoteOrder(e.target.value)}
+      placeholder="投票順（初日のみ）" style={{ width: 150 }} />
+  </>
                     ) : (
             <>
               <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
@@ -379,6 +376,7 @@ export default function GameDetail() {
           <select value={eType} onChange={e => setEType(e.target.value)}>
             <option value="normal">通常吊り</option>
             <option value="random">ランダム吊り</option>
+            <option value="runoff_execution">決戦釣り</option>
             <option value="none">吊りなし</option>
           </select>
                     {eType !== 'none' && (
@@ -396,7 +394,12 @@ export default function GameDetail() {
             <tbody>
               {executions.filter(e => e.day_number === day).map(e => (
                 <tr key={e.id}>
-                  <td>{e.execution_type === 'normal' ? '通常吊り' : e.execution_type === 'random' ? 'ランダム吊り' : '吊りなし'}</td>
+                  <td>
+  {e.execution_type === 'normal' ? '通常吊り'
+    : e.execution_type === 'random' ? 'ランダム吊り'
+    : e.execution_type === 'runoff_execution' ? '決戦釣り'
+    : '吊りなし'}
+</td>
                   <td>{participants.find(p => String(p.id) === String(e.participant_id))?.player_name ?? '―'}</td>
                 </tr>
               ))}
