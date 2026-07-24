@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
@@ -22,7 +23,7 @@ export default function Games() {
     <div>
       <h1>試合一覧</h1>
       <form onSubmit={add}>
-        <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+        <input type="date" value={date} onChange={e => setDate(e.target.value)} />
         <select value={result} onChange={e => setResult(e.target.value)}>
           <option value="">結果（未定）</option>
           <option value="village_win">村勝利</option>
