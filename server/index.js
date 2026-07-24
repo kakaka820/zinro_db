@@ -12,7 +12,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// 接続確認
 app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
@@ -22,7 +21,6 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// ルート登録
 app.use('/players',      require('./routes/players')(pool));
 app.use('/roles',        require('./routes/roles')(pool));
 app.use('/games',        require('./routes/games')(pool));
