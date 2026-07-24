@@ -43,13 +43,19 @@ export default function GameDetail() {
     const loadParticipants = () =>
     api.get(`/participants/game/${id}`).then(setParticipants)
 
-  const loadVotes = () =>
+    const loadVotes = () =>
   api.get(`/votes/game/${id}/day/${day}`)
     .then(data => {
       console.log('votes取得結果:', data)
       setVotes(data)
     })
     .catch(err => console.error('votesエラー:', err))
+
+  const loadExecutions = () =>
+    api.get(`/executions/game/${id}`).then(setExecutions)
+
+  const loadNightKills = () =>
+    api.get(`/night-kills/game/${id}`).then(setNightKills)
 
   useEffect(() => {
     api.get('/players').then(setPlayers)
@@ -59,6 +65,8 @@ export default function GameDetail() {
 
   useEffect(() => {
     loadVotes()
+    loadExecutions()
+    loadNightKills()
   }, [id, day])
 
   // 参加者追加
@@ -115,7 +123,8 @@ export default function GameDetail() {
       participant_id: eType === 'none' ? null : Number(eParticipantId),
       execution_type: eType,
     })
-    setEParticipantId(''); setEType('normal')
+        setEParticipantId(''); setEType('normal')
+    loadExecutions()
   }
 
   // 噛み追加
@@ -127,6 +136,7 @@ export default function GameDetail() {
       participant_id: nParticipantId ? Number(nParticipantId) : null,
     })
     setNParticipantId('')
+    loadNightKills()
   }
 
   return (
@@ -387,7 +397,5 @@ export default function GameDetail() {
         )}
       </div>
     </div>
-  )
-}
   )
 }
