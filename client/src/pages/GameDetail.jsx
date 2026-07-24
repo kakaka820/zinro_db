@@ -30,6 +30,8 @@ export default function GameDetail() {
   const [vVoteOrder,     setVVoteOrder]     = useState('')
   const [vReceiveOrder,  setVReceiveOrder]  = useState('')
   const [votes,          setVotes]          = useState([])
+  const [executions,     setExecutions]     = useState([])
+  const [nightKills,     setNightKills]     = useState([])
 
   // 吊りフォーム
   const [eParticipantId, setEParticipantId] = useState('')
