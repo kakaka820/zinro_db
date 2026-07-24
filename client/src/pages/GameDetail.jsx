@@ -13,6 +13,10 @@ export default function GameDetail() {
   const [pPlayerText,  setPPlayerText]  = useState('')
   const [pFiltered,    setPFiltered]    = useState([])
   const [pShowList,    setPShowList]    = useState(false)
+
+  const [editingId, setEditingId] = useState(null)
+  const [editRoleId, setEditRoleId] = useState('')
+  const [editSurvived, setEditSurvived] = useState(false)
   
   // 参加者追加フォーム
   const [pPlayerId, setPPlayerId] = useState('')
