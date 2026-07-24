@@ -25,5 +25,11 @@ module.exports = (pool) => {
     res.json(result.rows[0]);
   });
 
+  // 参加者削除
+router.delete('/:id', async (req, res) => {
+  await pool.query('DELETE FROM game_participants WHERE id = $1', [req.params.id]);
+  res.json({ success: true });
+});
+
   return router;
 };
