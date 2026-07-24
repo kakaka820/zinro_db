@@ -360,3 +360,25 @@ export default function COSection({ gameId, participants, roles }) {
                   <tbody>
                     {knightGuards.map(g => (
                       <tr key={g.id} style={{ opacity: g.disclosed_day ? 1 : 0.6 }}>
+                        <td>{g.knight_name}</td>
+                        <td>{g.target_name ?? '不明'}</td>
+                        <td>{g.day_number}日目</td>
+                        <td>{g.is_gj ? '✅ GJ' : '―'}</td>
+                        <td>{g.disclosed_day ? `${g.disclosed_day}日目` : '未開示'}</td>
+                        <td>
+                          <button className="secondary" onClick={async () => {
+                            await knightGuardsApi.del(g.id); load()
+                          }}>削除</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )
+        }
+      </div>
+    </div>
+  )
+}
