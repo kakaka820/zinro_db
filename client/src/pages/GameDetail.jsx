@@ -70,6 +70,17 @@ export default function GameDetail() {
     loadNightKills()
   }, [id, day])
 
+  // 番号または名前 → 参加者を検索するヘルパー
+  const resolveParticipant = (input) => {
+    const trimmed = input.trim()
+    if (!trimmed) return null
+    const num = parseInt(trimmed, 10)
+    if (!isNaN(num) && String(num) === trimmed) {
+      return participants.find(p => p.participant_number === num) ?? null
+    }
+    return participants.find(p => p.player_name === trimmed) ?? null
+  }
+
   // 参加者追加
   const addParticipant = async (e) => {
   e.preventDefault()
@@ -94,14 +105,21 @@ export default function GameDetail() {
     player_id: Number(playerId),
     role_id: Number(pRoleId),
     survived: pSurvived,
+    participant_number: pNumber ? Number(pNumber) : null,
   })
-  setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPSurvived(false)
+  setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPSurvived(false); setPNumber('')
   loadParticipants()
 }
 
   // 投票追加
   const addVote = async (e) => {
     e.preventDefault()
+    const voter = resolveParticipant(vVoterInput)
+    const target = resolveParticipant(vTargetInput)
+    if (!voter || !target) {
+      alert('投票した人・投票先が見つかりません（番号か名前で入力してください）')
+      return
+    }
     await api.post('/votes', {
       game_id: Number(id),
       day_number: day,
@@ -111,7 +129,7 @@ export default function GameDetail() {
       vote_order:    day === 1 && vVoteOrder    ? Number(vVoteOrder)    : null,
       receive_order: vReceiveOrder ? Number(vReceiveOrder) : null,
     })
-    setVVoterId(''); setVTargetId(''); setVVoteOrder(''); setVReceiveOrder('')
+    setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder('')
     loadVotes()
   }
 
