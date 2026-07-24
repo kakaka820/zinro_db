@@ -29,6 +29,7 @@ export default function GameDetail() {
   const [vType,          setVType]          = useState('normal')
   const [vVoteOrder,     setVVoteOrder]     = useState('')
   const [vReceiveOrder,  setVReceiveOrder]  = useState('')
+  const [votes,          setVotes]          = useState([])
 
   // 吊りフォーム
   const [eParticipantId, setEParticipantId] = useState('')
@@ -37,14 +38,21 @@ export default function GameDetail() {
   // 噛みフォーム
   const [nParticipantId, setNParticipantId] = useState('')
 
-  const loadParticipants = () =>
+    const loadParticipants = () =>
     api.get(`/participants/game/${id}`).then(setParticipants)
+
+  const loadVotes = () =>
+    api.get(`/votes/game/${id}/day/${day}`).then(setVotes)
 
   useEffect(() => {
     api.get('/players').then(setPlayers)
     api.get('/roles').then(setRoles)
     loadParticipants()
   }, [id])
+
+  useEffect(() => {
+    loadVotes()
+  }, [id, day])
 
   // 参加者追加
   const addParticipant = async (e) => {
@@ -88,6 +96,7 @@ export default function GameDetail() {
       receive_order: vReceiveOrder ? Number(vReceiveOrder) : null,
     })
     setVVoterId(''); setVTargetId(''); setVVoteOrder(''); setVReceiveOrder('')
+    loadVotes()
   }
 
   // 吊り追加
@@ -280,7 +289,34 @@ export default function GameDetail() {
               </select>
             </>
           )}
-          <button type="submit">記録</button>
+                    <button type="submit">記録</button>
+        </form>
+
+        {votes.length > 0 && (
+          <table style={{ marginTop: 12 }}>
+            <thead>
+              <tr>
+                <th>投票した人</th>
+                <th>投票先</th>
+                <th>種別</th>
+                {day === 1 && <th>投票順</th>}
+                <th>受けた順番</th>
+              </tr>
+            </thead>
+            <tbody>
+              {votes.map(v => (
+                <tr key={v.id}>
+                  <td>{participants.find(p => p.id === v.voter_id)?.player_name ?? v.voter_id}</td>
+                  <td>{participants.find(p => p.id === v.target_id)?.player_name ?? v.target_id}</td>
+                  <td>{v.vote_type === 'normal' ? '通常' : '決選'}</td>
+                  {day === 1 && <td>{v.vote_order ?? '―'}</td>}
+                  <td>{v.receive_order ?? '―'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
         </form>
       </div>
 
