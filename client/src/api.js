@@ -11,8 +11,10 @@ const put  = (path, body) => fetch(`${BASE}${path}`, {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(body),
 }).then(r => r.json());
-const del  = (path)       => fetch(`${BASE}${path}`, {
+const del  = (path, body) => fetch(`${BASE}${path}`, {
   method: 'DELETE',
+  headers: body ? { 'Content-Type': 'application/json' } : undefined,
+  body: body ? JSON.stringify(body) : undefined,
 }).then(r => r.json());
 
 export const api = { get, post, put, del };
