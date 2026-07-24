@@ -170,7 +170,7 @@ const [activeTab, setActiveTab] = useState('log')
   return (
     <div>
       <h1>試合 #{id} 記録</h1>
-{/* ── タブ切替 ── */}       {/* ← 追加ここから */}
+{/* ── タブ切替 ── */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <button
           onClick={() => setActiveTab('log')}
@@ -184,8 +184,10 @@ const [activeTab, setActiveTab] = useState('log')
         >
           CO状況
         </button>
-      </div>                        {/* ← 追加ここまで */}
+      </div>
+      {/* ── ログタブ ── */}
       {activeTab === 'log' && (
+  <>
       {/* ── 参加者 ── */}
 <div className="card">
   <h2>参加者・役職</h2>
@@ -447,6 +449,17 @@ const [activeTab, setActiveTab] = useState('log')
           </table>
         )}
       </div>
+    </>
         )}
+{/* ── COタブ ── */}
+    {activeTab === 'co' && (
+      <COSection
+        gameId={id}
+        participants={participants}
+        roles={roles}
+      />
+    )}
+      
     </div>
   )
+}
