@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL;
+const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 const get  = (path)       => fetch(`${BASE}${path}`).then(r => r.json());
 const post = (path, body) => fetch(`${BASE}${path}`, {
