@@ -44,16 +44,32 @@ export default function GameDetail() {
 
   // 参加者追加
   const addParticipant = async (e) => {
-    e.preventDefault()
-    await api.post('/participants', {
-      game_id: Number(id),
-      player_id: Number(pPlayerId),
-      role_id: Number(pRoleId),
-      survived: pSurvived,
-    })
-    setPPlayerId(''); setPRoleId(''); setPSurvived(false)
-    loadParticipants()
+  e.preventDefault()
+  if (!pPlayerText.trim()) return
+
+  // 完全一致を探す
+  let playerId = pPlayerId
+  if (!playerId) {
+    const exact = players.find(p => p.name === pPlayerText.trim())
+    if (exact) {
+      playerId = exact.id
+    } else {
+      // 新規登録（同名なら既存を返す）
+      const newPlayer = await api.post('/players', { name: pPlayerText.trim() })
+      playerId = newPlayer.id
+      await api.get('/players').then(setPlayers)
+    }
   }
+
+  await api.post('/participants', {
+    game_id: Number(id),
+    player_id: Number(playerId),
+    role_id: Number(pRoleId),
+    survived: pSurvived,
+  })
+  setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPSurvived(false)
+  loadParticipants()
+}
 
   // 投票追加
   const addVote = async (e) => {
