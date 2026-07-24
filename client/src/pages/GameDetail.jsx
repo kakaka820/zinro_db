@@ -329,7 +329,6 @@ export default function GameDetail() {
             <>
               <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
                 placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
-              {day !== 1 && (
   <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
                 placeholder="受けた順番" style={{ width: 120 }} />
               <select value={vType} onChange={e => setVType(e.target.value)}>
