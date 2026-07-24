@@ -176,21 +176,57 @@ export default function GameDetail() {
   <table>
     <thead><tr><th>プレイヤー</th><th>役職</th><th>陣営</th><th>生存</th><th></th></tr></thead>
     <tbody>
-      {participants.map(p => (
-        <tr key={p.id}>
-          <td>{p.player_name}</td>
-          <td>{p.role_name}</td>
-          <td><span className={`tag ${p.team}`}>{p.team}</span></td>
-          <td>{p.survived ? '✅' : '❌'}</td>
-          <td>
+  {participants.map(p => (
+    <tr key={p.id}>
+      <td>{p.player_name}</td>
+      <td>
+        {editingId === p.id ? (
+          <select value={editRoleId} onChange={e => setEditRoleId(e.target.value)}>
+            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          </select>
+        ) : p.role_name}
+      </td>
+      <td>
+        {editingId === p.id ? null : <span className={`tag ${p.team}`}>{p.team}</span>}
+      </td>
+      <td>
+        {editingId === p.id ? (
+          <input type="checkbox" checked={editSurvived}
+            onChange={e => setEditSurvived(e.target.checked)} />
+        ) : (p.survived ? '✅' : '❌')}
+      </td>
+      <td style={{ display: 'flex', gap: 4 }}>
+        {editingId === p.id ? (
+          <>
+            <button onClick={async () => {
+              await api.put(`/participants/${p.id}`, {
+                role_id: Number(editRoleId),
+                survived: editSurvived,
+              })
+              setEditingId(null)
+              loadParticipants()
+            }}>保存</button>
+            <button className="secondary" onClick={() => setEditingId(null)}>
+              キャンセル
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="secondary" onClick={() => {
+              setEditingId(p.id)
+              setEditRoleId(p.role_id)
+              setEditSurvived(p.survived)
+            }}>編集</button>
             <button className="secondary" onClick={async () => {
               await api.del(`/participants/${p.id}`)
               loadParticipants()
             }}>削除</button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
+          </>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
   </table>
 </div>
 
