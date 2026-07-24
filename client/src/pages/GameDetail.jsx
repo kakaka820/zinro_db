@@ -14,9 +14,10 @@ export default function GameDetail() {
   const [pFiltered,    setPFiltered]    = useState([])
   const [pShowList,    setPShowList]    = useState(false)
 
-  const [editingId, setEditingId] = useState(null)
+    const [editingId, setEditingId] = useState(null)
   const [editRoleId, setEditRoleId] = useState('')
   const [editSurvived, setEditSurvived] = useState(false)
+  const [editNumber, setEditNumber] = useState('')
   
   // 参加者追加フォーム
   const [pPlayerId, setPPlayerId] = useState('')
@@ -237,7 +238,13 @@ export default function GameDetail() {
     <tbody>
   {participants.map(p => (
         <tr key={p.id}>
-      <td>{p.participant_number ?? '―'}</td>
+            <td>
+        {editingId === p.id ? (
+          <input type="number" min="1" value={editNumber}
+            onChange={e => setEditNumber(e.target.value)}
+            style={{ width: 60 }} />
+        ) : (p.participant_number ?? '―')}
+      </td>
       <td>{p.player_name}</td>
       <td>
         {editingId === p.id ? (
@@ -258,10 +265,11 @@ export default function GameDetail() {
       <td style={{ display: 'flex', gap: 4 }}>
         {editingId === p.id ? (
           <>
-            <button onClick={async () => {
+                       <button onClick={async () => {
               await api.put(`/participants/${p.id}`, {
                 role_id: Number(editRoleId),
                 survived: editSurvived,
+                participant_number: editNumber ? Number(editNumber) : null,
               })
               setEditingId(null)
               loadParticipants()
@@ -272,10 +280,11 @@ export default function GameDetail() {
           </>
         ) : (
           <>
-            <button className="secondary" onClick={() => {
+                        <button className="secondary" onClick={() => {
               setEditingId(p.id)
               setEditRoleId(p.role_id)
               setEditSurvived(p.survived)
+              setEditNumber(p.participant_number ?? '')
             }}>編集</button>
             <button className="secondary" onClick={async () => {
               await api.del(`/participants/${p.id}`)
