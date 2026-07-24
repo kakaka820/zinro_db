@@ -22,6 +22,15 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// ルート登録
+app.use('/players',      require('./routes/players')(pool));
+app.use('/roles',        require('./routes/roles')(pool));
+app.use('/games',        require('./routes/games')(pool));
+app.use('/participants', require('./routes/participants')(pool));
+app.use('/votes',        require('./routes/votes')(pool));
+app.use('/executions',   require('./routes/executions')(pool));
+app.use('/night-kills',  require('./routes/nightKills')(pool));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
