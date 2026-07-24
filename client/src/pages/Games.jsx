@@ -9,6 +9,9 @@ export default function Games() {
   const [result, setResult] = useState('')
   const [notes, setNotes]   = useState('')
 
+  const [deleteMode, setDeleteMode] = useState(false)
+  const [selected, setSelected]     = useState(new Set())
+
   const load = () => api.get('/games').then(setGames)
   useEffect(() => { load() }, [])
 
@@ -16,6 +19,26 @@ export default function Games() {
     e.preventDefault()
     await api.post('/games', { played_at: date, result: result || null, notes: notes || null })
     setDate(''); setResult(''); setNotes('')
+    load()
+  }
+
+  const toggleDeleteMode = () => {
+    setDeleteMode(m => !m)
+    setSelected(new Set())
+  }
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+  const execDelete = async () => {
+    if (selected.size === 0) return
+    if (!window.confirm(`${selected.size} 件の試合を削除しますか？\n（関連する投票・吊り・噛みのデータもすべて消えます）`)) return
+    await api.del('/games', { ids: [...selected] })
+    setDeleteMode(false)
+    setSelected(new Set())
     load()
   }
 
@@ -43,6 +66,19 @@ export default function Games() {
               <td>{g.result ?? '—'}</td>
               <td>{g.notes ?? '—'}</td>
               <td><Link to={`/games/${g.id}`}>記録する →</Link></td>
+              <th style={{ textAlign: 'right' }}>
+              {deleteMode ? (
+                <>
+                  <button onClick={execDelete} disabled={selected.size === 0}
+                    style={{ marginRight: 8, color: 'red' }}>
+                    {selected.size > 0 ? `${selected.size} 件削除` : '削除'}
+                  </button>
+                  <button className="secondary" onClick={toggleDeleteMode}>キャンセル</button>
+                </>
+              ) : (
+                <button className="secondary" onClick={toggleDeleteMode}>削除</button>
+              )}
+            </th>
             </tr>
           ))}
         </tbody>
