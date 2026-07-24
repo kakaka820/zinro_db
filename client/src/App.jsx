@@ -3,6 +3,7 @@ import Players    from './pages/Players'
 import Roles      from './pages/Roles'
 import Games      from './pages/Games'
 import GameDetail from './pages/GameDetail'
+import GameView   from './pages/GameView'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/players"     element={<Players />} />
           <Route path="/roles"       element={<Roles />} />
           <Route path="/games/:id"   element={<GameDetail />} />
+          <Route path="/games/:id/view"  element={<GameView />} />
         </Routes>
       </main>
     </div>
