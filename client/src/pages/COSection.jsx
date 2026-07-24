@@ -1,0 +1,362 @@
+import { useState, useEffect } from 'react'
+import { coEventsApi, seerResultsApi, mediumResultsApi, knightGuardsApi } from '../api'
+
+export default function COSection({ gameId, participants, roles }) {
+  // ── データ ──
+  const [coEvents,      setCoEvents]      = useState([])
+  const [seerResults,   setSeerResults]   = useState([])
+  const [mediumResults, setMediumResults] = useState([])
+  const [knightGuards,  setKnightGuards]  = useState([])
+
+  // ── COフォーム ──
+  const [coParticipantId, setCoParticipantId] = useState('')
+  const [coClaimedRoleId, setCoClaimedRoleId] = useState('')
+  const [coDay,           setCoDay]           = useState(1)
+
+  // ── 占いフォーム ──
+  const [seerCoId,         setSeerCoId]         = useState('')  // どのCOか
+  const [seerTargetInput,  setSeerTargetInput]  = useState('')
+  const [seerDay,          setSeerDay]          = useState(1)
+  const [seerResult,       setSeerResult]       = useState('white')
+  const [seerDisclosedDay, setSeerDisclosedDay] = useState('')
+
+  // ── 霊媒フォーム ──
+  const [mediumCoId,         setMediumCoId]         = useState('')
+  const [mediumTargetInput,  setMediumTargetInput]  = useState('')
+  const [mediumDay,          setMediumDay]          = useState(1)
+  const [mediumResult,       setMediumResult]       = useState('white')
+  const [mediumDisclosedDay, setMediumDisclosedDay] = useState('')
+
+  // ── 騎士フォーム ──
+  const [knightCoId,         setKnightCoId]         = useState('')
+  const [knightTargetInput,  setKnightTargetInput]  = useState('')
+  const [knightDay,          setKnightDay]          = useState(1)
+  const [knightIsGj,         setKnightIsGj]         = useState(false)
+  const [knightDisclosedDay, setKnightDisclosedDay] = useState('')
+
+  // ── ロード ──
+  const load = () => {
+    coEventsApi.list(gameId).then(setCoEvents)
+    seerResultsApi.list(gameId).then(setSeerResults)
+    mediumResultsApi.list(gameId).then(setMediumResults)
+    knightGuardsApi.list(gameId).then(setKnightGuards)
+  }
+  useEffect(() => { load() }, [gameId])
+
+  // 番号 or 名前 → participant解決（GameDetailと同じヘルパー）
+  const resolve = (input) => {
+    const trimmed = input.trim()
+    if (!trimmed) return null
+    const num = parseInt(trimmed, 10)
+    if (!isNaN(num) && String(num) === trimmed)
+      return participants.find(p => p.participant_number === num) ?? null
+    return participants.find(p => p.player_name === trimmed) ?? null
+  }
+
+  // ── CO登録 ──
+  const addCo = async (e) => {
+    e.preventDefault()
+    await coEventsApi.add({
+      game_id:         Number(gameId),
+      participant_id:  Number(coParticipantId),
+      claimed_role_id: Number(coClaimedRoleId),
+      co_day:          Number(coDay),
+    })
+    setCoParticipantId(''); setCoClaimedRoleId(''); setCoDay(1)
+    load()
+  }
+
+  // ── 占い結果登録 ──
+  const addSeerResult = async (e) => {
+    e.preventDefault()
+    const target = resolve(seerTargetInput)
+    if (!target) return alert('占い対象が見つかりません')
+    // seerCoIdはco_eventsのid → そこからseer_participant_idを取得
+    const co = coEvents.find(c => c.id === Number(seerCoId))
+    if (!co) return alert('COを選択してください')
+    await seerResultsApi.add({
+      game_id:              Number(gameId),
+      seer_participant_id:  co.participant_id,
+      target_participant_id: target.id,
+      day_number:           Number(seerDay),
+      result:               seerResult,
+      disclosed_day:        seerDisclosedDay ? Number(seerDisclosedDay) : null,
+    })
+    setSeerTargetInput(''); setSeerDay(1); setSeerResult('white'); setSeerDisclosedDay('')
+    load()
+  }
+
+  // ── 霊媒結果登録 ──
+  const addMediumResult = async (e) => {
+    e.preventDefault()
+    const target = resolve(mediumTargetInput)
+    if (!target) return alert('霊媒対象が見つかりません')
+    const co = coEvents.find(c => c.id === Number(mediumCoId))
+    if (!co) return alert('COを選択してください')
+    await mediumResultsApi.add({
+      game_id:               Number(gameId),
+      medium_participant_id: co.participant_id,
+      target_participant_id: target.id,
+      day_number:            Number(mediumDay),
+      result:                mediumResult,
+      disclosed_day:         mediumDisclosedDay ? Number(mediumDisclosedDay) : null,
+    })
+    setMediumTargetInput(''); setMediumDay(1); setMediumResult('white'); setMediumDisclosedDay('')
+    load()
+  }
+
+  // ── 騎士護衛登録 ──
+  const addKnightGuard = async (e) => {
+    e.preventDefault()
+    const target = knightTargetInput.trim() ? resolve(knightTargetInput) : null
+    const co = coEvents.find(c => c.id === Number(knightCoId))
+    if (!co) return alert('COを選択してください')
+    await knightGuardsApi.add({
+      game_id:               Number(gameId),
+      knight_participant_id: co.participant_id,
+      target_participant_id: target ? target.id : null,  // null許容
+      day_number:            Number(knightDay),
+      is_gj:                 knightIsGj,
+      disclosed_day:         knightDisclosedDay ? Number(knightDisclosedDay) : null,
+    })
+    setKnightTargetInput(''); setKnightDay(1); setKnightIsGj(false); setKnightDisclosedDay('')
+    load()
+  }
+
+  // 偽COかどうかの判定（参加者の実際の役職 vs 主張役職）
+  const isFake = (co) => {
+    const p = participants.find(p => p.id === co.participant_id)
+    return p && String(p.role_id) !== String(co.claimed_role_id)
+  }
+
+  // COを役職名でフィルタするヘルパー
+  const cosByRole = (roleName) =>
+    coEvents.filter(co => co.claimed_role_name === roleName)
+
+  return (
+    <div>
+      {/* ── COイベント登録 ── */}
+      <div className="card">
+        <h2>COを記録する</h2>
+        <form onSubmit={addCo} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <select value={coParticipantId} onChange={e => setCoParticipantId(e.target.value)} required>
+            <option value="">参加者を選択</option>
+            {participants.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.participant_number ? `${p.participant_number}. ` : ''}{p.player_name}
+              </option>
+            ))}
+          </select>
+          <select value={coClaimedRoleId} onChange={e => setCoClaimedRoleId(e.target.value)} required>
+            <option value="">主張役職を選択</option>
+            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          </select>
+          <label>
+            CO日：
+            <input type="number" min="1" value={coDay}
+              onChange={e => setCoDay(e.target.value)} style={{ width: 60 }} />
+          </label>
+          <button type="submit">記録</button>
+        </form>
+
+        {coEvents.length > 0 && (
+          <table style={{ marginTop: 12 }}>
+            <thead>
+              <tr><th>参加者</th><th>主張役職</th><th>CO日</th><th>判定</th><th></th></tr>
+            </thead>
+            <tbody>
+              {coEvents.map(co => (
+                <tr key={co.id}>
+                  <td>{co.player_name}</td>
+                  <td>{co.claimed_role_name}</td>
+                  <td>{co.co_day}日目</td>
+                  <td>{isFake(co) ? '⚠️ 偽CO' : '本物'}</td>
+                  <td>
+                    <button className="secondary" onClick={async () => {
+                      await coEventsApi.del(co.id); load()
+                    }}>削除</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ── 占い師 ── */}
+      <div className="card">
+        <h2>占い師CO</h2>
+        {cosByRole('占い師').length === 0
+          ? <p style={{ color: '#888' }}>占い師COなし</p>
+          : (
+            <>
+              <form onSubmit={addSeerResult} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <select value={seerCoId} onChange={e => setSeerCoId(e.target.value)} required>
+                  <option value="">占い師COを選択</option>
+                  {cosByRole('占い師').map(co => (
+                    <option key={co.id} value={co.id}>
+                      {co.player_name}（{co.co_day}日目CO）{isFake(co) ? ' ⚠️偽' : ''}
+                    </option>
+                  ))}
+                </select>
+                <input value={seerTargetInput} onChange={e => setSeerTargetInput(e.target.value)}
+                  placeholder="占い対象（番号or名前）" style={{ width: 180 }} required />
+                <label>
+                  占った日：
+                  <input type="number" min="1" value={seerDay}
+                    onChange={e => setSeerDay(e.target.value)} style={{ width: 55 }} />
+                </label>
+                <select value={seerResult} onChange={e => setSeerResult(e.target.value)}>
+                  <option value="white">白</option>
+                  <option value="black">黒</option>
+                </select>
+                <label>
+                  開示日：
+                  <input type="number" min="1" value={seerDisclosedDay}
+                    onChange={e => setSeerDisclosedDay(e.target.value)}
+                    placeholder="未開示は空欄" style={{ width: 90 }} />
+                </label>
+                <button type="submit">追加</button>
+              </form>
+
+              {seerResults.length > 0 && (
+                <table style={{ marginTop: 12 }}>
+                  <thead>
+                    <tr><th>占い師</th><th>対象</th><th>占い日</th><th>結果</th><th>開示日</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    {seerResults.map(r => (
+                      <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
+                        <td>{r.seer_name}</td>
+                        <td>{r.target_name}</td>
+                        <td>{r.day_number}日目</td>
+                        <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
+                          {r.result === 'black' ? '黒' : '白'}
+                        </td>
+                        <td>{r.disclosed_day ? `${r.disclosed_day}日目` : '未開示'}</td>
+                        <td>
+                          <button className="secondary" onClick={async () => {
+                            await seerResultsApi.del(r.id); load()
+                          }}>削除</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )
+        }
+      </div>
+
+      {/* ── 霊媒師 ── */}
+      <div className="card">
+        <h2>霊媒師CO</h2>
+        {cosByRole('霊媒師').length === 0
+          ? <p style={{ color: '#888' }}>霊媒師COなし</p>
+          : (
+            <>
+              <form onSubmit={addMediumResult} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <select value={mediumCoId} onChange={e => setMediumCoId(e.target.value)} required>
+                  <option value="">霊媒師COを選択</option>
+                  {cosByRole('霊媒師').map(co => (
+                    <option key={co.id} value={co.id}>
+                      {co.player_name}（{co.co_day}日目CO）{isFake(co) ? ' ⚠️偽' : ''}
+                    </option>
+                  ))}
+                </select>
+                <input value={mediumTargetInput} onChange={e => setMediumTargetInput(e.target.value)}
+                  placeholder="霊媒対象（処刑者・番号or名前）" style={{ width: 210 }} required />
+                <label>
+                  処刑日：
+                  <input type="number" min="1" value={mediumDay}
+                    onChange={e => setMediumDay(e.target.value)} style={{ width: 55 }} />
+                </label>
+                <select value={mediumResult} onChange={e => setMediumResult(e.target.value)}>
+                  <option value="white">白</option>
+                  <option value="black">黒</option>
+                </select>
+                <label>
+                  開示日：
+                  <input type="number" min="1" value={mediumDisclosedDay}
+                    onChange={e => setMediumDisclosedDay(e.target.value)}
+                    placeholder="未開示は空欄" style={{ width: 90 }} />
+                </label>
+                <button type="submit">追加</button>
+              </form>
+
+              {mediumResults.length > 0 && (
+                <table style={{ marginTop: 12 }}>
+                  <thead>
+                    <tr><th>霊媒師</th><th>対象</th><th>処刑日</th><th>結果</th><th>開示日</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    {mediumResults.map(r => (
+                      <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
+                        <td>{r.medium_name}</td>
+                        <td>{r.target_name}</td>
+                        <td>{r.day_number}日目</td>
+                        <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
+                          {r.result === 'black' ? '黒' : '白'}
+                        </td>
+                        <td>{r.disclosed_day ? `${r.disclosed_day}日目` : '未開示'}</td>
+                        <td>
+                          <button className="secondary" onClick={async () => {
+                            await mediumResultsApi.del(r.id); load()
+                          }}>削除</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )
+        }
+      </div>
+
+      {/* ── 騎士 ── */}
+      <div className="card">
+        <h2>騎士CO</h2>
+        {cosByRole('騎士').length === 0
+          ? <p style={{ color: '#888' }}>騎士COなし</p>
+          : (
+            <>
+              <form onSubmit={addKnightGuard} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <select value={knightCoId} onChange={e => setKnightCoId(e.target.value)} required>
+                  <option value="">騎士COを選択</option>
+                  {cosByRole('騎士').map(co => (
+                    <option key={co.id} value={co.id}>
+                      {co.player_name}（{co.co_day}日目CO）{isFake(co) ? ' ⚠️偽' : ''}
+                    </option>
+                  ))}
+                </select>
+                <input value={knightTargetInput} onChange={e => setKnightTargetInput(e.target.value)}
+                  placeholder="護衛対象（空欄＝不明）" style={{ width: 190 }} />
+                <label>
+                  護衛日：
+                  <input type="number" min="1" value={knightDay}
+                    onChange={e => setKnightDay(e.target.value)} style={{ width: 55 }} />
+                </label>
+                <label>
+                  <input type="checkbox" checked={knightIsGj}
+                    onChange={e => setKnightIsGj(e.target.checked)} />
+                  　GJ
+                </label>
+                <label>
+                  開示日：
+                  <input type="number" min="1" value={knightDisclosedDay}
+                    onChange={e => setKnightDisclosedDay(e.target.value)}
+                    placeholder="未開示は空欄" style={{ width: 90 }} />
+                </label>
+                <button type="submit">追加</button>
+              </form>
+
+              {knightGuards.length > 0 && (
+                <table style={{ marginTop: 12 }}>
+                  <thead>
+                    <tr><th>騎士</th><th>護衛対象</th><th>護衛日</th><th>GJ</th><th>開示日</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    {knightGuards.map(g => (
+                      <tr key={g.id} style={{ opacity: g.disclosed_day ? 1 : 0.6 }}>
