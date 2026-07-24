@@ -13,7 +13,7 @@ module.exports = (pool) => {
     const { played_at, result: gameResult, notes } = req.body;
     const result = await pool.query(
       'INSERT INTO games (played_at, result, notes) VALUES ($1, $2, $3) RETURNING *',
-      [played_at, gameResult, notes]
+      [played_at || null, gameResult || null, notes || null]
     );
     res.json(result.rows[0]);
   });
