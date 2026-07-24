@@ -56,33 +56,48 @@ export default function Games() {
         <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="メモ（任意）" />
         <button type="submit">試合を追加</button>
       </form>
-      <table>
-        <thead><tr><th>ID</th><th>日付</th><th>結果</th><th>メモ</th><th></th></tr></thead>
-        <tbody>
-          {games.map(g => (
-            <tr key={g.id}>
-              <td>{g.id}</td>
-              <td>{g.played_at?.slice(0,10)}</td>
-              <td>{g.result ?? '—'}</td>
-              <td>{g.notes ?? '—'}</td>
-              <td><Link to={`/games/${g.id}`}>記録する →</Link></td>
-              <th style={{ textAlign: 'right' }}>
-              {deleteMode ? (
-                <>
-                  <button onClick={execDelete} disabled={selected.size === 0}
-                    style={{ marginRight: 8, color: 'red' }}>
-                    {selected.size > 0 ? `${selected.size} 件削除` : '削除'}
-                  </button>
-                  <button className="secondary" onClick={toggleDeleteMode}>キャンセル</button>
-                </>
-              ) : (
-                <button className="secondary" onClick={toggleDeleteMode}>削除</button>
-              )}
-            </th>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+     <table>
+  <thead>
+    <tr>
+      {deleteMode && <th />}          {/* チェックボックス列のヘッダー */}
+      <th>ID</th>
+      <th>日付</th>
+      <th>結果</th>
+      <th>メモ</th>
+      <th style={{ textAlign: 'right' }}>
+        {deleteMode ? (
+          <>
+            <button onClick={execDelete} disabled={selected.size === 0}
+              style={{ marginRight: 8, color: 'red' }}>
+              {selected.size > 0 ? `${selected.size} 件削除` : '削除'}
+            </button>
+            <button className="secondary" onClick={toggleDeleteMode}>キャンセル</button>
+          </>
+        ) : (
+          <button className="secondary" onClick={toggleDeleteMode}>削除</button>
+        )}
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {games.map(g => (
+      <tr key={g.id}>
+        {deleteMode && (
+          <td>
+            <input type="checkbox"
+              checked={selected.has(g.id)}
+              onChange={() => toggleSelect(g.id)} />
+          </td>
+        )}
+        <td>{g.id}</td>
+        <td>{g.played_at?.slice(0, 10)}</td>
+        <td>{g.result ?? '—'}</td>
+        <td>{g.notes ?? '—'}</td>
+        <td><Link to={`/games/${g.id}`}>記録する →</Link></td>
+      </tr>
+    ))}
+  </tbody>
+</table>
     </div>
   )
 }
