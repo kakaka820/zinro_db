@@ -167,6 +167,29 @@ useEffect(() => {
   const cosByRole = (roleName) =>
     coEvents.filter(co => co.claimed_role_name === roleName)
 
+  
+  // 本物COを自動選択（seer/medium/knightそれぞれ）
+  useEffect(() => {
+    const realSeer = cosByRole('占い師').find(co => !isFake(co))
+    if (realSeer) {
+      setSeerCoId(String(realSeer.id))
+      if (realSeer.co_day != null) {
+        setSeerDisclosedDay(d => d || String(realSeer.co_day))
+      }
+    }
+    const realMedium = cosByRole('霊媒師').find(co => !isFake(co))
+    if (realMedium) {
+      setMediumCoId(String(realMedium.id))
+      if (realMedium.co_day != null) {
+        setMediumDisclosedDay(d => d || String(realMedium.co_day))
+      }
+    }
+    const realKnight = cosByRole('騎士').find(co => !isFake(co))
+    if (realKnight) {
+      setKnightCoId(String(realKnight.id))
+    }
+  }, [coEvents])
+
   return (
     <div>
       {/* ── COイベント登録 ── */}
@@ -268,7 +291,7 @@ useEffect(() => {
     setSeerDisclosedDay(String(Math.max(co.co_day, Number(seerDay) || 1)))
   }
 }} required>
-                  <option value="">占い師COを選択</option>
+                  
                   {cosByRole('占い師').map(co => (
                     <option key={co.id} value={co.id}>
                       {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
@@ -348,7 +371,7 @@ useEffect(() => {
     setMediumDisclosedDay(String(Math.max(co.co_day, Number(mediumDay) || 1)))
   }
 }} required>
-                  <option value="">霊媒師COを選択</option>
+                  
                   {cosByRole('霊媒師').map(co => (
                     <option key={co.id} value={co.id}>
                       {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
@@ -421,7 +444,7 @@ useEffect(() => {
             <>
               <form onSubmit={addKnightGuard} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <select value={knightCoId} onChange={e => setKnightCoId(e.target.value)} required>
-                  <option value="">騎士COを選択</option>
+                 
                   {cosByRole('騎士').map(co => (
                     <option key={co.id} value={co.id}>
                       {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
