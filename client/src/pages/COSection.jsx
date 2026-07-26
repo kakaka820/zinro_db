@@ -13,6 +13,11 @@ export default function COSection({ gameId, participants, roles }) {
   const [coClaimedRoleId, setCoClaimedRoleId] = useState('')
   const [coDay,           setCoDay]           = useState(1)
 
+  // ── CO編集 ──
+  const [editingCoId,       setEditingCoId]       = useState(null)
+  const [editCoClaimedRole, setEditCoClaimedRole] = useState('')
+  const [editCoDay,         setEditCoDay]         = useState('')
+
   // ── 占いフォーム ──
   const [seerCoId,         setSeerCoId]         = useState('')  // どのCOか
   const [seerTargetInput,  setSeerTargetInput]  = useState('')
@@ -194,16 +199,51 @@ useEffect(() => {
               <tr><th>参加者</th><th>主張役職</th><th>CO日</th><th>判定</th><th></th></tr>
             </thead>
             <tbody>
-              {coEvents.map(co => (
+                            {coEvents.map(co => (
                 <tr key={co.id}>
                   <td>{co.player_name}</td>
-                  <td>{co.claimed_role_name}</td>
-                  <td>{co.co_day != null ? `${co.co_day}日目` : '未CO'}</td>
-                  <td>{isFake(co) ? '⚠️ 偽CO' : '本物'}</td>
                   <td>
-                    <button className="secondary" onClick={async () => {
-                      await coEventsApi.del(co.id); load()
-                    }}>削除</button>
+                    {editingCoId === co.id ? (
+                      <select value={editCoClaimedRole} onChange={e => setEditCoClaimedRole(e.target.value)}>
+                        {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      </select>
+                    ) : co.claimed_role_name}
+                  </td>
+                  <td>
+                    {editingCoId === co.id ? (
+                      <input type="number" min="1" value={editCoDay}
+                        onChange={e => setEditCoDay(e.target.value)}
+                        placeholder="未COは空欄" style={{ width: 80 }} />
+                    ) : (co.co_day != null ? `${co.co_day}日目` : '未CO')}
+                  </td>
+                  <td>{isFake(co) ? '⚠️ 偽CO' : '本物'}</td>
+                  <td style={{ display: 'flex', gap: 4 }}>
+                    {editingCoId === co.id ? (
+                      <>
+                        <button onClick={async () => {
+                          await coEventsApi.update(co.id, {
+                            claimed_role_id: Number(editCoClaimedRole),
+                            co_day: editCoDay ? Number(editCoDay) : null,
+                          })
+                          setEditingCoId(null)
+                          load()
+                        }}>保存</button>
+                        <button className="secondary" onClick={() => setEditingCoId(null)}>
+                          キャンセル
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="secondary" onClick={() => {
+                          setEditingCoId(co.id)
+                          setEditCoClaimedRole(co.claimed_role_id)
+                          setEditCoDay(co.co_day != null ? String(co.co_day) : '')
+                        }}>編集</button>
+                        <button className="secondary" onClick={async () => {
+                          await coEventsApi.del(co.id); load()
+                        }}>削除</button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
