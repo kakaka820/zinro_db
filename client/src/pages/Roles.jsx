@@ -17,6 +17,11 @@ export default function Roles() {
     load()
   }
 
+const toggleNeedsCo = async (role) => {
+    await api.put(`/roles/${role.id}`, { needs_co: !role.needs_co })
+    load()
+  }
+  
   return (
     <div>
       <h1>役職</h1>
@@ -30,17 +35,29 @@ export default function Roles() {
         <button type="submit">追加</button>
       </form>
       <table>
-        <thead><tr><th>ID</th><th>役職名</th><th>陣営</th></tr></thead>
+        <thead>
+        <tr><th>ID</th><th>役職名</th><th>陣営</th><th>CO自動追加</th></tr>
+        </thead>
         <tbody>
           {roles.map(r => (
             <tr key={r.id}>
               <td>{r.id}</td>
               <td>{r.name}</td>
               <td><span className={`tag ${r.team}`}>{r.team}</span></td>
+　　　　　　　<td>
+                <input
+                  type="checkbox"
+                  checked={!!r.needs_co}
+                  onChange={() => toggleNeedsCo(r)}
+                />
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <p style={{ color: '#666', fontSize: 13 }}>
+        「CO自動追加」にチェックを入れた役職の参加者は、COタブを開いたときに自動でリストに追加されます。
+      </p>
     </div>
   )
 }
