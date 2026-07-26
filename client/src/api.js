@@ -22,9 +22,10 @@ export const api = { get, post, put, del };
 
 // CO関連
 export const coEventsApi = {
-  list:   (gameId) => api.get(`/co-events/game/${gameId}`),
-  add:    (body)   => api.post('/co-events', body),
-  del:    (id)     => api.del(`/co-events/${id}`),
+  list:   (gameId)   => api.get(`/co-events/game/${gameId}`),
+  add:    (body)     => api.post('/co-events', body),
+  update: (id, body) => api.put(`/co-events/${id}`, body),
+  del:    (id)       => api.del(`/co-events/${id}`),
 };
 
 export const seerResultsApi = {
