@@ -36,6 +36,20 @@ module.exports = (pool) => {
     }
   });
 
+// CO更新
+  router.put('/:id', async (req, res) => {
+    try {
+      const { claimed_role_id, co_day } = req.body;
+      const result = await pool.query(
+        `UPDATE co_events SET claimed_role_id = $1, co_day = $2 WHERE id = $3 RETURNING *`,
+        [claimed_role_id, co_day ?? null, req.params.id]
+      );
+      res.json(result.rows[0]);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+  
   // CO削除
   router.delete('/:id', async (req, res) => {
     try {
