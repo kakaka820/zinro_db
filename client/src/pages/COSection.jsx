@@ -271,7 +271,14 @@ export default function COSection({ gameId, participants, roles }) {
           : (
             <>
               <form onSubmit={addMediumResult} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <select value={mediumCoId} onChange={e => setMediumCoId(e.target.value)} required>
+                <select value={mediumCoId} onChange={e => {
+  const newCoId = e.target.value
+  setMediumCoId(newCoId)
+  const co = coEvents.find(c => c.id === Number(newCoId))
+  if (co) {
+    setMediumDisclosedDay(String(Math.max(co.co_day, Number(mediumDay) || 1)))
+  }
+}} required>
                   <option value="">霊媒師COを選択</option>
                   {cosByRole('霊媒師').map(co => (
                     <option key={co.id} value={co.id}>
@@ -284,7 +291,14 @@ export default function COSection({ gameId, participants, roles }) {
                 <label>
                   処刑日：
                   <input type="number" min="1" value={mediumDay}
-                    onChange={e => setMediumDay(e.target.value)} style={{ width: 55 }} />
+  onChange={e => {
+    const newDay = e.target.value
+    setMediumDay(newDay)
+    const co = coEvents.find(c => c.id === Number(mediumCoId))
+    if (co && newDay) {
+      setMediumDisclosedDay(String(Math.max(co.co_day, Number(newDay))))
+    }
+  }} style={{ width: 55 }} />
                 </label>
                 <select value={mediumResult} onChange={e => setMediumResult(e.target.value)}>
                   <option value="white">白</option>
