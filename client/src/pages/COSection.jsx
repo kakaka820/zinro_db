@@ -191,7 +191,14 @@ export default function COSection({ gameId, participants, roles }) {
           : (
             <>
               <form onSubmit={addSeerResult} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <select value={seerCoId} onChange={e => setSeerCoId(e.target.value)} required>
+                <select value={seerCoId} onChange={e => {
+  const newCoId = e.target.value
+  setSeerCoId(newCoId)
+  const co = coEvents.find(c => c.id === Number(newCoId))
+  if (co) {
+    setSeerDisclosedDay(String(Math.max(co.co_day, Number(seerDay) || 1)))
+  }
+}} required>
                   <option value="">占い師COを選択</option>
                   {cosByRole('占い師').map(co => (
                     <option key={co.id} value={co.id}>
@@ -204,7 +211,14 @@ export default function COSection({ gameId, participants, roles }) {
                 <label>
                   占った日：
                   <input type="number" min="1" value={seerDay}
-                    onChange={e => setSeerDay(e.target.value)} style={{ width: 55 }} />
+  onChange={e => {
+    const newDay = e.target.value
+    setSeerDay(newDay)
+    const co = coEvents.find(c => c.id === Number(seerCoId))
+    if (co && newDay) {
+      setSeerDisclosedDay(String(Math.max(co.co_day, Number(newDay))))
+    }
+  }} style={{ width: 55 }} />
                 </label>
                 <select value={seerResult} onChange={e => setSeerResult(e.target.value)}>
                   <option value="white">白</option>
