@@ -18,5 +18,14 @@ module.exports = (pool) => {
     res.json(result.rows[0]);
   });
 
+router.put('/:id', async (req, res) => {
+  const { needs_co } = req.body;
+  const result = await pool.query(
+    'UPDATE roles SET needs_co = $1 WHERE id = $2 RETURNING *',
+    [needs_co, req.params.id]
+  );
+  res.json(result.rows[0]);
+});
+  
   return router;
 };
