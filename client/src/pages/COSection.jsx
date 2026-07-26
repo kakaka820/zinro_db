@@ -43,6 +43,35 @@ export default function COSection({ gameId, participants, roles }) {
   }
   useEffect(() => { load() }, [gameId])
 
+  // 本物の役職を自動追加
+useEffect(() => {
+  if (!participants.length || !roles.length) return
+  const autoAdd = async () => {
+    const needsCoRoleIds = new Set(
+      roles.filter(r => r.needs_co).map(r => r.id)
+    )
+    const current = await coEventsApi.list(gameId)
+    const existingParticipantIds = new Set(current.map(c => c.participant_id))
+    const toAdd = participants.filter(p =>
+      needsCoRoleIds.has(p.role_id) && !existingParticipantIds.has(p.id)
+    )
+    for (const p of toAdd) {
+      await coEventsApi.add({
+        game_id:         Number(gameId),
+        participant_id:  p.id,
+        claimed_role_id: p.role_id,  // 本物なので実役職をそのままセット
+        co_day:          null,
+      })
+    }
+    if (toAdd.length > 0) load()
+  }
+  autoAdd()
+}, [participants, roles])
+
+
+
+  
+
   // 番号 or 名前 → participant解決（GameDetailと同じヘルパー）
   const resolve = (input) => {
     const trimmed = input.trim()
@@ -169,7 +198,7 @@ export default function COSection({ gameId, participants, roles }) {
                 <tr key={co.id}>
                   <td>{co.player_name}</td>
                   <td>{co.claimed_role_name}</td>
-                  <td>{co.co_day}日目</td>
+                  <td>{co.co_day != null ? `${co.co_day}日目` : '未CO'}</td>
                   <td>{isFake(co) ? '⚠️ 偽CO' : '本物'}</td>
                   <td>
                     <button className="secondary" onClick={async () => {
@@ -202,7 +231,7 @@ export default function COSection({ gameId, participants, roles }) {
                   <option value="">占い師COを選択</option>
                   {cosByRole('占い師').map(co => (
                     <option key={co.id} value={co.id}>
-                      {co.player_name}（{co.co_day}日目CO）{isFake(co) ? ' ⚠️偽' : ''}
+                      {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
                     </option>
                   ))}
                 </select>
@@ -282,7 +311,7 @@ export default function COSection({ gameId, participants, roles }) {
                   <option value="">霊媒師COを選択</option>
                   {cosByRole('霊媒師').map(co => (
                     <option key={co.id} value={co.id}>
-                      {co.player_name}（{co.co_day}日目CO）{isFake(co) ? ' ⚠️偽' : ''}
+                      {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
                     </option>
                   ))}
                 </select>
@@ -355,7 +384,7 @@ export default function COSection({ gameId, participants, roles }) {
                   <option value="">騎士COを選択</option>
                   {cosByRole('騎士').map(co => (
                     <option key={co.id} value={co.id}>
-                      {co.player_name}（{co.co_day}日目CO）{isFake(co) ? ' ⚠️偽' : ''}
+                      {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
                     </option>
                   ))}
                 </select>
