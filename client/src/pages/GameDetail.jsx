@@ -72,6 +72,14 @@ export default function GameDetail() {
     loadNightKills()
   }, [id, day])
 
+  useEffect(() => {
+  const nums = participants
+    .map(p => p.participant_number)
+    .filter(n => n != null)
+  const next = nums.length === 0 ? 1 : Math.max(...nums) + 1
+  setPNumber(String(next))
+}, [participants])
+
   // 番号または名前 → 参加者を検索するヘルパー
   const resolveParticipant = (input) => {
     const trimmed = input.trim()
