@@ -137,10 +137,10 @@ export default function GameView() {
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
 
-  // day日目終了時点での死亡者ID（処刑 or 噛み）
+    // day日目開始時点での死亡者ID（前日までの処刑・噛みが反映）
   const deadByDay = new Set([
-    ...executions.filter(e => e.day_number <= day && e.participant_id != null).map(e => e.participant_id),
-    ...nightKills.filter(n => n.day_number <= day && n.participant_id != null).map(n => n.participant_id),
+    ...executions.filter(e => e.day_number < day && e.participant_id != null).map(e => e.participant_id),
+    ...nightKills.filter(n => n.day_number < day && n.participant_id != null).map(n => n.participant_id),
   ])
   const normalVotes  = votes.filter(v => v.vote_type === 'normal')
   const runoffVotes  = votes.filter(v => v.vote_type === 'runoff')
