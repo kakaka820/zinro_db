@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
 import COSection from './COSection'
 
@@ -206,7 +206,10 @@ export default function GameDetail() {
 const [activeTab, setActiveTab] = useState('log')
   return (
     <div>
-      <h1>試合 #{id} 記録</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+        <h1 style={{ margin: 0 }}>試合 #{id} 記録</h1>
+        <Link to={`/games/${id}/view`}>👁 確認モード</Link>
+      </div>
 {/* ── タブ切替 ── */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <button
