@@ -240,8 +240,6 @@ useEffect(() => {
     })()
   }, [executions, nightKills, coEvents, mediumResults])
 
-  return (
-    <div>
   
   return (
     <div>
