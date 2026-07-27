@@ -41,13 +41,13 @@ module.exports = (pool) => {
     }
   });
 
-  // 開示日の更新
+  // 結果・開示日の更新
   router.put('/:id', async (req, res) => {
     try {
-      const { disclosed_day } = req.body;
+      const { result: medResult, disclosed_day } = req.body;
       const result = await pool.query(
-        `UPDATE medium_results SET disclosed_day = $1 WHERE id = $2 RETURNING *`,
-        [disclosed_day ?? null, req.params.id]
+        `UPDATE medium_results SET result = $1, disclosed_day = $2 WHERE id = $3 RETURNING *`,
+        [medResult, disclosed_day ?? null, req.params.id]
       );
       res.json(result.rows[0]);
     } catch (err) {
