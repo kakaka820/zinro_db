@@ -20,6 +20,19 @@ export default function COSection({ gameId, participants, roles }) {
   const [editCoClaimedRole, setEditCoClaimedRole] = useState('')
   const [editCoDay,         setEditCoDay]         = useState('')
 
+    // ── 占い結果編集 ──
+  const [editingSeerId,        setEditingSeerId]        = useState(null)
+  const [editSeerResult,       setEditSeerResult]       = useState('white')
+  const [editSeerDisclosedDay, setEditSeerDisclosedDay] = useState('')
+  // ── 霊媒結果編集 ──
+  const [editingMediumId,        setEditingMediumId]        = useState(null)
+  const [editMediumResult,       setEditMediumResult]       = useState('white')
+  const [editMediumDisclosedDay, setEditMediumDisclosedDay] = useState('')
+  // ── 騎士護衛編集 ──
+  const [editingKnightId,        setEditingKnightId]        = useState(null)
+  const [editKnightIsGj,         setEditKnightIsGj]         = useState(false)
+  const [editKnightDisclosedDay, setEditKnightDisclosedDay] = useState('')
+
   // ── 占いフォーム ──
   const [seerCoId,         setSeerCoId]         = useState('')  // どのCOか
   const [seerTargetInput,  setSeerTargetInput]  = useState('')
@@ -382,19 +395,50 @@ useEffect(() => {
                     <tr><th>占い師</th><th>対象</th><th>占い日</th><th>結果</th><th>開示日</th><th></th></tr>
                   </thead>
                   <tbody>
-                    {seerResults.map(r => (
+                                        {seerResults.map(r => (
                       <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
                         <td>{r.seer_name}</td>
                         <td>{r.target_name}</td>
                         <td>{r.day_number}日目</td>
                         <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
-                          {r.result === 'black' ? '黒' : '白'}
+                          {editingSeerId === r.id ? (
+                            <select value={editSeerResult} onChange={e => setEditSeerResult(e.target.value)}>
+                              <option value="white">白</option>
+                              <option value="black">黒</option>
+                            </select>
+                          ) : (r.result === 'black' ? '黒' : '白')}
                         </td>
-                        <td>{r.disclosed_day ? `${r.disclosed_day}日目` : '未開示'}</td>
                         <td>
-                          <button className="secondary" onClick={async () => {
-                            await seerResultsApi.del(r.id); load()
-                          }}>削除</button>
+                          {editingSeerId === r.id ? (
+                            <input type="number" min="1" value={editSeerDisclosedDay}
+                              onChange={e => setEditSeerDisclosedDay(e.target.value)}
+                              placeholder="未開示は空欄" style={{ width: 90 }} />
+                          ) : (r.disclosed_day ? `${r.disclosed_day}日目` : '未開示')}
+                        </td>
+                        <td style={{ display: 'flex', gap: 4 }}>
+                          {editingSeerId === r.id ? (
+                            <>
+                              <button onClick={async () => {
+                                await seerResultsApi.update(r.id, {
+                                  result: editSeerResult,
+                                  disclosed_day: editSeerDisclosedDay ? Number(editSeerDisclosedDay) : null,
+                                })
+                                setEditingSeerId(null); load()
+                              }}>保存</button>
+                              <button className="secondary" onClick={() => setEditingSeerId(null)}>キャンセル</button>
+                            </>
+                          ) : (
+                            <>
+                              <button className="secondary" onClick={() => {
+                                setEditingSeerId(r.id)
+                                setEditSeerResult(r.result)
+                                setEditSeerDisclosedDay(r.disclosed_day != null ? String(r.disclosed_day) : '')
+                              }}>編集</button>
+                              <button className="secondary" onClick={async () => {
+                                await seerResultsApi.del(r.id); load()
+                              }}>削除</button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -462,19 +506,50 @@ useEffect(() => {
                     <tr><th>霊媒師</th><th>対象</th><th>処刑日</th><th>結果</th><th>開示日</th><th></th></tr>
                   </thead>
                   <tbody>
-                    {mediumResults.map(r => (
+                                        {mediumResults.map(r => (
                       <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
                         <td>{r.medium_name}</td>
                         <td>{r.target_name}</td>
                         <td>{r.day_number}日目</td>
                         <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
-                          {r.result === 'black' ? '黒' : '白'}
+                          {editingMediumId === r.id ? (
+                            <select value={editMediumResult} onChange={e => setEditMediumResult(e.target.value)}>
+                              <option value="white">白</option>
+                              <option value="black">黒</option>
+                            </select>
+                          ) : (r.result === 'black' ? '黒' : '白')}
                         </td>
-                        <td>{r.disclosed_day ? `${r.disclosed_day}日目` : '未開示'}</td>
                         <td>
-                          <button className="secondary" onClick={async () => {
-                            await mediumResultsApi.del(r.id); load()
-                          }}>削除</button>
+                          {editingMediumId === r.id ? (
+                            <input type="number" min="1" value={editMediumDisclosedDay}
+                              onChange={e => setEditMediumDisclosedDay(e.target.value)}
+                              placeholder="未開示は空欄" style={{ width: 90 }} />
+                          ) : (r.disclosed_day ? `${r.disclosed_day}日目` : '未開示')}
+                        </td>
+                        <td style={{ display: 'flex', gap: 4 }}>
+                          {editingMediumId === r.id ? (
+                            <>
+                              <button onClick={async () => {
+                                await mediumResultsApi.update(r.id, {
+                                  result: editMediumResult,
+                                  disclosed_day: editMediumDisclosedDay ? Number(editMediumDisclosedDay) : null,
+                                })
+                                setEditingMediumId(null); load()
+                              }}>保存</button>
+                              <button className="secondary" onClick={() => setEditingMediumId(null)}>キャンセル</button>
+                            </>
+                          ) : (
+                            <>
+                              <button className="secondary" onClick={() => {
+                                setEditingMediumId(r.id)
+                                setEditMediumResult(r.result)
+                                setEditMediumDisclosedDay(r.disclosed_day != null ? String(r.disclosed_day) : '')
+                              }}>編集</button>
+                              <button className="secondary" onClick={async () => {
+                                await mediumResultsApi.del(r.id); load()
+                              }}>削除</button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -529,17 +604,52 @@ useEffect(() => {
                     <tr><th>騎士</th><th>護衛対象</th><th>護衛日</th><th>GJ</th><th>開示日</th><th></th></tr>
                   </thead>
                   <tbody>
-                    {knightGuards.map(g => (
+                                        {knightGuards.map(g => (
                       <tr key={g.id} style={{ opacity: g.disclosed_day ? 1 : 0.6 }}>
                         <td>{g.knight_name}</td>
                         <td>{g.target_name ?? '不明'}</td>
                         <td>{g.day_number}日目</td>
-                        <td>{g.is_gj ? '✅ GJ' : '―'}</td>
-                        <td>{g.disclosed_day ? `${g.disclosed_day}日目` : '未開示'}</td>
                         <td>
-                          <button className="secondary" onClick={async () => {
-                            await knightGuardsApi.del(g.id); load()
-                          }}>削除</button>
+                          {editingKnightId === g.id ? (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <input type="checkbox" checked={editKnightIsGj}
+                                onChange={e => setEditKnightIsGj(e.target.checked)} />
+                              GJ
+                            </label>
+                          ) : (g.is_gj ? '✅ GJ' : '―')}
+                        </td>
+                        <td>
+                          {editingKnightId === g.id ? (
+                            <input type="number" min="1" value={editKnightDisclosedDay}
+                              onChange={e => setEditKnightDisclosedDay(e.target.value)}
+                              placeholder="未開示は空欄" style={{ width: 90 }} />
+                          ) : (g.disclosed_day ? `${g.disclosed_day}日目` : '未開示')}
+                        </td>
+                        <td style={{ display: 'flex', gap: 4 }}>
+                          {editingKnightId === g.id ? (
+                            <>
+                              <button onClick={async () => {
+                                await knightGuardsApi.update(g.id, {
+                                  target_participant_id: g.target_participant_id,
+                                  is_gj: editKnightIsGj,
+                                  disclosed_day: editKnightDisclosedDay ? Number(editKnightDisclosedDay) : null,
+                                })
+                                setEditingKnightId(null); load()
+                              }}>保存</button>
+                              <button className="secondary" onClick={() => setEditingKnightId(null)}>キャンセル</button>
+                            </>
+                          ) : (
+                            <>
+                              <button className="secondary" onClick={() => {
+                                setEditingKnightId(g.id)
+                                setEditKnightIsGj(g.is_gj)
+                                setEditKnightDisclosedDay(g.disclosed_day != null ? String(g.disclosed_day) : '')
+                              }}>編集</button>
+                              <button className="secondary" onClick={async () => {
+                                await knightGuardsApi.del(g.id); load()
+                              }}>削除</button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
