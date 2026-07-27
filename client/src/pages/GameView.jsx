@@ -132,9 +132,15 @@ export default function GameView() {
     : r === 'wolf_win'  ? '人狼勝利'
     : r === 'other'     ? 'その他' : '—'
 
-  const sortedP      = [...participants].sort(
+    const sortedP      = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
+
+  // day日目終了時点での死亡者ID（処刑 or 噛み）
+  const deadByDay = new Set([
+    ...executions.filter(e => e.day_number <= day && e.participant_id != null).map(e => e.participant_id),
+    ...nightKills.filter(n => n.day_number <= day && n.participant_id != null).map(n => n.participant_id),
+  ])
   const normalVotes  = votes.filter(v => v.vote_type === 'normal')
   const runoffVotes  = votes.filter(v => v.vote_type === 'runoff')
   const dayExecs     = executions.filter(e => e.day_number === day)
@@ -173,7 +179,7 @@ export default function GameView() {
                   <td>{p.player_name}</td>
                   <td>{p.role_name}</td>
                   <td><span className={`tag ${p.team}`}>{p.team}</span></td>
-                  <td>{p.survived ? '✅' : '❌'}</td>
+                  <td>{deadByDay.has(p.id) ? '❌' : '✅'}</td>
                 </tr>
               ))}
             </tbody>
