@@ -98,12 +98,14 @@ export default function GameView() {
   const [executions,    setExecutions]   = useState([])
   const [nightKills,    setNightKills]   = useState([])
   const [showRoles,     setShowRoles]    = useState(false)
+  const [coEvents,      setCoEvents]     = useState([])
 
-  useEffect(() => {
+   useEffect(() => {
     api.get('/games').then(gs =>
       setGame(gs.find(g => String(g.id) === String(id)) ?? null)
     )
     api.get(`/participants/game/${id}`).then(setParticipants)
+    api.get(`/co-events/game/${id}`).then(setCoEvents).catch(() => setCoEvents([]))
   }, [id])
 
   useEffect(() => {
@@ -133,10 +135,13 @@ export default function GameView() {
     : r === 'wolf_win'  ? '人狼勝利'
     : r === 'other'     ? 'その他' : '—'
 
-    const sortedP      = [...participants].sort(
+      const sortedP      = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
 
+  // day日目時点でCO済みのイベントを取得（co_day <= day）
+  const getCOs = (participantId) =>
+    coEvents.filter(c => c.participant_id === participantId && c.co_day != null && c.co_day <= day)
     // day日目開始時点での死亡者ID（前日までの処刑・噛みが反映）
   const deadByDay = new Set([
     ...executions.filter(e => e.day_number < day && e.participant_id != null).map(e => e.participant_id),
@@ -190,7 +195,18 @@ export default function GameView() {
               {sortedP.map(p => (
                 <tr key={p.id}>
                   <td>{p.participant_number ?? '—'}</td>
-                  <td>{p.player_name}</td>
+                                    <td>
+                    {p.player_name}
+                    {getCOs(p.id).map(c => (
+                      <span key={c.id} style={{
+                        marginLeft: 6, fontSize: 11, padding: '1px 6px',
+                        borderRadius: 10, background: '#dbeafe', color: '#1d4ed8',
+                        fontWeight: 'bold', whiteSpace: 'nowrap',
+                      }}>
+                        CO:{c.claimed_role_name}
+                      </span>
+                    ))}
+                  </td>
                   {showRoles && (
                     <>
                       <td>{p.role_name}</td>
