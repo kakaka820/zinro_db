@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { coEventsApi, seerResultsApi, mediumResultsApi, knightGuardsApi } from '../api'
+import { api, coEventsApi, seerResultsApi, mediumResultsApi, knightGuardsApi } from '../api'
 
 export default function COSection({ gameId, participants, roles }) {
   // ── データ ──
@@ -7,7 +7,9 @@ export default function COSection({ gameId, participants, roles }) {
   const [seerResults,   setSeerResults]   = useState([])
   const [mediumResults, setMediumResults] = useState([])
   const [knightGuards,  setKnightGuards]  = useState([])
-
+　const [executions,    setExecutions]    = useState([])
+  const [nightKills,    setNightKills]    = useState([])
+  
   // ── COフォーム ──
   const [coParticipantId, setCoParticipantId] = useState('')
   const [coClaimedRoleId, setCoClaimedRoleId] = useState('')
@@ -45,6 +47,8 @@ export default function COSection({ gameId, participants, roles }) {
     seerResultsApi.list(gameId).then(setSeerResults)
     mediumResultsApi.list(gameId).then(setMediumResults)
     knightGuardsApi.list(gameId).then(setKnightGuards)
+    api.get(`/executions/game/${gameId}`).then(setExecutions)
+    api.get(`/night-kills/game/${gameId}`).then(setNightKills)
   }
   useEffect(() => { load() }, [gameId])
 
@@ -190,6 +194,55 @@ useEffect(() => {
     }
   }, [coEvents])
 
+  // ── 霊媒結果を自動記入 ──
+  useEffect(() => {
+    if (!executions.length || !coEvents.length) return
+
+    // 本物の霊媒師のCOを特定
+    const realMediumCo = cosByRole('霊媒師').find(co => !isFake(co))
+    if (!realMediumCo) return
+
+    const mid = realMediumCo.participant_id
+
+    // 霊媒師が処刑 or 噛みで死亡した日（どちらか早い方、なければ Infinity）
+    const executedDay = executions.find(e => e.participant_id === mid)?.day_number ?? Infinity
+    const nightKilledDay = nightKills.find(e => e.participant_id === mid)?.day_number ?? Infinity
+    const mediumDeadDay = Math.min(executedDay, nightKilledDay)
+
+    // 霊媒師の死亡日より前の、他者の処刑一覧
+    const targets = executions.filter(
+      e => e.day_number < mediumDeadDay &&
+           e.participant_id != null &&
+           e.participant_id !== mid
+    )
+
+    // 既に記録済みの target_participant_id
+    const recorded = new Set(mediumResults.map(r => r.target_participant_id))
+
+    const toAdd = targets.filter(e => !recorded.has(e.participant_id))
+    if (!toAdd.length) return
+
+    ;(async () => {
+      for (const ex of toAdd) {
+        const p = participants.find(p => p.id === ex.participant_id)
+        if (!p) continue
+        const result = p.role_name === '人狼' ? 'black' : 'white'
+        await mediumResultsApi.add({
+          game_id:               Number(gameId),
+          medium_participant_id: mid,
+          target_participant_id: ex.participant_id,
+          day_number:            ex.day_number,
+          result,
+          disclosed_day:         null,
+        })
+      }
+      load()
+    })()
+  }, [executions, nightKills, coEvents, mediumResults])
+
+  return (
+    <div>
+  
   return (
     <div>
       {/* ── COイベント登録 ── */}
