@@ -98,6 +98,7 @@ export default function GameView() {
   const [executions,    setExecutions]   = useState([])
   const [nightKills,    setNightKills]   = useState([])
   const [showRoles,     setShowRoles]    = useState(false)
+  const [showNames,     setShowNames]    = useState(true)
   const [coEvents,      setCoEvents]     = useState([])
   const [seerResults,   setSeerResults]  = useState([])
   const [mediumResults, setMediumResults] = useState([])
@@ -178,8 +179,15 @@ export default function GameView() {
 
       {/* 参加者 */}
       <div className="card">
-                <h2 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           参加者
+          <button
+            className="secondary"
+            style={{ fontSize: 12, padding: '2px 10px' }}
+            onClick={() => setShowNames(v => !v)}
+          >
+            {showNames ? '名前を隠す' : '名前を表示'}
+          </button>
           <button
             className="secondary"
             style={{ fontSize: 12, padding: '2px 10px' }}
@@ -190,9 +198,11 @@ export default function GameView() {
         </h2>
         {sortedP.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
           <table>
-            <thead>
+                        <thead>
               <tr>
-                <th>番号</th><th>名前</th>
+                <th>番号</th>
+                {showNames && <th>名前</th>}
+                <th>CO</th>
                 {showRoles && <><th>役職</th><th>陣営</th></>}
                 <th>生存</th>
               </tr>
@@ -201,11 +211,11 @@ export default function GameView() {
               {sortedP.map(p => (
                 <tr key={p.id}>
                   <td>{p.participant_number ?? '—'}</td>
-                                    <td>
-                    {p.player_name}
+                  {showNames && <td>{p.player_name}</td>}
+                  <td>
                     {getCOs(p.id).map(c => (
                       <span key={c.id} style={{
-                        marginLeft: 6, fontSize: 11, padding: '1px 6px',
+                        marginRight: 4, fontSize: 11, padding: '1px 6px',
                         borderRadius: 10, background: '#dbeafe', color: '#1d4ed8',
                         fontWeight: 'bold', whiteSpace: 'nowrap',
                       }}>
@@ -265,7 +275,9 @@ export default function GameView() {
                   )
                   return (
                     <div key={co.id} style={{ marginBottom: 8 }}>
-                      <strong>{co.player_name}</strong>
+                                            <strong>
+                        {showNames ? co.player_name : `${getNum(co.participant_id)}番`}
+                      </strong>
                       {results.length === 0
                         ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>開示なし</span>
                         : (
@@ -276,7 +288,7 @@ export default function GameView() {
                             <tbody>
                               {results.map(r => (
                                 <tr key={r.id}>
-                                  <td>{r.target_name}</td>
+                                  <td>{showNames ? r.target_name : `${getNum(r.target_participant_id)}番`}</td>
                                   <td>{r.day_number}日目</td>
                                   <td style={{ color: resultColor(r.result), fontWeight: 'bold' }}>
                                     {resultLabel2(r.result)}
@@ -304,7 +316,9 @@ export default function GameView() {
                   )
                   return (
                     <div key={co.id} style={{ marginBottom: 8 }}>
-                      <strong>{co.player_name}</strong>
+                                           <strong>
+                        {showNames ? co.player_name : `${getNum(co.participant_id)}番`}
+                      </strong>
                       {results.length === 0
                         ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>開示なし</span>
                         : (
@@ -315,7 +329,7 @@ export default function GameView() {
                             <tbody>
                               {results.map(r => (
                                 <tr key={r.id}>
-                                  <td>{r.target_name}</td>
+                                  <td>{showNames ? r.target_name : `${getNum(r.target_participant_id)}番`}</td>
                                   <td>{r.day_number}日目</td>
                                   <td style={{ color: resultColor(r.result), fontWeight: 'bold' }}>
                                     {resultLabel2(r.result)}
@@ -343,7 +357,9 @@ export default function GameView() {
                   )
                   return (
                     <div key={co.id} style={{ marginBottom: 8 }}>
-                      <strong>{co.player_name}</strong>
+                                            <strong>
+                        {showNames ? co.player_name : `${getNum(co.participant_id)}番`}
+                      </strong>
                       {guards.length === 0
                         ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>開示なし</span>
                         : (
@@ -354,7 +370,7 @@ export default function GameView() {
                             <tbody>
                               {guards.map(g => (
                                 <tr key={g.id}>
-                                  <td>{g.target_name ?? '不明'}</td>
+                                                                    <td>{showNames ? (g.target_name ?? '不明') : (g.target_participant_id ? `${getNum(g.target_participant_id)}番` : '不明')}</td>
                                   <td>{g.day_number}日目</td>
                                   <td>{g.is_gj ? '✅ GJ' : '―'}</td>
                                 </tr>
