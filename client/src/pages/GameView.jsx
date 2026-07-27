@@ -99,6 +99,9 @@ export default function GameView() {
   const [nightKills,    setNightKills]   = useState([])
   const [showRoles,     setShowRoles]    = useState(false)
   const [coEvents,      setCoEvents]     = useState([])
+  const [seerResults,   setSeerResults]  = useState([])
+  const [mediumResults, setMediumResults] = useState([])
+  const [knightGuards,  setKnightGuards] = useState([])
 
    useEffect(() => {
     api.get('/games').then(gs =>
@@ -106,6 +109,9 @@ export default function GameView() {
     )
     api.get(`/participants/game/${id}`).then(setParticipants)
     api.get(`/co-events/game/${id}`).then(setCoEvents).catch(() => setCoEvents([]))
+    api.get(`/seer-results/game/${id}`).then(setSeerResults).catch(() => setSeerResults([]))
+    api.get(`/medium-results/game/${id}`).then(setMediumResults).catch(() => setMediumResults([]))
+    api.get(`/knight-guards/game/${id}`).then(setKnightGuards).catch(() => setKnightGuards([]))
   }, [id])
 
   useEffect(() => {
@@ -232,6 +238,140 @@ export default function GameView() {
         </form>
       </div>
 
+      {/* CO状況 */}
+      {(() => {
+        const cosByRole = (roleName) =>
+          coEvents.filter(c => c.claimed_role_name === roleName && c.co_day != null && c.co_day <= day)
+        const resultColor = (r) => r === 'black' ? '#c00' : '#080'
+        const resultLabel2 = (r) => r === 'black' ? '黒' : '白'
+
+        const seerCOs   = cosByRole('占い師')
+        const mediumCOs = cosByRole('霊媒師')
+        const knightCOs = cosByRole('騎士')
+        if (!seerCOs.length && !mediumCOs.length && !knightCOs.length) return null
+
+        return (
+          <div className="card">
+            <h2>CO状況（{day}日目時点）</h2>
+
+            {/* 占い師 */}
+            {seerCOs.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <h3 style={{ fontSize: 14, marginBottom: 6 }}>🔮 占い師CO</h3>
+                {seerCOs.map(co => {
+                  const results = seerResults.filter(
+                    r => r.seer_participant_id === co.participant_id &&
+                         r.disclosed_day != null && r.disclosed_day <= day
+                  )
+                  return (
+                    <div key={co.id} style={{ marginBottom: 8 }}>
+                      <strong>{co.player_name}</strong>
+                      {results.length === 0
+                        ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>開示なし</span>
+                        : (
+                          <table style={{ marginTop: 4 }}>
+                            <thead>
+                              <tr><th>対象</th><th>占い日</th><th>結果</th></tr>
+                            </thead>
+                            <tbody>
+                              {results.map(r => (
+                                <tr key={r.id}>
+                                  <td>{r.target_name}</td>
+                                  <td>{r.day_number}日目</td>
+                                  <td style={{ color: resultColor(r.result), fontWeight: 'bold' }}>
+                                    {resultLabel2(r.result)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )
+                      }
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* 霊媒師 */}
+            {mediumCOs.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <h3 style={{ fontSize: 14, marginBottom: 6 }}>👻 霊媒師CO</h3>
+                {mediumCOs.map(co => {
+                  const results = mediumResults.filter(
+                    r => r.medium_participant_id === co.participant_id &&
+                         r.disclosed_day != null && r.disclosed_day <= day
+                  )
+                  return (
+                    <div key={co.id} style={{ marginBottom: 8 }}>
+                      <strong>{co.player_name}</strong>
+                      {results.length === 0
+                        ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>開示なし</span>
+                        : (
+                          <table style={{ marginTop: 4 }}>
+                            <thead>
+                              <tr><th>対象</th><th>処刑日</th><th>結果</th></tr>
+                            </thead>
+                            <tbody>
+                              {results.map(r => (
+                                <tr key={r.id}>
+                                  <td>{r.target_name}</td>
+                                  <td>{r.day_number}日目</td>
+                                  <td style={{ color: resultColor(r.result), fontWeight: 'bold' }}>
+                                    {resultLabel2(r.result)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )
+                      }
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* 騎士 */}
+            {knightCOs.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: 14, marginBottom: 6 }}>🛡 騎士CO</h3>
+                {knightCOs.map(co => {
+                  const guards = knightGuards.filter(
+                    g => g.knight_participant_id === co.participant_id &&
+                         g.disclosed_day != null && g.disclosed_day <= day
+                  )
+                  return (
+                    <div key={co.id} style={{ marginBottom: 8 }}>
+                      <strong>{co.player_name}</strong>
+                      {guards.length === 0
+                        ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>開示なし</span>
+                        : (
+                          <table style={{ marginTop: 4 }}>
+                            <thead>
+                              <tr><th>護衛対象</th><th>護衛日</th><th>GJ</th></tr>
+                            </thead>
+                            <tbody>
+                              {guards.map(g => (
+                                <tr key={g.id}>
+                                  <td>{g.target_name ?? '不明'}</td>
+                                  <td>{g.day_number}日目</td>
+                                  <td>{g.is_gj ? '✅ GJ' : '―'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )
+                      }
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })()}
+      
       {/* 投票マトリクス */}
       <div className="card">
         <h2>{day}日目：投票</h2>
