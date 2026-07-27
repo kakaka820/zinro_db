@@ -41,13 +41,13 @@ module.exports = (pool) => {
     }
   });
 
-  // 開示日の更新（後から「何日目に村に言った」を埋める）
+  // 結果・開示日の更新（後から「何日目に村に言った」を埋める）
   router.put('/:id', async (req, res) => {
     try {
-      const { disclosed_day } = req.body;
+      const { result: divResult, disclosed_day } = req.body;
       const result = await pool.query(
-        `UPDATE seer_results SET disclosed_day = $1 WHERE id = $2 RETURNING *`,
-        [disclosed_day ?? null, req.params.id]
+        `UPDATE seer_results SET result = $1, disclosed_day = $2 WHERE id = $3 RETURNING *`,
+        [divResult, disclosed_day ?? null, req.params.id]
       );
       res.json(result.rows[0]);
     } catch (err) {
