@@ -115,13 +115,16 @@ export default function GameView() {
     api.get(`/knight-guards/game/${id}`).then(setKnightGuards).catch(() => setKnightGuards([]))
   }, [id])
 
-  useEffect(() => {
-    api.get(`/votes/game/${id}/day/${day}`)
-      .then(setVotes).catch(() => setVotes([]))
+    useEffect(() => {
     api.get(`/executions/game/${id}`)
       .then(setExecutions).catch(() => setExecutions([]))
     api.get(`/night-kills/game/${id}`)
       .then(setNightKills).catch(() => setNightKills([]))
+  }, [id])
+
+  useEffect(() => {
+    api.get(`/votes/game/${id}/day/${day}`)
+      .then(setVotes).catch(() => setVotes([]))
   }, [id, day])
 
   const getName = (pid) =>
