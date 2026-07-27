@@ -97,6 +97,7 @@ export default function GameView() {
   const [votes,         setVotes]        = useState([])
   const [executions,    setExecutions]   = useState([])
   const [nightKills,    setNightKills]   = useState([])
+  const [showRoles,     setShowRoles]    = useState(false)
 
   useEffect(() => {
     api.get('/games').then(gs =>
@@ -166,19 +167,36 @@ export default function GameView() {
 
       {/* 参加者 */}
       <div className="card">
-        <h2>参加者</h2>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          参加者
+          <button
+            className="secondary"
+            style={{ fontSize: 12, padding: '2px 10px' }}
+            onClick={() => setShowRoles(v => !v)}
+          >
+            {showRoles ? '役職・陣営を隠す' : '役職・陣営を表示'}
+          </button>
+        </h2>
         {sortedP.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
           <table>
             <thead>
-              <tr><th>番号</th><th>名前</th><th>役職</th><th>陣営</th><th>生存</th></tr>
+              <tr>
+                <th>番号</th><th>名前</th>
+                {showRoles && <><th>役職</th><th>陣営</th></>}
+                <th>生存</th>
+              </tr>
             </thead>
             <tbody>
               {sortedP.map(p => (
                 <tr key={p.id}>
                   <td>{p.participant_number ?? '—'}</td>
                   <td>{p.player_name}</td>
-                  <td>{p.role_name}</td>
-                  <td><span className={`tag ${p.team}`}>{p.team}</span></td>
+                  {showRoles && (
+                    <>
+                      <td>{p.role_name}</td>
+                      <td><span className={`tag ${p.team}`}>{p.team}</span></td>
+                    </>
+                  )}
                   <td>{deadByDay.has(p.id) ? '❌' : '✅'}</td>
                 </tr>
               ))}
