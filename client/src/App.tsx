@@ -4,8 +4,9 @@ import Roles      from './pages/Roles'
 import Games      from './pages/Games'
 import GameDetail from './pages/GameDetail'
 import GameView   from './pages/GameView'
+import type { FC } from 'react'
 
-export default function App() {
+const App: FC = () => {
   return (
     <div>
       <nav className="nav">
@@ -25,3 +26,5 @@ export default function App() {
     </div>
   )
 }
+export default App
+
