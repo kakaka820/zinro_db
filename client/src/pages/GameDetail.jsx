@@ -3,6 +3,72 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
 import COSection from './COSection'
 
+// ── 表入力マトリクス ──────────────────────────────────────────────
+function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType, setMatrixType, onSubmit }) {
+  const sortedP = [...participants].sort(
+    (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
+  )
+  const ROWS = Math.max(3, Math.ceil(participants.length / 2))
+
+  const getCell = (tid, row) => matrixInput[tid]?.[row] ?? ''
+  const setCell = (tid, row, val) =>
+    setMatrixInput(prev => {
+      const col = [...(prev[tid] ?? Array(ROWS).fill(''))]
+      col[row] = val
+      return { ...prev, [tid]: col }
+    })
+
+  const cell = { border: '1px solid #bbb', padding: 2 }
+  const labelCell = {
+    ...cell, borderTop: '2px solid #555', background: '#f5f5f5',
+    textAlign: 'center', fontSize: 12, fontWeight: 'bold', padding: '3px 0',
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+        <select value={matrixType} onChange={e => setMatrixType(e.target.value)}>
+          <option value="normal">通常投票</option>
+          <option value="runoff">決選投票</option>
+        </select>
+        <button type="button" onClick={onSubmit}>一括登録</button>
+        <button type="button" className="secondary" onClick={() => setMatrixInput({})}>クリア</button>
+      </div>
+      <p style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
+        各列の参加者番号の上のセルに、投票した人の番号を入力してください
+      </p>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ borderCollapse: 'collapse' }}>
+          <tbody>
+            {Array.from({ length: ROWS }, (_, row) => (
+              <tr key={row}>
+                {sortedP.map(p => (
+                  <td key={p.id} style={cell}>
+                    <input
+                      type="text"
+                      value={getCell(p.id, row)}
+                      onChange={e => setCell(p.id, row, e.target.value)}
+                      style={{ width: 28, textAlign: 'center', fontSize: 12, border: 'none', padding: 0 }}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+            <tr>
+              {sortedP.map(p => (
+                <td key={p.id} style={labelCell}>
+                  {p.participant_number ?? '?'}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+
 export default function GameDetail() {
   const { id } = useParams()
 
@@ -441,68 +507,16 @@ const [activeTab, setActiveTab] = useState('log')
             )}
             <button type="submit">記録</button>
           </form>
-        ) : (
+                ) : (
           /* ── 表入力 ── */
-          (() => {
-            const sortedP = [...participants].sort(
-              (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
-            )
-            const ROWS = Math.max(3, Math.ceil(participants.length / 2))
-            const getCell = (tid, row) => matrixInput[tid]?.[row] ?? ''
-            const setCell = (tid, row, val) =>
-              setMatrixInput(prev => {
-                const col = [...(prev[tid] ?? Array(ROWS).fill(''))]
-                col[row] = val
-                return { ...prev, [tid]: col }
-              })
-            const cell = { border: '1px solid #bbb', padding: 2 }
-            const labelCell = {
-              ...cell, borderTop: '2px solid #555', background: '#f5f5f5',
-              textAlign: 'center', fontSize: 12, fontWeight: 'bold', padding: '3px 0'
-            }
-            return (
-              <div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                  <select value={matrixType} onChange={e => setMatrixType(e.target.value)}>
-                    <option value="normal">通常投票</option>
-                    <option value="runoff">決選投票</option>
-                  </select>
-                  <button type="button" onClick={submitMatrix}>一括登録</button>
-                  <button type="button" className="secondary" onClick={() => setMatrixInput({})}>クリア</button>
-                </div>
-                <p style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
-                  各列の参加者番号の上のセルに、投票した人の番号を入力してください
-                </p>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ borderCollapse: 'collapse' }}>
-                    <tbody>
-                      {Array.from({ length: ROWS }, (_, row) => (
-                        <tr key={row}>
-                          {sortedP.map(p => (
-                            <td key={p.id} style={cell}>
-                              <input
-                                type="text"
-                                value={getCell(p.id, row)}
-                                onChange={e => setCell(p.id, row, e.target.value)}
-                                style={{ width: 28, textAlign: 'center', fontSize: 12, border: 'none', padding: 0 }}
-                              />
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                      <tr>
-                        {sortedP.map(p => (
-                          <td key={p.id} style={labelCell}>
-                            {p.participant_number ?? '?'}
-                          </td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )
-          })()
+          <VoteMatrixInput
+            participants={participants}
+            matrixInput={matrixInput}
+            setMatrixInput={setMatrixInput}
+            matrixType={matrixType}
+            setMatrixType={setMatrixType}
+            onSubmit={submitMatrix}
+          />
         )}
 
         {votes.length > 0 && (
