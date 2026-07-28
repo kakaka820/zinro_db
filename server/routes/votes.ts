@@ -1,9 +1,12 @@
-const express = require('express');
-const router = express.Router();
+import express, { Request, Response } from 'express';
+ import { Pool } from 'pg';
+ import { Vote } from '../types/db';
 
-module.exports = (pool) => {
+ const router = express.Router();
+
+export default (pool: Pool) => {
   // 試合・日付ごとの投票一覧
-  router.get('/game/:gameId/day/:dayNumber', async (req, res) => {
+  router.get('/game/:gameId/day/:dayNumber', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query(
       `SELECT v.*, 
         voter.player_id as voter_player_id,
@@ -19,8 +22,10 @@ module.exports = (pool) => {
   });
 
   // 投票登録
-router.post('/', async (req, res) => {
-  const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order } = req.body;
+router.post('/', async (req: Request, res: Response): Promise<void> => {
+     const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order }:
+       { game_id: number; day_number: number; vote_type?: 'normal' | 'runoff';
+         voter_id: number; target_id: number; vote_order?: number; receive_order?: number } = req.body;
 
   let finalReceiveOrder = receive_order ?? null;
 
