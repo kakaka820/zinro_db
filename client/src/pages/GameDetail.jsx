@@ -18,7 +18,7 @@ function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType
       return { ...prev, [tid]: col }
     })
 
-  const cell = { border: '1px solid #bbb', padding: 2 }
+  const cell = { border: '1px solid #bbb', padding: 0 }
   const labelCell = {
     ...cell, borderTop: '2px solid #555', background: '#f5f5f5',
     textAlign: 'center', fontSize: 12, fontWeight: 'bold', padding: '3px 0',
@@ -37,7 +37,16 @@ function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType
       <p style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
         各列の参加者番号の上のセルに、投票した人の番号を入力してください
       </p>
-      <div style={{ overflowX: 'auto' }}>
+      style={{
+  display: 'block',
+  width: '100%',
+  height: '100%',
+  textAlign: 'center',
+  fontSize: 12,
+  border: 'none',
+  padding: '4px 0',
+  boxSizing: 'border-box',
+}}
         <table style={{ borderCollapse: 'collapse' }}>
           <tbody>
             {Array.from({ length: ROWS }, (_, row) => (
