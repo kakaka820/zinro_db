@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import type { Game } from '../types'  
+
+
 
 export default function Games() {
-  const [games, setGames]   = useState([])
+  const [games, setGames]   = useState<Game[]>([])
   const [date, setDate]     = useState('')
   const [result, setResult] = useState('')
   const [notes, setNotes]   = useState('')
 
   const [deleteMode, setDeleteMode] = useState(false)
-  const [selected, setSelected]     = useState(new Set())
+  const [selected, setSelected]     = useState<Set<number>>(new Set())
 
   const load = () => api.get('/games').then(setGames)
   useEffect(() => { load() }, [])
 
-  const add = async (e) => {
+  const add = async (e: React.FormEvent) => {
     e.preventDefault()
     await api.post('/games', { played_at: date, result: result || null, notes: notes || null })
     setDate(''); setResult(''); setNotes('')
@@ -25,7 +28,7 @@ export default function Games() {
     setDeleteMode(m => !m)
     setSelected(new Set())
   }
-  const toggleSelect = (id) => {
+  const toggleSelect = (id: number) => {
     setSelected(prev => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
