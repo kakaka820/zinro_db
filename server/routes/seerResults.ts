@@ -1,9 +1,12 @@
-const express = require('express');
-const router = express.Router();
+import express, { Request, Response } from 'express';
+ import { Pool } from 'pg';
+ import { SeerResult } from '../types/db';
 
-module.exports = (pool) => {
+ const router = express.Router();
+
+export default (pool: Pool) => {
   // 試合の占い結果一覧
-  router.get('/game/:gameId', async (req, res) => {
+  router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await pool.query(
         `SELECT sr.*,
@@ -22,14 +25,17 @@ module.exports = (pool) => {
       );
       res.json(result.rows);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 占い結果登録
-  router.post('/', async (req, res) => {
+  router.post('/', async (req: Request, res: Response): Promise<void> => {
     try {
-      const { game_id, seer_participant_id, target_participant_id, day_number, result: divResult, disclosed_day } = req.body;
+      const { game_id, seer_participant_id, target_participant_id, day_number, result: divResult, disclosed_day }:
+         { game_id: number; seer_participant_id: number; target_participant_id: number;
+           day_number: number; result: 'white' | 'black'; disclosed_day?: number } = req.body;
+
       const result = await pool.query(
         `INSERT INTO seer_results (game_id, seer_participant_id, target_participant_id, day_number, result, disclosed_day)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
@@ -37,31 +43,32 @@ module.exports = (pool) => {
       );
       res.json(result.rows[0]);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 結果・開示日の更新（後から「何日目に村に言った」を埋める）
-  router.put('/:id', async (req, res) => {
+  router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     try {
-      const { result: divResult, disclosed_day } = req.body;
+      const { result: divResult, disclosed_day }:
+         { result: 'white' | 'black'; disclosed_day?: number } = req.body;
       const result = await pool.query(
         `UPDATE seer_results SET result = $1, disclosed_day = $2 WHERE id = $3 RETURNING *`,
         [divResult, disclosed_day ?? null, req.params.id]
       );
       res.json(result.rows[0]);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 削除
-  router.delete('/:id', async (req, res) => {
+  router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       await pool.query('DELETE FROM seer_results WHERE id = $1', [req.params.id]);
       res.json({ success: true });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
