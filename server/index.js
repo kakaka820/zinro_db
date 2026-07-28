@@ -1,7 +1,19 @@
-require('dotenv').config();
-const express = require('express');
-const { Pool } = require('pg');
-const cors = require('cors');
+import 'dotenv/config';
+ import express from 'express';
+ import { Pool } from 'pg';
+ import cors from 'cors';
+
+ import playersRouter from './routes/players';
+ import rolesRouter from './routes/roles';
+ import gamesRouter from './routes/games';
+ import participantsRouter from './routes/participants';
+ import votesRouter from './routes/votes';
+ import executionsRouter from './routes/executions';
+ import nightKillsRouter from './routes/nightKills';
+ import coEventsRouter from './routes/coEvents';
+ import seerResultsRouter from './routes/seerResults';
+ import mediumResultsRouter from './routes/mediumResults';
+ import knightGuardsRouter from './routes/knightGuards';
 
 const app = express();
 app.use(cors({
@@ -27,19 +39,19 @@ app.get('/health', async (req, res) => {
 });
 
 
-app.use('/players',      require('./routes/players')(pool));
-app.use('/roles',        require('./routes/roles')(pool));
-app.use('/games',        require('./routes/games')(pool));
-app.use('/participants', require('./routes/participants')(pool));
-app.use('/votes',        require('./routes/votes')(pool));
-app.use('/executions',   require('./routes/executions')(pool));
-app.use('/night-kills',  require('./routes/nightKills')(pool));
-app.use('/co-events',      require('./routes/coEvents')(pool));
-app.use('/seer-results',   require('./routes/seerResults')(pool));
-app.use('/medium-results', require('./routes/mediumResults')(pool));
-app.use('/knight-guards',  require('./routes/knightGuards')(pool));
+app.use('/players', playersRouter(pool));
+ app.use('/roles', rolesRouter(pool));
+ app.use('/games', gamesRouter(pool));
+ app.use('/participants', participantsRouter(pool));
+ app.use('/votes', votesRouter(pool));
+ app.use('/executions', executionsRouter(pool));
+ app.use('/night-kills', nightKillsRouter(pool));
+ app.use('/co-events', coEventsRouter(pool));
+ app.use('/seer-results', seerResultsRouter(pool));
+ app.use('/medium-results', mediumResultsRouter(pool));
+ app.use('/knight-guards', knightGuardsRouter(pool));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(Number(PORT), () => {
+   console.log(`Server running on port ${PORT}`);
+ });
