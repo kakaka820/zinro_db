@@ -230,27 +230,34 @@ export default function GameDetail() {
 
     // 表モードで一括投票登録
   const submitMatrix = async () => {
-    const toSubmit = []
-    for (const [targetIdStr, voterNums] of Object.entries(matrixInput)) {
-      for (const voterNumStr of (voterNums ?? [])) {
-        if (!voterNumStr.trim()) continue
-        const voter = resolveParticipant(voterNumStr.trim())
-        if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
-        toSubmit.push({
-          game_id:       Number(id),
-          day_number:    day,
-          vote_type:     matrixType,
-          voter_id:      voter.id,
-          target_id:     Number(targetIdStr),
-          vote_order:    null,
-          receive_order: null,
-        })
-      }
+  const toSubmit = []
+  for (const [targetIdStr, voterNums] of Object.entries(matrixInput)) {
+    for (const voterNumStr of (voterNums ?? [])) {
+      if (!voterNumStr.trim()) continue
+      const voter = resolveParticipant(voterNumStr.trim())
+      if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
+      // 既に登録済みの投票はスキップ
+      const alreadyExists = votes.some(
+        v => v.voter_id === voter.id &&
+             v.target_id === Number(targetIdStr) &&
+             v.vote_type === matrixType
+      )
+      if (alreadyExists) continue
+      toSubmit.push({
+        game_id:       Number(id),
+        day_number:    day,
+        vote_type:     matrixType,
+        voter_id:      voter.id,
+        target_id:     Number(targetIdStr),
+        vote_order:    null,
+        receive_order: null,
+      })
     }
-    if (!toSubmit.length) return
-    for (const v of toSubmit) await api.post('/votes', v)
-    loadVotes()
   }
+  if (!toSubmit.length) { loadVotes(); return }
+  for (const v of toSubmit) await api.post('/votes', v)
+  loadVotes()
+}
 
   
 
