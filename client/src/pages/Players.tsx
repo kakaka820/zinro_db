@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api'
+import type { Player } from '../types' 
 
 export default function Players() {
-  const [players, setPlayers] = useState([])
+  const [players, setPlayers] = useState<Player[]>([])
   const [name, setName] = useState('')
 
   const load = () => api.get('/players').then(setPlayers)
   useEffect(() => { load() }, [])
 
-  const add = async (e) => {
+  const add = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
     await api.post('/players', { name })
