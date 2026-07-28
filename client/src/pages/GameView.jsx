@@ -33,6 +33,11 @@ function VoteMatrix({ participants, votes, label, showVoteOrder }) {
   const label2 = { ...cell, fontWeight: 'bold',
                   borderTop: '2px solid #555', background: '#f5f5f5' }
 
+const isAlive = (pid) =>
+  !executions.some(e => e.participant_id === pid) &&
+  !nightKills.some(n => n.participant_id === pid)
+
+  
   return (
     <div style={{ marginBottom: 20 }}>
       {label && (
