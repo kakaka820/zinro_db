@@ -33,6 +33,11 @@ export default function GameDetail() {
   const [vVoteOrder,     setVVoteOrder]     = useState('')
   const [vReceiveOrder,  setVReceiveOrder]  = useState('')
   const [votes,          setVotes]          = useState([])
+
+  // ── 表入力モード ──
+  const [voteInputMode, setVoteInputMode] = useState('form')   // 'form' | 'table'
+  const [matrixInput,   setMatrixInput]   = useState({})       // { targetId: string[] }
+  const [matrixType,    setMatrixType]    = useState('normal')
   const [executions,     setExecutions]     = useState([])
   const [nightKills,     setNightKills]     = useState([])
 
@@ -143,6 +148,33 @@ export default function GameDetail() {
     setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder('')
     loadVotes()
   }
+
+    // 表モードで一括投票登録
+  const submitMatrix = async () => {
+    const toSubmit = []
+    for (const [targetIdStr, voterNums] of Object.entries(matrixInput)) {
+      for (const voterNumStr of (voterNums ?? [])) {
+        if (!voterNumStr.trim()) continue
+        const voter = resolveParticipant(voterNumStr.trim())
+        if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
+        toSubmit.push({
+          game_id:       Number(id),
+          day_number:    day,
+          vote_type:     matrixType,
+          voter_id:      voter.id,
+          target_id:     Number(targetIdStr),
+          vote_order:    null,
+          receive_order: null,
+        })
+      }
+    }
+    if (!toSubmit.length) return
+    for (const v of toSubmit) await api.post('/votes', v)
+    setMatrixInput({})
+    loadVotes()
+  }
+
+  
 
   // 吊り追加
   const addExecution = async (e) => {
