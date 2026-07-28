@@ -2,6 +2,7 @@ import type { Player, Role, Game, Participant, Vote,
    Execution, NightKill, CoEvent, SeerResult, MediumResult, KnightGuard
  } from './types'
 
+
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 const get = <T>(path: string): Promise<T> =>
