@@ -398,39 +398,112 @@ const [activeTab, setActiveTab] = useState('log')
         </form>
       </div>
 
-            {/* ── 投票 ── */}
+                        {/* ── 投票 ── */}
       <div className="card">
-        <h2>{day}日目：投票</h2>
-        <form onSubmit={addVote}>
-          {day === 1 ? (
-  <>
-    <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
-      placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
-    <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
-      placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
-    <select value={vType} onChange={e => setVType(e.target.value)}>
-      <option value="normal">通常投票</option>
-      <option value="runoff">決選投票</option>
-    </select>
-    <input type="number" min="1" value={vVoteOrder} onChange={e => setVVoteOrder(e.target.value)}
-      placeholder="投票順（初日のみ）" style={{ width: 150 }} />
-  </>
-                    ) : (
-            <>
-              <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
-                placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
-  <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
-                placeholder="受けた順番" style={{ width: 120 }} />
-              <select value={vType} onChange={e => setVType(e.target.value)}>
-                <option value="normal">通常投票</option>
-                <option value="runoff">決選投票</option>
-              </select>
-              <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
-                placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
-            </>
-          )}
-                    <button type="submit">記録</button>
-        </form>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {day}日目：投票
+          <button type="button" className="secondary"
+            style={{ fontSize: 12, padding: '2px 10px' }}
+            onClick={() => { setVoteInputMode(m => m === 'form' ? 'table' : 'form'); setMatrixInput({}) }}>
+            {voteInputMode === 'form' ? '表入力に切替' : 'フォーム入力に切替'}
+          </button>
+        </h2>
+
+        {voteInputMode === 'form' ? (
+          /* ── フォーム入力 ── */
+          <form onSubmit={addVote}>
+            {day === 1 ? (
+              <>
+                <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
+                  placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
+                <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
+                  placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
+                <select value={vType} onChange={e => setVType(e.target.value)}>
+                  <option value="normal">通常投票</option>
+                  <option value="runoff">決選投票</option>
+                </select>
+                <input type="number" min="1" value={vVoteOrder} onChange={e => setVVoteOrder(e.target.value)}
+                  placeholder="投票順（初日のみ）" style={{ width: 150 }} />
+              </>
+            ) : (
+              <>
+                <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
+                  placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
+                <input type="number" min="1" value={vReceiveOrder} onChange={e => setVReceiveOrder(e.target.value)}
+                  placeholder="受けた順番" style={{ width: 120 }} />
+                <select value={vType} onChange={e => setVType(e.target.value)}>
+                  <option value="normal">通常投票</option>
+                  <option value="runoff">決選投票</option>
+                </select>
+                <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
+                  placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
+              </>
+            )}
+            <button type="submit">記録</button>
+          </form>
+        ) : (
+          /* ── 表入力 ── */
+          (() => {
+            const sortedP = [...participants].sort(
+              (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
+            )
+            const ROWS = Math.max(3, Math.ceil(participants.length / 2))
+            const getCell = (tid, row) => matrixInput[tid]?.[row] ?? ''
+            const setCell = (tid, row, val) =>
+              setMatrixInput(prev => {
+                const col = [...(prev[tid] ?? Array(ROWS).fill(''))]
+                col[row] = val
+                return { ...prev, [tid]: col }
+              })
+            const cell = { border: '1px solid #bbb', padding: 2 }
+            const labelCell = {
+              ...cell, borderTop: '2px solid #555', background: '#f5f5f5',
+              textAlign: 'center', fontSize: 12, fontWeight: 'bold', padding: '3px 0'
+            }
+            return (
+              <div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                  <select value={matrixType} onChange={e => setMatrixType(e.target.value)}>
+                    <option value="normal">通常投票</option>
+                    <option value="runoff">決選投票</option>
+                  </select>
+                  <button type="button" onClick={submitMatrix}>一括登録</button>
+                  <button type="button" className="secondary" onClick={() => setMatrixInput({})}>クリア</button>
+                </div>
+                <p style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
+                  各列の参加者番号の上のセルに、投票した人の番号を入力してください
+                </p>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ borderCollapse: 'collapse' }}>
+                    <tbody>
+                      {Array.from({ length: ROWS }, (_, row) => (
+                        <tr key={row}>
+                          {sortedP.map(p => (
+                            <td key={p.id} style={cell}>
+                              <input
+                                type="text"
+                                value={getCell(p.id, row)}
+                                onChange={e => setCell(p.id, row, e.target.value)}
+                                style={{ width: 28, textAlign: 'center', fontSize: 12, border: 'none', padding: 0 }}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                      <tr>
+                        {sortedP.map(p => (
+                          <td key={p.id} style={labelCell}>
+                            {p.participant_number ?? '?'}
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          })()
+        )}
 
         {votes.length > 0 && (
           <table style={{ marginTop: 12 }}>
