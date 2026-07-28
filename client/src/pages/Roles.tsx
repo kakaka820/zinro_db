@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api'
+import type { Role } from '../types'
 
 export default function Roles() {
-  const [roles, setRoles] = useState([])
+  const [roles, setRoles] = useState<Role[]>([])
   const [name, setName] = useState('')
-  const [team, setTeam] = useState('village')
+  const [team, setTeam] = useState<'village' | 'wolf' | 'other'>('village')
 
   const load = () => api.get('/roles').then(setRoles)
   useEffect(() => { load() }, [])
 
-  const add = async (e) => {
+  const add = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
     await api.post('/roles', { name, team })
@@ -17,7 +18,7 @@ export default function Roles() {
     load()
   }
 
-const toggleNeedsCo = async (role) => {
+const toggleNeedsCo = async (role: Role) => {
     await api.put(`/roles/${role.id}`, { needs_co: !role.needs_co })
     load()
   }
