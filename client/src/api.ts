@@ -35,15 +35,15 @@ export const seerResultsApi = {
 };
 
 export const mediumResultsApi = {
-  list:   (gameId) => api.get(`/medium-results/game/${gameId}`),
-  add:    (body)   => api.post('/medium-results', body),
-  update: (id, body) => api.put(`/medium-results/${id}`, body),
-  del:    (id)     => api.del(`/medium-results/${id}`),
+  list:   (gameId: number) => api.get<MediumResult[]>(`/medium-results/game/${gameId}`),
+  add:    (body: Omit<MediumResult, 'id' | 'medium_name' | 'target_name'>) => api.post<MediumResult>('/medium-results', body),
+  update: (id: number, body: Partial<MediumResult>) => api.put<MediumResult>(`/medium-results/${id}`, body),
+  del:    (id: number) => api.del<{ success: boolean }>(`/medium-results/${id}`),
 };
 
 export const knightGuardsApi = {
-  list:   (gameId) => api.get(`/knight-guards/game/${gameId}`),
-  add:    (body)   => api.post('/knight-guards', body),
-  update: (id, body) => api.put(`/knight-guards/${id}`, body),
-  del:    (id)     => api.del(`/knight-guards/${id}`),
+  list:   (gameId: number) => api.get<KnightGuard[]>(`/knight-guards/game/${gameId}`),
+  add:    (body: Omit<KnightGuard, 'id' | 'knight_name' | 'target_name'>) => api.post<KnightGuard>('/knight-guards', body),
+  update: (id: number, body: Partial<KnightGuard>) => api.put<KnightGuard>(`/knight-guards/${id}`, body),
+  del:    (id: number) => api.del<{ success: boolean }>(`/knight-guards/${id}`),
 };
