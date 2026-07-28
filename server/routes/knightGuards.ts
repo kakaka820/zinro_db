@@ -1,9 +1,13 @@
-const express = require('express');
-const router = express.Router();
+import express, { Request, Response } from 'express';
+ import { Pool } from 'pg';
+ import { KnightGuard } from '../types/db';
 
-module.exports = (pool) => {
+ const router = express.Router();
+
+
+export default (pool: Pool) => {
   // 試合の護衛記録一覧
-  router.get('/game/:gameId', async (req, res) => {
+router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await pool.query(
         `SELECT kg.*,
@@ -22,14 +26,16 @@ module.exports = (pool) => {
       );
       res.json(result.rows);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 護衛記録登録（target_participant_idはNULL可）
-  router.post('/', async (req, res) => {
+  router.post('/', async (req: Request, res: Response): Promise<void> => {
     try {
-      const { game_id, knight_participant_id, target_participant_id, day_number, is_gj, disclosed_day } = req.body;
+      const { game_id, knight_participant_id, target_participant_id, day_number, is_gj, disclosed_day }:
+         { game_id: number; knight_participant_id: number; target_participant_id?: number;
+           day_number: number; is_gj?: boolean; disclosed_day?: number } = req.body;
       const result = await pool.query(
         `INSERT INTO knight_guards (game_id, knight_participant_id, target_participant_id, day_number, is_gj, disclosed_day)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
@@ -37,14 +43,15 @@ module.exports = (pool) => {
       );
       res.json(result.rows[0]);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 更新（護衛先が後から判明した場合など）
-  router.put('/:id', async (req, res) => {
+  router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     try {
-      const { target_participant_id, is_gj, disclosed_day } = req.body;
+      const { target_participant_id, is_gj, disclosed_day }:
+         { target_participant_id?: number; is_gj?: boolean; disclosed_day?: number } = req.body;
       const result = await pool.query(
         `UPDATE knight_guards
          SET target_participant_id = $1, is_gj = $2, disclosed_day = $3
@@ -53,17 +60,17 @@ module.exports = (pool) => {
       );
       res.json(result.rows[0]);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 削除
-  router.delete('/:id', async (req, res) => {
+ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       await pool.query('DELETE FROM knight_guards WHERE id = $1', [req.params.id]);
       res.json({ success: true });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
