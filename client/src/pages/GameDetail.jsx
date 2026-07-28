@@ -8,7 +8,11 @@ function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType
   const sortedP = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
-  const ROWS = Math.max(3, Math.ceil(participants.length / 2))
+  const maxFilled = Math.max(
+  0,
+  ...Object.values(matrixInput).map(col => col.filter(v => v.trim()).length)
+)
+const ROWS = Math.max(3, Math.ceil(participants.length / 2), maxFilled + 1)
 
   const getCell = (tid, row) => matrixInput[tid]?.[row] ?? ''
   const setCell = (tid, row, val) =>
@@ -164,6 +168,20 @@ export default function GameDetail() {
   const next = nums.length === 0 ? 1 : Math.max(...nums) + 1
   setPNumber(String(next))
 }, [participants])
+
+  // votes が更新されたら matrixInput に反映（表モード時）
+useEffect(() => {
+  if (voteInputMode !== 'table') return
+  const matrix = {}
+  const filtered = votes.filter(v => v.vote_type === matrixType)
+  for (const v of filtered) {
+    const voterNum = participants.find(p => p.id === v.voter_id)?.participant_number
+    if (voterNum == null) continue
+    if (!matrix[v.target_id]) matrix[v.target_id] = []
+    matrix[v.target_id].push(String(voterNum))
+  }
+  setMatrixInput(matrix)
+}, [votes, matrixType, voteInputMode])
 
   // 番号または名前 → 参加者を検索するヘルパー
   const resolveParticipant = (input) => {
