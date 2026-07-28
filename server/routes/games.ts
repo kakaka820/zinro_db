@@ -1,16 +1,20 @@
-const express = require('express');
-const router = express.Router();
+import express, { Request, Response } from 'express';
+ import { Pool } from 'pg';
+ import { Game } from '../types/db';
 
-module.exports = (pool) => {
+ const router = express.Router();
+
+export default (pool: Pool) => {
   // 試合一覧
-  router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query('SELECT * FROM games ORDER BY played_at DESC');
     res.json(result.rows);
   });
 
   // 試合登録
-  router.post('/', async (req, res) => {
-    const { played_at, result: gameResult, notes } = req.body;
+  router.post('/', async (req: Request, res: Response): Promise<void> => {
+     const { played_at, result: gameResult, notes }:
+       { played_at?: string; result?: string; notes?: string } = req.body;
     const result = await pool.query(
       'INSERT INTO games (played_at, result, notes) VALUES ($1, $2, $3) RETURNING *',
       [played_at || null, gameResult || null, notes || null]
@@ -19,10 +23,12 @@ module.exports = (pool) => {
   });
 
   // 試合削除（複数まとめて）
-  router.delete('/', async (req, res) => {
-    const { ids } = req.body;  // ids: number[]
+router.delete('/', async (req: Request, res: Response): Promise<void> => {
+     const { ids }: { ids: number[] } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ error: 'ids は空でない配列で指定してください' });
+      res.status(400).json({ error: 'ids は空でない配列で指定してください' });
+       return;
+
     }
     await pool.query(
       `DELETE FROM games WHERE id = ANY($1::int[])`,
