@@ -8,15 +8,18 @@ export default (pool: Pool) => {
 
   // 噛み結果登録
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-     const { game_id, day_number, participant_id }:
-       { game_id: number
+  const { game_id, day_number, participant_id }: { game_id: number; day_number: number; participant_id?: number } = req.body;
+  try {
     const result = await pool.query(
       `INSERT INTO night_kills (game_id, day_number, participant_id)
        VALUES ($1, $2, $3) RETURNING *`,
       [game_id, day_number, participant_id ?? null]
     );
     res.json(result.rows[0]);
-  });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
 
   // 試合の噛み記録一覧
 router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
