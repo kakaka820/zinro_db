@@ -28,10 +28,10 @@ export const coEventsApi = {
 };
 
 export const seerResultsApi = {
-  list:   (gameId) => api.get(`/seer-results/game/${gameId}`),
-  add:    (body)   => api.post('/seer-results', body),
-  update: (id, body) => api.put(`/seer-results/${id}`, body),
-  del:    (id)     => api.del(`/seer-results/${id}`),
+  list:   (gameId: number) => api.get<SeerResult[]>(`/seer-results/game/${gameId}`),
+  add:    (body: Omit<SeerResult, 'id' | 'seer_name' | 'target_name'>) => api.post<SeerResult>('/seer-results', body),
+  update: (id: number, body: Partial<SeerResult>) => api.put<SeerResult>(`/seer-results/${id}`, body),
+  del:    (id: number) => api.del<{ success: boolean }>(`/seer-results/${id}`),
 };
 
 export const mediumResultsApi = {
