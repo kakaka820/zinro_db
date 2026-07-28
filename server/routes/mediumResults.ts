@@ -1,9 +1,12 @@
-const express = require('express');
-const router = express.Router();
+import express, { Request, Response } from 'express';
++ import { Pool } from 'pg';
++ import { MediumResult } from '../types/db';
++
++ const router = express.Router();
 
-module.exports = (pool) => {
+export default (pool: Pool) => {
   // 試合の霊媒結果一覧
-  router.get('/game/:gameId', async (req, res) => {
+  router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await pool.query(
         `SELECT mr.*,
@@ -22,12 +25,12 @@ module.exports = (pool) => {
       );
       res.json(result.rows);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 霊媒結果登録
-  router.post('/', async (req, res) => {
+  router.post('/', async (req: Request, res: Response): Promise<void> => {
     try {
       const { game_id, medium_participant_id, target_participant_id, day_number, result: medResult, disclosed_day } = req.body;
       const result = await pool.query(
@@ -37,12 +40,12 @@ module.exports = (pool) => {
       );
       res.json(result.rows[0]);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 結果・開示日の更新
-  router.put('/:id', async (req, res) => {
+  router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       const { result: medResult, disclosed_day } = req.body;
       const result = await pool.query(
@@ -51,17 +54,17 @@ module.exports = (pool) => {
       );
       res.json(result.rows[0]);
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
   // 削除
-  router.delete('/:id', async (req, res) => {
+  router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       await pool.query('DELETE FROM medium_results WHERE id = $1', [req.params.id]);
       res.json({ success: true });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: (err as Error).message });
     }
   });
 
