@@ -28,7 +28,7 @@ export default (pool: Pool) => {
   router.post('/', async (req, res) => {
     try {
       const { game_id, participant_id, claimed_role_id, co_day }:
-+         { game_id: number; participant_id: number; claimed_role_id: number; co_day?: number } = req.body;
+         { game_id: number; participant_id: number; claimed_role_id: number; co_day?: number } = req.body;
       const result = await pool.query(
         `INSERT INTO co_events (game_id, participant_id, claimed_role_id, co_day)
          VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -44,7 +44,7 @@ export default (pool: Pool) => {
   router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     try {
       const { claimed_role_id, co_day }:
-+         { claimed_role_id: number; co_day?: number } = req.body;
+         { claimed_role_id: number; co_day?: number } = req.body;
       const result = await pool.query(
         `UPDATE co_events SET claimed_role_id = $1, co_day = $2 WHERE id = $3 RETURNING *`,
         [claimed_role_id, co_day ?? null, req.params.id]
