@@ -16,10 +16,10 @@ function VoteMatrix({ participants, votes, label, showVoteOrder }: VoteMatrixPro
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
 
-  const getNum = (id) =>
+  const getNum = (id: number) =>
     participants.find(p => p.id === id)?.participant_number ?? '?'
 
-  const getVotesReceived = (participantId) =>
+  const getVotesReceived = (participantId: number) =>
     votes
       .filter(v => v.target_id === participantId)
       .sort((a, b) => {
@@ -28,7 +28,7 @@ function VoteMatrix({ participants, votes, label, showVoteOrder }: VoteMatrixPro
         return ao !== bo ? ao - bo : (a.id ?? 0) - (b.id ?? 0)
       })
 
-  const getVoteOrder = (participantId) =>
+  const getVoteOrder = (participantId: number) =>
     votes.find(v => v.voter_id === participantId)?.vote_order ?? ''
 
   const maxReceived = Math.max(
@@ -161,7 +161,7 @@ const [knightGuards,  setKnightGuards] = useState<KnightGuard[]>([])
   )
 
   // day日目時点でCO済みのイベントを取得（co_day <= day）
-  const getCOs = (participantId) =>
+  const getCOs = (participantId: number) =>
     coEvents.filter(c => c.participant_id === participantId && c.co_day != null && c.co_day <= day)
     // day日目開始時点での死亡者ID（前日までの処刑・噛みが反映）
   const deadByDay = new Set([
