@@ -1,9 +1,12 @@
-const express = require('express');
-const router = express.Router();
+import express, { Request, Response } from 'express';
+ import { Pool } from 'pg';
+ import { Participant } from '../types/db';
 
-module.exports = (pool) => {
+ const router = express.Router();
+
+export default (pool: Pool) => {
   // 試合ごとの参加者一覧
-  router.get('/game/:gameId', async (req, res) => {
+  router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query(
       `SELECT gp.*, p.name as player_name, r.name as role_name, r.team
        FROM game_participants gp
@@ -16,8 +19,10 @@ module.exports = (pool) => {
   });
 
    // 参加者登録
-  router.post('/', async (req, res) => {
-    const { game_id, player_id, role_id, survived, participant_number } = req.body;
+  router.post('/', async (req: Request, res: Response): Promise<void> => {
+     const { game_id, player_id, role_id, survived, participant_number }
+       : { game_id: number; player_id: number; role_id: number; survived?: boolean; participant_number?: number }
+       = req.body;
     const result = await pool.query(
       'INSERT INTO game_participants (game_id, player_id, role_id, survived, participant_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [game_id, player_id, role_id, survived ?? false, participant_number ?? null]
