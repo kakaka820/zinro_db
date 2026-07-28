@@ -31,13 +31,13 @@ export default (pool: Pool) => {
   });
 
   // 参加者削除
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   await pool.query('DELETE FROM game_participants WHERE id = $1', [req.params.id]);
   res.json({ success: true });
 });
 
   // 参加者更新
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
   const { role_id, survived, participant_number } = req.body;
   const result = await pool.query(
     `UPDATE game_participants SET role_id = $1, survived = $2, participant_number = $3 WHERE id = $4 RETURNING *`,
