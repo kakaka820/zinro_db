@@ -4,7 +4,7 @@ import { api } from '../api'
 import COSection from './COSection'
 
 // ── 表入力マトリクス ──────────────────────────────────────────────
-function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType, setMatrixType, onSubmit }) {
+function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType, setMatrixType, onSubmit, votes, day }) {
   const sortedP = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
@@ -22,6 +22,9 @@ function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType
   const labelCell = {
     ...cell, borderTop: '2px solid #555', background: '#f5f5f5',
     textAlign: 'center', fontSize: 12, fontWeight: 'bold', padding: '3px 0',
+  }
+  const orderCell = {
+    ...cell, textAlign: 'center', fontSize: 12, padding: '3px 0', color: '#666',
   }
 
   return (
@@ -54,6 +57,7 @@ function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType
                 ))}
               </tr>
             ))}
+            {/* ラベル行：参加者番号 */}
             <tr>
               {sortedP.map(p => (
                 <td key={p.id} style={labelCell}>
@@ -61,13 +65,22 @@ function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType
                 </td>
               ))}
             </tr>
+            {/* 投票順行：初日のみ表示 */}
+            {day === 1 && (
+              <tr>
+                {sortedP.map(p => (
+                  <td key={p.id} style={orderCell}>
+                    {votes.find(v => v.voter_id === p.id && v.vote_type === matrixType)?.vote_order ?? ''}
+                  </td>
+                ))}
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   )
 }
-
 
 export default function GameDetail() {
   const { id } = useParams()
