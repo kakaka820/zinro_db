@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
+import type { Game, Participant, Vote, Execution, NightKill, CoEvent, SeerResult, MediumResult, KnightGuard } from '../types'
+
 
 // ── 投票マトリクス ────────────────────────────────────────────────
-function VoteMatrix({ participants, votes, label, showVoteOrder }) {
+type VoteMatrixProps = {
+  participants: Participant[]
+  votes:        Vote[]
+  label:        string | null
+  showVoteOrder: boolean
+}
+function VoteMatrix({ participants, votes, label, showVoteOrder }: VoteMatrixProps) {
   const sorted = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
@@ -93,19 +101,19 @@ function VoteMatrix({ participants, votes, label, showVoteOrder }) {
 
 // ── メインページ ──────────────────────────────────────────────────
 export default function GameView() {
-  const { id } = useParams()
-  const [game,          setGame]         = useState(null)
-  const [participants,  setParticipants] = useState([])
-  const [day,           setDay]          = useState(1)
-  const [votes,         setVotes]        = useState([])
-  const [executions,    setExecutions]   = useState([])
-  const [nightKills,    setNightKills]   = useState([])
-  const [showRoles,     setShowRoles]    = useState(false)
-  const [showNames,     setShowNames]    = useState(true)
-  const [coEvents,      setCoEvents]     = useState([])
-  const [seerResults,   setSeerResults]  = useState([])
-  const [mediumResults, setMediumResults] = useState([])
-  const [knightGuards,  setKnightGuards] = useState([])
+  const { id } = useParams<{ id: string }>()
+const [game,          setGame]         = useState<Game | null>(null)
+const [participants,  setParticipants] = useState<Participant[]>([])
+const [day,           setDay]          = useState(1)
+const [votes,         setVotes]        = useState<Vote[]>([])
+const [executions,    setExecutions]   = useState<Execution[]>([])
+const [nightKills,    setNightKills]   = useState<NightKill[]>([])
+const [showRoles,     setShowRoles]    = useState(false)
+const [showNames,     setShowNames]    = useState(true)
+const [coEvents,      setCoEvents]     = useState<CoEvent[]>([])
+const [seerResults,   setSeerResults]  = useState<SeerResult[]>([])
+const [mediumResults, setMediumResults] = useState<MediumResult[]>([])
+const [knightGuards,  setKnightGuards] = useState<KnightGuard[]>([])
 
    useEffect(() => {
     api.get('/games').then(gs =>
@@ -130,20 +138,20 @@ export default function GameView() {
       .then(setVotes).catch(() => setVotes([]))
   }, [id, day])
 
-  const getName = (pid) =>
+  const getName = (pid: number) =>
     participants.find(p => p.id === pid)?.player_name ?? `#${pid}`
-  const getNum  = (pid) =>
+  const getNum  = (pid: number) =>
     participants.find(p => p.id === pid)?.participant_number ?? '?'
-  const fmt = (pid) =>
+  const fmt = (pid: number) =>
     pid ? `${getNum(pid)}. ${getName(pid)}` : '—'
 
-  const execLabel = (type) =>
+  const execLabel = (type: string) =>
     type === 'normal'             ? '通常吊り'
     : type === 'random'           ? 'ランダム吊り'
     : type === 'runoff_execution' ? '決戦釣り'
     : '吊りなし'
 
-  const resultLabel = (r) =>
+  const resultLabel = (r: string) =>
     r === 'village_win' ? '村勝利'
     : r === 'wolf_win'  ? '人狼勝利'
     : r === 'other'     ? 'その他' : '—'
