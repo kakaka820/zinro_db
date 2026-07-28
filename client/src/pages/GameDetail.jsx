@@ -249,7 +249,6 @@ export default function GameDetail() {
     }
     if (!toSubmit.length) return
     for (const v of toSubmit) await api.post('/votes', v)
-    setMatrixInput({})
     loadVotes()
   }
 
