@@ -195,8 +195,8 @@ useEffect(() => {
   }
 
   const isAlive = (pid) =>
-  !executions.some(e => e.participant_id === pid) &&
-  !nightKills.some(n => n.participant_id === pid)
+  !executions.some(e => e.participant_id === pid && e.day_number < day) &&
+  !nightKills.some(n => n.participant_id === pid && n.day_number < day)
 
   // 参加者追加
   const addParticipant = async (e) => {
