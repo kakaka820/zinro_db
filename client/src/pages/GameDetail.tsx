@@ -4,6 +4,7 @@ import { api } from '../api'
 import COSection from './COSection'
 import VoteMatrixInput from './VoteMatrixInput'
 import ExecutionSection from './ExecutionSection'
+import NightKillSection from './NightKillSection'
 
 
 export default function GameDetail() {
@@ -45,9 +46,7 @@ export default function GameDetail() {
   const [nightKills,     setNightKills]     = useState([])
 
   
-  // 噛みフォーム
-  const [nParticipantId, setNParticipantId] = useState('')
-  const [nIsGj,          setNIsGj]          = useState(false)
+  
 
     const loadParticipants = () =>
     api.get(`/participants/game/${id}`).then(setParticipants)
@@ -199,47 +198,7 @@ setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPNumber('')
 
   
 
-
-  // 噛み追加
-    // 噛み追加
-  const addNightKill = async (e) => {
-    e.preventDefault()
-    const target = (!nIsGj && nParticipantId.trim()) ? resolveParticipant(nParticipantId) : null
-    await api.post('/night-kills', {
-      game_id: Number(id),
-      day_number: day,
-      participant_id: target ? target.id : null,
-    })
-
-    if (nIsGj) {
-      // 本物の騎士を特定（role_name が '騎士' の参加者）
-      const knight = participants.find(p => p.role_name === '騎士')
-      if (knight) {
-        // 騎士護衛記録（is_gj = true）を自動追加
-        await api.post('/knight-guards', {
-          game_id:               Number(id),
-          knight_participant_id: knight.id,
-          target_participant_id: null,
-          day_number:            day,
-          is_gj:                 true,
-          disclosed_day:         null,
-        })
-        // 騎士の co_day を GJ日+1 に自動更新
-        const coEvents = await api.get(`/co-events/game/${id}`)
-        const knightCo = coEvents.find(c => c.participant_id === knight.id)
-        if (knightCo) {
-          await api.put(`/co-events/${knightCo.id}`, {
-            claimed_role_id: knightCo.claimed_role_id,
-            co_day:          day + 1,
-          })
-        }
-      }
-    }
-
-    setNParticipantId('')
-    setNIsGj(false)
-    loadNightKills()
-  }
+  
 const [activeTab, setActiveTab] = useState('log')
   return (
     <div>
@@ -484,37 +443,13 @@ const [activeTab, setActiveTab] = useState('log')
   onRefresh={loadExecutions}
 />
       {/* ── 噛み ── */}
-      <div className="card">
-        <h2>{day}日目：噛み結果</h2>
-                <form onSubmit={addNightKill} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input value={nIsGj ? '' : nParticipantId}
-            onChange={e => setNParticipantId(e.target.value)}
-            placeholder={nIsGj ? '（GJ）' : '噛まれた人（番号or名前）'}
-            disabled={nIsGj}
-            style={{ width: 220 }} />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-            <input type="checkbox" checked={nIsGj}
-              onChange={e => { setNIsGj(e.target.checked); setNParticipantId('') }} />
-            GJ
-          </label>
-          <button type="submit">記録</button>
-        </form>
-
-        {nightKills.filter(n => n.day_number === day).length > 0 && (
-          <table style={{ marginTop: 12 }}>
-            <thead>
-              <tr><th>噛まれた人</th></tr>
-            </thead>
-            <tbody>
-              {nightKills.filter(n => n.day_number === day).map(n => (
-                <tr key={n.id}>
-                  <td>{participants.find(p => String(p.id) === String(n.participant_id))?.player_name ?? 'GJ'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <NightKillSection
+  gameId={id}
+  participants={participants}
+  nightKills={nightKills}
+  day={day}
+  onRefresh={loadNightKills}
+/>
     </>
         )}
 {/* ── COタブ ── */}
