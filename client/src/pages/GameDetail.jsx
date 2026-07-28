@@ -14,13 +14,13 @@ function VoteMatrixInput({ participants, matrixInput, setMatrixInput, matrixType
 )
 const ROWS = Math.max(3, Math.ceil(participants.length / 2), maxFilled + 1)
 
-  const getCell = (tid, row) => matrixInput[tid]?.[row] ?? ''
-  const setCell = (tid, row, val) =>
-    setMatrixInput(prev => {
-      const col = [...(prev[tid] ?? Array(ROWS).fill(''))]
-      col[row] = val
-      return { ...prev, [tid]: col }
-    })
+  const getCell = (tid, row) => matrixInput[tid]?.[ROWS - 1 - row] ?? ''
+const setCell = (tid, row, val) =>
+  setMatrixInput(prev => {
+    const col = [...(prev[tid] ?? Array(ROWS).fill(''))]
+    col[ROWS - 1 - row] = val
+    return { ...prev, [tid]: col }
+  })
 
   const cell = { border: '1px solid #bbb', padding: 0 }
   const labelCell = {
