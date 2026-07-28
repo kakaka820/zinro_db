@@ -1,10 +1,16 @@
-const express = require('express');
-const router = express.Router();
+import express, { Request, Response } from 'express';
+ import { Pool } from 'pg';
+ import { Execution } from '../types/db';
 
-module.exports = (pool) => {
-  // 吊り結果登録
-  router.post('/', async (req, res) => {
-    const { game_id, day_number, participant_id, execution_type } = req.body;
+ const router = express.Router();
+
+ export default (pool: Pool) => {
+   
+ // 吊り結果登録
+   router.post('/', async (req: Request, res: Response): Promise<void> => {
+     const { game_id, day_number, participant_id, execution_type }:
+       { game_id: number; day_number: number; participant_id?: number;
+         execution_type: 'normal' | 'random' | 'runoff_execution' | 'none' } = req.body;
     const result = await pool.query(
       `INSERT INTO executions (game_id, day_number, participant_id, execution_type)
        VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -14,7 +20,7 @@ module.exports = (pool) => {
   });
 
   // 試合の吊り記録一覧
-  router.get('/game/:gameId', async (req, res) => {
+router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query(
       'SELECT * FROM executions WHERE game_id = $1 ORDER BY day_number',
       [req.params.gameId]
