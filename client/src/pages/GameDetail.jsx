@@ -100,13 +100,13 @@ export default function GameDetail() {
 
     const [editingId, setEditingId] = useState(null)
   const [editRoleId, setEditRoleId] = useState('')
-  const [editSurvived, setEditSurvived] = useState(false)
+  
   const [editNumber, setEditNumber] = useState('')
   
   // 参加者追加フォーム
   const [pPlayerId, setPPlayerId] = useState('')
   const [pRoleId,   setPRoleId]   = useState('')
-  const [pSurvived, setPSurvived] = useState(false)
+  
   const [pNumber,   setPNumber]   = useState('')
 
   // 投票フォーム
@@ -194,6 +194,10 @@ useEffect(() => {
     return participants.find(p => p.player_name === trimmed) ?? null
   }
 
+  const isAlive = (pid) =>
+  !executions.some(e => e.participant_id === pid) &&
+  !nightKills.some(n => n.participant_id === pid)
+
   // 参加者追加
   const addParticipant = async (e) => {
   e.preventDefault()
@@ -214,13 +218,12 @@ useEffect(() => {
   }
 
   await api.post('/participants', {
-    game_id: Number(id),
-    player_id: Number(playerId),
-    role_id: Number(pRoleId),
-    survived: pSurvived,
-    participant_number: pNumber ? Number(pNumber) : null,
-  })
-  setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPSurvived(false); setPNumber('')
+  game_id: Number(id),
+  player_id: Number(playerId),
+  role_id: Number(pRoleId),
+  participant_number: pNumber ? Number(pNumber) : null,
+})
+setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPNumber('')
   loadParticipants()
 }
 
@@ -413,10 +416,6 @@ const [activeTab, setActiveTab] = useState('log')
       <option value="">役職を選択</option>
       {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
     </select>
-    <label>
-      <input type="checkbox" checked={pSurvived} onChange={e => setPSurvived(e.target.checked)} />
-      　生存
-    </label>
         <input
       type="number" min="1"
       value={pNumber}
@@ -449,21 +448,15 @@ const [activeTab, setActiveTab] = useState('log')
       <td>
         {editingId === p.id ? null : <span className={`tag ${p.team}`}>{p.team}</span>}
       </td>
-      <td>
-        {editingId === p.id ? (
-          <input type="checkbox" checked={editSurvived}
-            onChange={e => setEditSurvived(e.target.checked)} />
-        ) : (p.survived ? '✅' : '❌')}
-      </td>
+      <td>{isAlive(p.id) ? '✅' : '❌'}</td>
       <td style={{ display: 'flex', gap: 4 }}>
         {editingId === p.id ? (
           <>
                        <button onClick={async () => {
               await api.put(`/participants/${p.id}`, {
-                role_id: Number(editRoleId),
-                survived: editSurvived,
-                participant_number: editNumber ? Number(editNumber) : null,
-              })
+  role_id: Number(editRoleId),
+  participant_number: editNumber ? Number(editNumber) : null,
+})
               setEditingId(null)
               loadParticipants()
             }}>保存</button>
@@ -476,7 +469,6 @@ const [activeTab, setActiveTab] = useState('log')
                         <button className="secondary" onClick={() => {
               setEditingId(p.id)
               setEditRoleId(p.role_id)
-              setEditSurvived(p.survived)
               setEditNumber(p.participant_number ?? '')
             }}>編集</button>
             <button className="secondary" onClick={async () => {
