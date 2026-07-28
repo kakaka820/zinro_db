@@ -523,13 +523,15 @@ const [activeTab, setActiveTab] = useState('log')
                 ) : (
           /* ── 表入力 ── */
           <VoteMatrixInput
-            participants={participants}
-            matrixInput={matrixInput}
-            setMatrixInput={setMatrixInput}
-            matrixType={matrixType}
-            setMatrixType={setMatrixType}
-            onSubmit={submitMatrix}
-          />
+  participants={participants}
+  matrixInput={matrixInput}
+  setMatrixInput={setMatrixInput}
+  matrixType={matrixType}
+  setMatrixType={setMatrixType}
+  onSubmit={submitMatrix}
+  votes={votes}
+  day={day}
+/>
         )}
 
         {votes.length > 0 && (
