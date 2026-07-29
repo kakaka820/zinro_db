@@ -78,10 +78,11 @@ const handleKeyDown = (
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-        <select value={matrixType} onChange={e => setMatrixType(e.target.value as 'normal' | 'runoff')}>
-          <option value="normal">通常投票</option>
-          <option value="runoff">決選投票</option>
-        </select>
+        <select value={matrixType} onChange={e => setMatrixType(e.target.value as 'normal' | 'runoff' | 'runoff2')}>
+  <option value="normal">通常投票</option>
+  <option value="runoff">決選投票</option>
+  <option value="runoff2">2回目決選投票</option>
+</select>
         <button type="button" onClick={onSubmit}>一括登録</button>
         <button type="button" className="secondary" onClick={() => setMatrixInput({})}>クリア</button>
       </div>
