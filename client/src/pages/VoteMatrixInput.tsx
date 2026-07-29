@@ -1,5 +1,16 @@
 import type { Participant, Vote } from '../types'
 
+import type { KeyboardEvent } from 'react'
+ function focusCell(row: number, col: number) {
+   const el = document.querySelector<HTMLInputElement>(
+     `[data-matrix-cell="${row}-${col}"]`
+   )
+   if (el) { el.focus(); el.select() }
+ }
+
+
+
+
 type VoteMatrixInputProps = {
   participants:   Participant[]
   matrixInput:    Record<number, string[]>
@@ -32,6 +43,29 @@ export default function VoteMatrixInput({
       return { ...prev, [tid]: col }
     })
 
+
+const handleKeyDown = (
+   e: KeyboardEvent<HTMLInputElement>,
+   colIdx: number,
+   row: number,
+ ) => {
+   const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+   if (!arrows.includes(e.key)) return
+   e.preventDefault()
+   const cols = sortedP.length
+   let nextCol = colIdx
+   let nextRow = row
+   if (e.key === 'ArrowLeft')  nextCol = Math.max(0, colIdx - 1)
+   if (e.key === 'ArrowRight') nextCol = Math.min(cols - 1, colIdx + 1)
+   if (e.key === 'ArrowUp')    nextRow = Math.max(0, row - 1)
+   if (e.key === 'ArrowDown')  nextRow = Math.min(ROWS - 1, row + 1)
+   focusCell(nextRow, nextCol)
+ }
+
+
+
+  
+
   const cell = { border: '1px solid #bbb', padding: 0 }
   const labelCell = {
     ...cell, borderTop: '2px solid #555', background: '#f5f5f5',
@@ -59,12 +93,14 @@ export default function VoteMatrixInput({
           <tbody>
             {Array.from({ length: ROWS }, (_, row) => (
               <tr key={row}>
-                {sortedP.map(p => (
+                sortedP.map((p, colIdx) => (
                   <td key={p.id} style={cell}>
                     <input
                       type="text"
                       value={getCell(p.id, row)}
                       onChange={e => setCell(p.id, row, e.target.value)}
+                      onKeyDown={e => handleKeyDown(e, colIdx, row)}
+       data-matrix-cell={`${row}-${colIdx}`}
                       style={{ display: 'block', width: '100%', height: '100%', textAlign: 'center', fontSize: 12, border: 'none', padding: '4px 0', boxSizing: 'border-box' }}
                     />
                   </td>
