@@ -1,6 +1,4 @@
 
-
-Participantsection · TSX
 import { useState, useEffect } from 'react'
 import { api } from '../api'
 import type { Player, Role, Participant, Execution, NightKill } from '../types'
