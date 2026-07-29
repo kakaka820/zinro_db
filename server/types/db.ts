@@ -30,7 +30,7 @@ export type Participant = {
   participant_number: number | null
   player_name: string
   role_name: string
-  team: 'village' | 'wolf' | 'other'
+  team: 'village' | 'wolf' | 'other' | null
 }
 
 // 投票
