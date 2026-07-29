@@ -115,7 +115,7 @@ const handleKeyDown = (
                 </td>
               ))}
             </tr>
-            {day === 1 matrixType === 'normal' && (
+            {day === 1 && matrixType === 'normal' && (
               <tr>
                 {sortedP.map(p => (
                   <td key={p.id} style={orderCell}>
