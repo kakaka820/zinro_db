@@ -101,11 +101,50 @@ export default function CoStatusTable({
   const knightSlots = slotsByRole('騎士',   KNIGHT_SLOTS)
   const allSlots    = [...seerSlots, ...mediumSlots, ...knightSlots]
 
-  // 参加者ごとのセル値（今は空文字 = 将来の結果表示用プレースホルダ）
-  const getCellValue = (_p: Participant, _slot: CoSlot): string => {
-    // TODO: 各役職の結果をここで返す
-    return ''
+  // 日付を丸数字（①②③...）に変換
+const CIRCLED_DIGITS = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
+                         '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
+const circled = (n: number) => CIRCLED_DIGITS[n] ?? `(${n})`
+
+type ResultEntry = { label: string; isBlack: boolean }
+
+// 参加者(行) × 枠(列) のセルに表示する結果一覧
+const getResultEntries = (p: Participant, slot: CoSlot): ResultEntry[] => {
+  if (!slot.co) return []
+  const ownerId = slot.co.participant_id
+
+  if (slot.role === '占い師') {
+    return seerResults
+      .filter(r => r.seer_participant_id === ownerId && r.target_participant_id === p.id)
+      .sort((a, b) => a.day_number - b.day_number)
+      .map(r => ({
+        label:   r.result === 'white' ? circled(r.day_number) : `${r.day_number}W`,
+        isBlack: r.result === 'black',
+      }))
   }
+
+  if (slot.role === '霊媒師') {
+    return mediumResults
+      .filter(r => r.medium_participant_id === ownerId && r.target_participant_id === p.id)
+      .sort((a, b) => a.day_number - b.day_number)
+      .map(r => ({
+        label:   r.result === 'white' ? circled(r.day_number) : `${r.day_number}W`,
+        isBlack: r.result === 'black',
+      }))
+  }
+
+  if (slot.role === '騎士') {
+    return knightGuards
+      .filter(g => g.knight_participant_id === ownerId && g.target_participant_id === p.id)
+      .sort((a, b) => a.day_number - b.day_number)
+      .map(g => ({
+        label:   g.is_gj ? `${g.day_number}GJ` : `${g.day_number}`,
+        isBlack: false,
+      }))
+  }
+
+  return []
+}
 
   // ── スタイル定数 ─────────────────────────────────────────────
   const borderCell: React.CSSProperties = {
@@ -195,28 +234,24 @@ export default function CoStatusTable({
                   (slot.role === '霊媒師' && slot.index === 0) ||
                   (slot.role === '騎士'   && slot.index === 0)
                 // この列の CO 本人行はハイライト
-                const isOwner = slot.co?.participant_id === p.id
-                const fake    = slot.co ? isFake(slot.co) : false
+const isOwner = slot.co?.participant_id === p.id
+const fake    = slot.co ? isFake(slot.co) : false
+const entries = isOwner ? [] : getResultEntries(p, slot)
 
-                return (
-                  <td
-                    key={`cell-${p.id}-${i}`}
-                    style={{
-                      ...borderCell,
-                      ...(isGroupStart ? groupBorder : {}),
-                      background: isOwner
-                        ? fake ? '#fce4ec' : '#e8f5e9'
-                        : undefined,
-                    }}
-                  >
-                    {isOwner && (
-                      <span style={fake ? fakeStyle : { color: '#2e7d32', fontWeight: 'bold' }}>
-                        {fake ? '偽' : 'CO'}
-                      </span>
-                    )}
-                    {!isOwner && getCellValue(p, slot)}
-                  </td>
-                )
+return (
+  <td key={`cell-${p.id}-${i}`} style={{ ...borderCell, ...(isGroupStart ? groupBorder : {}), background: isOwner ? (fake ? '#fce4ec' : '#e8f5e9') : undefined }}>
+    {isOwner && (
+      <span style={fake ? fakeStyle : { color: '#2e7d32', fontWeight: 'bold' }}>
+        {fake ? '偽' : 'CO'}
+      </span>
+    )}
+    {!isOwner && entries.map((entry, idx) => (
+      <span key={idx} style={entry.isBlack ? fakeStyle : undefined}>
+        {entry.label}{idx < entries.length - 1 ? ' ' : ''}
+      </span>
+    ))}
+  </td>
+)
               })}
             </tr>
           ))}
