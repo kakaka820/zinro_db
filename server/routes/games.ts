@@ -22,19 +22,38 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     res.json(result.rows[0]);
   });
 
-  // 試合削除（複数まとめて）
-router.delete('/', async (req: Request, res: Response): Promise<void> => {
-     const { ids }: { ids: number[] } = req.body;
+    // 試合削除（複数まとめて・関連レコードも連鎖削除）
+  router.delete('/', async (req: Request, res: Response): Promise<void> => {
+    const { ids }: { ids: number[] } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
       res.status(400).json({ error: 'ids は空でない配列で指定してください' });
-       return;
-
+      return;
     }
-    await pool.query(
-      `DELETE FROM games WHERE id = ANY($1::int[])`,
-      [ids]
-    );
-    res.json({ deleted: ids.length });
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        // 子テーブルを依存順に削除
+        await client.query(`DELETE FROM votes          WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM executions     WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM night_kills    WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM co_events      WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM seer_results   WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM medium_results WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM knight_guards  WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM game_participants WHERE game_id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM games          WHERE id = ANY($1::int[])`, [ids]);
+        await client.query('COMMIT');
+        res.json({ deleted: ids.length });
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
   });
 
 
