@@ -1,7 +1,10 @@
+
+
+Participantsection · TSX
 import { useState, useEffect } from 'react'
 import { api } from '../api'
 import type { Player, Role, Participant, Execution, NightKill } from '../types'
-
+ 
 type Props = {
   gameId: string
   players: Player[]
@@ -13,7 +16,7 @@ type Props = {
   onRefresh: () => void
   onPlayersRefresh: () => void
 }
-
+ 
 export default function ParticipantSection({
   gameId, players, roles, participants, executions, nightKills, day,
   onRefresh, onPlayersRefresh,
@@ -24,25 +27,35 @@ export default function ParticipantSection({
   const [pPlayerId,   setPPlayerId]   = useState('')
   const [pRoleId,     setPRoleId]     = useState('')
   const [pNumber,     setPNumber]     = useState('')
-
+ 
   const [editingId,  setEditingId]  = useState<number | null>(null)
   const [editRoleId, setEditRoleId] = useState('')
   const [editNumber, setEditNumber] = useState('')
-
+ 
+  // 役職一括設定用
+  const [bulkDefaultRoleId, setBulkDefaultRoleId] = useState('')
+  const [bulkInputs,        setBulkInputs]        = useState<Record<number, string>>({})
+ 
   useEffect(() => {
     const nums = participants
       .map(p => p.participant_number)
       .filter((n): n is number => n != null)
     setPNumber(String(nums.length === 0 ? 1 : Math.max(...nums) + 1))
   }, [participants])
-
+ 
   const isAlive = (pid: number) =>
     !executions.some(e => e.participant_id === pid && e.day_number < day) &&
     !nightKills.some(n => n.participant_id === pid && n.day_number < day)
-
+ 
   const addParticipant = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!pPlayerText.trim()) return
+    // 役職未選択の場合は「デフォルト役職」にフォールバック（先に一括設定パネルで選んでおく想定）
+    const roleIdToUse = pRoleId || bulkDefaultRoleId
+    if (!roleIdToUse) {
+      alert('役職を選択するか、下の「デフォルト役職」を先に選んでおいてください')
+      return
+    }
     let playerId = pPlayerId
     if (!playerId) {
       const exact = players.find(p => p.name === pPlayerText.trim())
@@ -57,13 +70,67 @@ export default function ParticipantSection({
     await api.post('/participants', {
       game_id:            Number(gameId),
       player_id:          Number(playerId),
-      role_id:            Number(pRoleId),
+      role_id:            Number(roleIdToUse),
       participant_number: pNumber ? Number(pNumber) : null,
     })
     setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPNumber('')
     onRefresh()
   }
-
+ 
+  // "3,7,12" のような入力を番号の配列にパース（全角カンマ・スペース区切りにも対応）
+  const parseNumbers = (text: string): number[] =>
+    text.split(/[,、\s]+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(n => !isNaN(n))
+ 
+  // 役職ごとの番号入力から「参加者番号 → role_id」のマップを作り、まとめて更新する
+  const applyBulkRoles = async () => {
+    const numberToRoleId = new Map<number, number>()
+    const duplicates = new Set<number>()
+ 
+    for (const role of roles) {
+      for (const num of parseNumbers(bulkInputs[role.id] ?? '')) {
+        if (numberToRoleId.has(num)) duplicates.add(num)
+        numberToRoleId.set(num, role.id)
+      }
+    }
+    if (duplicates.size > 0) {
+      alert(`番号 ${[...duplicates].join(', ')} が複数の役職に重複して指定されています`)
+      return
+    }
+ 
+    const numbered = participants.filter(
+      (p): p is Participant & { participant_number: number } => p.participant_number != null
+    )
+    const missing = [...numberToRoleId.keys()].filter(
+      num => !numbered.some(p => p.participant_number === num)
+    )
+    if (missing.length > 0) {
+      alert(`番号 ${missing.join(', ')} の参加者がまだ登録されていません。先に名前・番号を登録してください`)
+      return
+    }
+ 
+    const defaultRoleId = bulkDefaultRoleId ? Number(bulkDefaultRoleId) : null
+    const updates = numbered
+      .map(p => ({
+        p,
+        targetRoleId: numberToRoleId.get(p.participant_number) ?? defaultRoleId,
+      }))
+      .filter((u): u is { p: typeof numbered[number]; targetRoleId: number } =>
+        u.targetRoleId != null && u.targetRoleId !== u.p.role_id
+      )
+ 
+    for (const { p, targetRoleId } of updates) {
+      await api.put(`/participants/${p.id}`, {
+        role_id: targetRoleId,
+        participant_number: p.participant_number,
+      })
+    }
+    onRefresh()
+  }
+ 
   const saveEdit = async (p: Participant) => {
     await api.put(`/participants/${p.id}`, {
       role_id:            Number(editRoleId),
@@ -72,7 +139,7 @@ export default function ParticipantSection({
     setEditingId(null)
     onRefresh()
   }
-
+ 
   return (
     <div className="card">
       <h2>参加者・役職</h2>
@@ -117,8 +184,12 @@ export default function ParticipantSection({
             </div>
           )}
         </div>
-        <select value={pRoleId} onChange={e => setPRoleId(e.target.value)} required>
-          <option value="">役職を選択</option>
+        <select value={pRoleId} onChange={e => setPRoleId(e.target.value)}>
+          <option value="">
+            {bulkDefaultRoleId
+              ? `役職を選択（未選択なら「${roles.find(r => String(r.id) === bulkDefaultRoleId)?.name}」）`
+              : '役職を選択'}
+          </option>
           {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
         <input
@@ -130,7 +201,44 @@ export default function ParticipantSection({
         />
         <button type="submit">追加</button>
       </form>
-
+ 
+      <div className="card" style={{ background: '#fafafa', marginTop: 12 }}>
+        <h3 style={{ fontSize: 15, marginBottom: 4 }}>役職を番号で一括設定</h3>
+        <p style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+          各役職の欄に、その役職を持つ参加者番号をカンマ区切りで入力してください（例: 3,7,12）。
+          指定されなかった番号は下のデフォルト役職になります。
+        </p>
+ 
+        <label style={{ display: 'flex', flexDirection: 'column', fontSize: 12, marginBottom: 10, maxWidth: 240 }}>
+          デフォルト役職（指定なしの番号 / 名前登録時の初期値）
+          <select value={bulkDefaultRoleId} onChange={e => setBulkDefaultRoleId(e.target.value)}>
+            <option value="">（未設定）</option>
+            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          </select>
+        </label>
+ 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+          gap: 8, marginBottom: 10,
+        }}>
+          {roles
+            .filter(r => String(r.id) !== bulkDefaultRoleId)
+            .map(r => (
+              <label key={r.id} style={{ display: 'flex', flexDirection: 'column', fontSize: 12 }}>
+                {r.name}
+                <input
+                  value={bulkInputs[r.id] ?? ''}
+                  onChange={e => setBulkInputs(prev => ({ ...prev, [r.id]: e.target.value }))}
+                  placeholder="例: 3,7,12"
+                />
+              </label>
+            ))}
+        </div>
+ 
+        <button type="button" onClick={applyBulkRoles}>一括適用</button>
+      </div>
+ 
       <table>
         <thead>
           <tr>
@@ -196,3 +304,4 @@ export default function ParticipantSection({
     </div>
   )
 }
+ 
