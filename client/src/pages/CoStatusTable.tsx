@@ -54,7 +54,7 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
         lineHeight: 1,
         color:      co ? '#111' : '#ccc',
       }}>
-        {co ? co.participant_number : '番'}
+        {co?.co_day != null ? `${co.co_day}日` : (co ? '?' : '日')}
       </span>
       {/* 右下 = 番号 */}
       <span style={{
@@ -66,7 +66,8 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
         lineHeight: 1,
         color:      co ? '#111' : '#ccc',
       }}>
-        {co?.co_day != null ? `${co.co_day}日` : (co ? '?' : '日')}
+        
+        {co ? co.participant_number : '番'}
       </span>
     </th>
   )
