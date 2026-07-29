@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
 import type { Game, Participant, Vote, Execution, NightKill, CoEvent, SeerResult, MediumResult, KnightGuard } from '../types'
 import CoStatusTable from './CoStatusTable'
-
+import ExecutionKillTable from './ExecutionKillTable'
 
 
 // ── 投票マトリクス ────────────────────────────────────────────────
