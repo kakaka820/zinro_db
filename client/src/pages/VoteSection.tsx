@@ -115,9 +115,10 @@ export default function VoteSection({ gameId, participants, day }: Props) {
               <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
                 placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
               <select value={vType} onChange={e => setVType(e.target.value)}>
-                <option value="normal">通常投票</option>
-                <option value="runoff">決選投票</option>
-              </select>
+  <option value="normal">通常投票</option>
+  <option value="runoff">決選投票</option>
+  <option value="runoff2">2回目決選投票</option>
+</select>
               <input type="number" min="1" value={vVoteOrder}
                 onChange={e => setVVoteOrder(e.target.value)}
                 placeholder="投票順（初日のみ）" style={{ width: 150 }} />
@@ -130,9 +131,10 @@ export default function VoteSection({ gameId, participants, day }: Props) {
                 onChange={e => setVReceiveOrder(e.target.value)}
                 placeholder="受けた順番" style={{ width: 120 }} />
               <select value={vType} onChange={e => setVType(e.target.value)}>
-                <option value="normal">通常投票</option>
-                <option value="runoff">決選投票</option>
-              </select>
+  <option value="normal">通常投票</option>
+  <option value="runoff">決選投票</option>
+  <option value="runoff2">2回目決選投票</option>
+</select>
               <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
                 placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
             </>
@@ -166,7 +168,11 @@ export default function VoteSection({ gameId, participants, day }: Props) {
               <tr key={v.id}>
                 <td>{participants.find(p => p.id === v.voter_id)?.player_name  ?? v.voter_id}</td>
                 <td>{participants.find(p => p.id === v.target_id)?.player_name ?? v.target_id}</td>
-                <td>{v.vote_type === 'normal' ? '通常' : '決選'}</td>
+                <td>
+  {v.vote_type === 'normal' ? '通常'
+    : v.vote_type === 'runoff' ? '決選'
+    : '2回目決選'}
+</td>
                 {day === 1 && <td>{v.vote_order    ?? '―'}</td>}
                 <td>{v.receive_order ?? '―'}</td>
               </tr>
