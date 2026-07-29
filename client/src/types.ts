@@ -69,6 +69,7 @@ export type CoEvent = {
   participant_id: number
   claimed_role_id: number
   co_day: number | null
+  co_timing: 'runoff' | 'testament' | null
   player_name: string
   claimed_role_name: string
   participant_number: number | null
