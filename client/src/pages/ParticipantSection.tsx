@@ -68,6 +68,7 @@ setPPlayerText(''); setPPlayerId(''); setPNumber('')
     await api.put(`/participants/${p.id}`, {
       role_id:            Number(editRoleId),
       participant_number: editNumber ? Number(editNumber) : null,
+      survived:           p.survived,
     })
     setEditingId(null)
     onRefresh()
@@ -97,6 +98,7 @@ const assignRoles = async () => {
       return api.put(`/participants/${p.id}`, {
         role_id: roleId,
         participant_number: p.participant_number,
+        survived: p.survived,
       })
     })
   )
