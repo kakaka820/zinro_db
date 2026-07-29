@@ -15,8 +15,8 @@ type VoteMatrixInputProps = {
   participants:   Participant[]
   matrixInput:    Record<number, string[]>
   setMatrixInput: React.Dispatch<React.SetStateAction<Record<number, string[]>>>
-  matrixType:     'normal' | 'runoff'
-  setMatrixType:  React.Dispatch<React.SetStateAction<'normal' | 'runoff'>>
+  matrixType:     'normal' | 'runoff' | 'runoff2'
+  setMatrixType:  React.Dispatch<React.SetStateAction<'normal' | 'runoff' | 'runoff2'>>
   onSubmit:       () => void
   votes:          Vote[]
   day:            number
