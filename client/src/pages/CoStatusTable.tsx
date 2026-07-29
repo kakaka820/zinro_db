@@ -23,6 +23,10 @@ type Props = {
 }
 
 // ── 斜線ヘッダーセル ──────────────────────────────────────────────
+const CIRCLED_DIGITS = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
+                         '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
+const circled = (n: number) => CIRCLED_DIGITS[n] ?? `(${n})`
+
 function DiagonalHeader({ co }: { co: CoEvent | null }) {
   const CELL = 52  // セルの正方形サイズ(px)
 
@@ -54,7 +58,13 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
         lineHeight: 1,
         color:      co ? '#111' : '#ccc',
       }}>
-        {co?.co_day != null ? `${co.co_day}日` : (co ? '?' : '日')}
+       {co?.co_day != null
+          ? co.co_timing === 'runoff'
+            ? `${circled(co.co_day)}日`
+          : co.co_timing === 'testament'
+            ? `△${co.co_day}日`
+          : `${co.co_day}日`
+          : (co ? '?' : '日')}
       </span>
       {/* 右下 = 番号 */}
       <span style={{
@@ -101,10 +111,6 @@ export default function CoStatusTable({
   const knightSlots = slotsByRole('騎士',   KNIGHT_SLOTS)
   const allSlots    = [...seerSlots, ...mediumSlots, ...knightSlots]
 
-  // 日付を丸数字（①②③...）に変換
-const CIRCLED_DIGITS = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
-                         '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
-const circled = (n: number) => CIRCLED_DIGITS[n] ?? `(${n})`
 
 type ResultEntry = { label: string; isBlack: boolean }
 
