@@ -491,7 +491,14 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('list
             knightGuards={knightGuards}
             coEvents={coEvents}
             mediumResults={mediumResults}
-            maxDay={day}
+            maxDay={Math.max(
+              1, day,
+              ...executions.map(e => e.day_number),
+              ...nightKills.map(n => n.day_number),
+              ...knightGuards.map(g => g.day_number),
+              ...mediumResults.map(r => r.day_number),
+            )}
+            viewDay={day}
           />
         )}
  
