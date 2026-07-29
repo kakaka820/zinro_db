@@ -162,15 +162,16 @@ export default function VoteSection({ gameId, participants, day }: Props) {
 
       {votes.length > 0 && (
         <table style={{ marginTop: 12 }}>
-          <thead>
+                    <thead>
             <tr>
               <th>投票した人</th><th>投票先</th><th>種別</th>
               {day === 1 && <th>投票順</th>}
               <th>受けた順番</th>
+              <th>捨て票</th>
             </tr>
           </thead>
           <tbody>
-            {votes.map(v => (
+                        {votes.map(v => (
               <tr key={v.id}>
                 <td>{participants.find(p => p.id === v.voter_id)?.player_name  ?? v.voter_id}</td>
                 <td>{participants.find(p => p.id === v.target_id)?.player_name ?? v.target_id}</td>
@@ -181,6 +182,16 @@ export default function VoteSection({ gameId, participants, day }: Props) {
 </td>
                 {day === 1 && <td>{v.vote_order    ?? '―'}</td>}
                 <td>{v.receive_order ?? '―'}</td>
+                <td style={{ textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!v.is_discard}
+                    onChange={async e => {
+                      await api.put(`/votes/${v.id}`, { is_discard: e.target.checked })
+                      loadVotes()
+                    }}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
