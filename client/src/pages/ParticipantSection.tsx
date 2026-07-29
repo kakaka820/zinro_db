@@ -183,7 +183,7 @@ const assignRoles = async () => {
                   <select value={editRoleId} onChange={e => setEditRoleId(e.target.value)}>
                     {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                   </select>
-                ) : p.role_name}
+                ) : (p.role_name ?? '―')}
               </td>
               <td>
                 {editingId !== p.id && (
@@ -221,6 +221,41 @@ const assignRoles = async () => {
           ))}
         </tbody>
       </table>
+            {/* 役職割り当てセクション */}
+      {participants.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ marginBottom: 8 }}>役職割り当て</h3>
+          <p style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+            特殊役職の参加者番号を入力（複数はカンマ・スペース区切り）。未入力の参加者は村人になります。
+          </p>
+          <table>
+            <tbody>
+              {roles.filter(r => r.needs_co).map(r => (
+                <tr key={r.id}>
+                  <td style={{ paddingRight: 12, whiteSpace: 'nowrap' }}>{r.name}</td>
+                  <td>
+                    <input
+                      value={roleAssign[r.id] ?? ''}
+                      onChange={e =>
+                        setRoleAssign(prev => ({ ...prev, [r.id]: e.target.value }))
+                      }
+                      placeholder="例: 3, 7, 11"
+                      style={{ width: 160 }}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button
+            type="button"
+            style={{ marginTop: 8 }}
+            onClick={assignRoles}
+          >
+            一括割り当て（残り全員を村人に）
+          </button>
+        </div>
+      )}
     </div>
   )
 }
