@@ -40,7 +40,7 @@ export type Vote = {
   voter_id: number
   target_id: number
   day_number: number
-  vote_type: 'normal' | 'runoff'
+  vote_type: 'normal' | 'runoff' | 'runoff2'
   vote_order: number | null
   receive_order: number | null
 }
