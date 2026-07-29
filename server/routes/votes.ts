@@ -23,9 +23,9 @@ export default (pool: Pool) => {
 
   // 投票登録
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-     const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order }:
-       { game_id: number; day_number: number; vote_type?: 'normal' | 'runoff' | 'runoff2';
-  voter_id: number; target_id: number; vote_order?: number; receive_order?: number } = req.body;
+     const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order, is_discard }:
+  { game_id: number; day_number: number; vote_type?: 'normal' | 'runoff' | 'runoff2';
+    voter_id: number; target_id: number; vote_order?: number; receive_order?: number; is_discard?: boolean } = req.body;
 
   let finalReceiveOrder = receive_order ?? null;
 
@@ -41,10 +41,10 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   }
 
   const result = await pool.query(
-    `INSERT INTO votes (game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-    [game_id, day_number, vote_type ?? 'normal', voter_id, target_id, vote_order ?? null, finalReceiveOrder]
-  );
+  `INSERT INTO votes (game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order, is_discard)
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+  [game_id, day_number, vote_type ?? 'normal', voter_id, target_id, vote_order ?? null, finalReceiveOrder, is_discard ?? false]
+);
   res.json(result.rows[0]);
 });
 
