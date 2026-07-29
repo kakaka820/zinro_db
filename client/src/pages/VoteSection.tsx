@@ -20,6 +20,7 @@ export default function VoteSection({ gameId, participants, day }: Props) {
   const [vType,         setVType]         = useState('normal')
   const [vVoteOrder,    setVVoteOrder]    = useState('')
   const [vReceiveOrder, setVReceiveOrder] = useState('')
+  const [vIsDiscard,    setVIsDiscard]    = useState(false)
 
   const loadVotes = () =>
     api.get<Vote[]>(`/votes/game/${gameId}/day/${day}`).then(setVotes)
@@ -55,7 +56,7 @@ export default function VoteSection({ gameId, participants, day }: Props) {
       alert('投票した人・投票先が見つかりません（番号か名前で入力してください）')
       return
     }
-    await api.post('/votes', {
+        await api.post('/votes', {
       game_id:       Number(gameId),
       day_number:    day,
       vote_type:     vType,
@@ -63,8 +64,9 @@ export default function VoteSection({ gameId, participants, day }: Props) {
       target_id:     target.id,
       vote_order:    day === 1 && vVoteOrder    ? Number(vVoteOrder)    : null,
       receive_order: day !== 1 && vReceiveOrder ? Number(vReceiveOrder) : null,
+      is_discard:    vIsDiscard,
     })
-    setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder('')
+    setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder(''); setVIsDiscard(false)
     loadVotes()
   }
 
@@ -139,6 +141,10 @@ export default function VoteSection({ gameId, participants, day }: Props) {
                 placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
             </>
           )}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <input type="checkbox" checked={vIsDiscard} onChange={e => setVIsDiscard(e.target.checked)} />
+            捨て票
+          </label>
           <button type="submit">記録</button>
         </form>
       ) : (
