@@ -18,6 +18,8 @@ export default function CoEventSection({
   const [coParticipantId, setCoParticipantId] = useState('')
   const [coClaimedRoleId, setCoClaimedRoleId] = useState('')
   const [coDay,           setCoDay]           = useState(1)
+const [coTiming,     setCoTiming]     = useState<'runoff' | 'testament' | ''>('')
+const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>('')
 
   // ── インライン編集 ──
   const [editingCoId,       setEditingCoId]       = useState<number | null>(null)
@@ -31,8 +33,9 @@ export default function CoEventSection({
       participant_id:  Number(coParticipantId),
       claimed_role_id: Number(coClaimedRoleId),
       co_day:          Number(coDay),
+      co_timing:       coTiming || null,
     })
-    setCoParticipantId(''); setCoClaimedRoleId(''); setCoDay(1)
+    setCoParticipantId(''); setCoClaimedRoleId(''); setCoDay(1); setCoTiming('')
     onRefresh()
   }
 
@@ -40,6 +43,7 @@ export default function CoEventSection({
     await coEventsApi.update(co.id, {
       claimed_role_id: Number(editCoClaimedRole),
       co_day:          editCoDay ? Number(editCoDay) : null,
+      co_timing:       editCoTiming || null,
     })
     setEditingCoId(null)
     onRefresh()
@@ -68,6 +72,11 @@ export default function CoEventSection({
             onChange={e => setCoDay(Number(e.target.value))}
             style={{ width: 60 }} />
         </label>
+<select value={coTiming} onChange={e => setCoTiming(e.target.value as any)}>
+  <option value="">通常CO</option>
+  <option value="runoff">決戦CO</option>
+  <option value="testament">遺言CO</option>
+</select>
         <button type="submit">記録</button>
       </form>
 
@@ -92,7 +101,15 @@ export default function CoEventSection({
                     <input type="number" min="1" value={editCoDay}
                       onChange={e => setEditCoDay(e.target.value)}
                       placeholder="未COは空欄" style={{ width: 80 }} />
-                  ) : (co.co_day != null ? `${co.co_day}日目` : '未CO')}
+                  ) : (
+                    <>
+                      {co.co_day != null
+                        ? co.co_timing === 'runoff'   ? `${co.co_day}日目（決戦CO）`
+                        : co.co_timing === 'testament' ? `${co.co_day}日目（遺言CO）`
+                        : `${co.co_day}日目`
+                        : '未CO'}
+                    </>
+                  )}
                 </td>
                 <td>{isFake(co) ? '⚠️ 偽CO' : '本物'}</td>
                 <td style={{ display: 'flex', gap: 4 }}>
@@ -109,6 +126,7 @@ export default function CoEventSection({
                         setEditingCoId(co.id)
                         setEditCoClaimedRole(String(co.claimed_role_id))
                         setEditCoDay(co.co_day != null ? String(co.co_day) : '')
+                        setEditCoTiming((co.co_timing ?? '') as any)
                       }}>編集</button>
                       <button className="secondary" onClick={async () => {
                         await coEventsApi.del(co.id)
