@@ -454,7 +454,7 @@ const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
     participants={participants}
     votes={runoffVotes}
     label="決選投票"
-    showVoteOrder={day === 1}
+    showVoteOrder={false}
   />
 )}
 {runoff2Votes.length > 0 && (
@@ -462,7 +462,7 @@ const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
     participants={participants}
     votes={runoff2Votes}
     label="2回目決選投票"
-    showVoteOrder={day === 1}
+    showVoteOrder={false}
   />
 )}
           </>
