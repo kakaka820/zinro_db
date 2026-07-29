@@ -43,6 +43,7 @@ export type Vote = {
   vote_type: 'normal' | 'runoff' | 'runoff2'
   vote_order: number | null
   receive_order: number | null
+  is_discard: boolean
 }
 
 // 吊り
