@@ -87,6 +87,7 @@ export default function ExecutionKillTable({
       <table style={{ borderCollapse: 'collapse', width: 'auto' }}>
         <thead>
           <tr>
+            <th></th>
             {days.map(d => {
               const exec = d <= viewDay ? executions.find(e => e.day_number === d && e.participant_id != null) : undefined
               const kill = d <= viewDay ? nightKills.find(n => n.day_number === d) : undefined
