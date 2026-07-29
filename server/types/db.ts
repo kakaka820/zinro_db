@@ -71,6 +71,7 @@ export type CoEvent = {
   co_day: number | null
   player_name: string
   claimed_role_name: string
+  participant_number: number | null
 }
 
 // 占い結果
