@@ -54,12 +54,11 @@ export default function ParticipantSection({
       }
     }
     await api.post('/participants', {
-      game_id:            Number(gameId),
-      player_id:          Number(playerId),
-      role_id:            Number(pRoleId),
-      participant_number: pNumber ? Number(pNumber) : null,
-    })
-    setPPlayerText(''); setPPlayerId(''); setPRoleId(''); setPNumber('')
+  game_id: Number(gameId),
+  player_id: Number(playerId),
+  participant_number: pNumber ? Number(pNumber) : null,
+})
+setPPlayerText(''); setPPlayerId(''); setPNumber('')
     onRefresh()
   }
 
