@@ -469,38 +469,60 @@ const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
         )}
       </div>
 
-      {/* 吊り */}
+      {/* 吊り・噛み・護衛 */}
       <div className="card">
-        <h2>{day}日目：吊り結果</h2>
-        {dayExecs.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
-          <table>
-            <thead><tr><th>種別</th><th>吊られた人</th></tr></thead>
-            <tbody>
-              {dayExecs.map(e => (
-                <tr key={e.id}>
-                  <td>{execLabel(e.execution_type)}</td>
-                  <td>{e.participant_id ? fmt(e.participant_id) : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          吊り・噛み・護衛
+          <button
+            className="secondary"
+            style={{ fontSize: 12, padding: '2px 10px' }}
+            onClick={() => setExecKillViewMode(m => m === 'list' ? 'table' : 'list')}
+          >
+            {execKillViewMode === 'list' ? '表で見る' : 'リストで見る'}
+          </button>
+        </h2>
+ 
+        {execKillViewMode === 'table' && (
+          <ExecutionKillTable
+            participants={participants}
+            executions={executions}
+            nightKills={nightKills}
+            knightGuards={knightGuards}
+            maxDay={Math.max(day, ...executions.map(e => e.day_number), ...nightKills.map(n => n.day_number), 1)}
+          />
         )}
-      </div>
-
-      {/* 噛み */}
-      <div className="card">
-        <h2>{day}日目：噛み結果</h2>
-        {dayKills.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
-          <table>
-            <thead><tr><th>噛まれた人</th></tr></thead>
-            <tbody>
-              {dayKills.map(n => (
-                <tr key={n.id}>
-                  <td>{n.participant_id ? fmt(n.participant_id) : 'GJ'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+ 
+        {execKillViewMode === 'list' && (
+          <>
+            <h3 style={{ fontSize: 14, marginBottom: 6 }}>{day}日目：吊り結果</h3>
+            {dayExecs.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
+              <table>
+                <thead><tr><th>種別</th><th>吊られた人</th></tr></thead>
+                <tbody>
+                  {dayExecs.map(e => (
+                    <tr key={e.id}>
+                      <td>{execLabel(e.execution_type)}</td>
+                      <td>{e.participant_id ? fmt(e.participant_id) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+ 
+            <h3 style={{ fontSize: 14, margin: '16px 0 6px' }}>{day}日目：噛み結果</h3>
+            {dayKills.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
+              <table>
+                <thead><tr><th>噛まれた人</th></tr></thead>
+                <tbody>
+                  {dayKills.map(n => (
+                    <tr key={n.id}>
+                      <td>{n.participant_id ? fmt(n.participant_id) : 'GJ'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
         )}
       </div>
     </div>
