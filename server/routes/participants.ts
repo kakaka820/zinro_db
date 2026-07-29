@@ -38,12 +38,16 @@ router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 
   // 参加者更新
 router.put('/:id', async (req: Request, res: Response): Promise<void> => {
-  const { role_id, survived, participant_number } = req.body;
-  const result = await pool.query(
-    `UPDATE game_participants SET role_id = $1, survived = $2, participant_number = $3 WHERE id = $4 RETURNING *`,
-    [role_id, survived, participant_number ?? null, req.params.id]
-  );
-  res.json(result.rows[0]);
+  try {
+    const { role_id, survived, participant_number } = req.body;
+    const result = await pool.query(
+      `UPDATE game_participants SET role_id = $1, survived = $2, participant_number = $3 WHERE id = $4 RETURNING *`,
+      [role_id, survived, participant_number ?? null, req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
 });
   
   return router;
