@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Participant, CoEvent, SeerResult, MediumResult, KnightGuard } from '../types'
 
 // ── 列定義 ────────────────────────────────────────────────────────
@@ -75,6 +76,9 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
 export default function CoStatusTable({
   participants, coEvents, seerResults, mediumResults, knightGuards, isFake,
 }: Props) {
+  const [showNames, setShowNames] = useState(true)   // デフォルト：表示
+  const [showRole,  setShowRole]  = useState(false)  // デフォルト：非表示
+
   const sortedP = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
@@ -118,13 +122,33 @@ export default function CoStatusTable({
   }
 
   return (
-    <div style={{ overflowX: 'auto', marginTop: 8 }}>
+    <div style={{ marginTop: 8 }}>
+      {/* 表示切替ボタン */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+        <button
+          type="button" className="secondary"
+          style={{ fontSize: 12, padding: '2px 10px' }}
+          onClick={() => setShowNames(v => !v)}
+        >
+          {showNames ? '名前を隠す' : '名前を表示'}
+        </button>
+        <button
+          type="button" className="secondary"
+          style={{ fontSize: 12, padding: '2px 10px' }}
+          onClick={() => setShowRole(v => !v)}
+        >
+          {showRole ? '役職を隠す' : '役職を表示'}
+        </button>
+      </div>
+
+      <div style={{ overflowX: 'auto' }}>
       <table style={{ borderCollapse: 'collapse', minWidth: 'max-content' }}>
         <thead>
           <tr>
             {/* 固定左列ヘッダー */}
             <th style={{ ...borderCell, background: '#f5f5f5', minWidth: 32 }}>番号</th>
-            <th style={{ ...borderCell, background: '#f5f5f5', minWidth: 52 }}>役職</th>
+            {showNames && <th style={{ ...borderCell, background: '#f5f5f5', minWidth: 64 }}>名前</th>}
+            {showRole  && <th style={{ ...borderCell, background: '#f5f5f5', minWidth: 52 }}>役職</th>}
 
             {/* CO列ヘッダー（斜線セル） */}
             {allSlots.map((slot, i) => {
@@ -142,7 +166,6 @@ export default function CoStatusTable({
             })}
           </tr>
 
-          
         </thead>
 
         <tbody>
@@ -152,10 +175,18 @@ export default function CoStatusTable({
               <td style={{ ...borderCell, fontWeight: 'bold', background: '#fafafa' }}>
                 {p.participant_number}
               </td>
+              {/* 名前 */}
+              {showNames && (
+                <td style={{ ...borderCell, background: '#fafafa', whiteSpace: 'nowrap' }}>
+                  {p.player_name}
+                </td>
+              )}
               {/* 役職 */}
-              <td style={{ ...borderCell, background: '#fafafa', whiteSpace: 'nowrap' }}>
-                {p.role_name ?? '?'}
-              </td>
+              {showRole && (
+                <td style={{ ...borderCell, background: '#fafafa', whiteSpace: 'nowrap' }}>
+                  {p.role_name ?? '?'}
+                </td>
+              )}
 
               {/* CO列 */}
               {allSlots.map((slot, i) => {
@@ -190,6 +221,7 @@ export default function CoStatusTable({
           ))}
         </tbody>
       </table>
+      </div>  {/* overflowX: auto */}
     </div>
   )
 }
