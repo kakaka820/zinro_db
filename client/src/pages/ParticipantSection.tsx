@@ -27,6 +27,8 @@ export default function ParticipantSection({
   const [editingId,  setEditingId]  = useState<number | null>(null)
   const [editRoleId, setEditRoleId] = useState('')
   const [editNumber, setEditNumber] = useState('')
+  const [roleAssign, setRoleAssign] = useState<Record<number, string>>({})
+// roleId → 参加者番号（カンマ・スペース区切りで複数可）
 
   useEffect(() => {
     const nums = participants
@@ -70,6 +72,38 @@ setPPlayerText(''); setPPlayerId(''); setPNumber('')
     setEditingId(null)
     onRefresh()
   }
+
+const assignRoles = async () => {
+  // 番号→役職IDのマップを作成
+  const numToRoleId: Record<number, number> = {}
+  for (const [roleId, numsStr] of Object.entries(roleAssign)) {
+    const nums = numsStr
+      .split(/[\s,、]+/)
+      .map(n => parseInt(n))
+      .filter(n => !isNaN(n))
+    for (const num of nums) {
+      numToRoleId[num] = Number(roleId)
+    }
+  }
+
+  // 村人ロールのIDを取得（needs_co=false かつ team=village の最初の役職）
+  const villager = roles.find(r => !r.needs_co && r.team === 'village')
+
+  await Promise.all(
+    participants.map(p => {
+      const num = p.participant_number ?? -1
+      const roleId = numToRoleId[num] ?? villager?.id
+      if (roleId == null) return
+      return api.put(`/participants/${p.id}`, {
+        role_id: roleId,
+        participant_number: p.participant_number,
+      })
+    })
+  )
+
+  setRoleAssign({})
+  onRefresh()
+}
 
   return (
     <div className="card">
