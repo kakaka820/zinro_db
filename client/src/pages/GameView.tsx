@@ -66,7 +66,10 @@ function VoteMatrix({ participants, votes, label, showVoteOrder }: VoteMatrixPro
                     const vote = slotIndex < received.length
                       ? received[slotIndex] : null
                     return (
-                      <td key={p.id} style={cell}>
+                                            <td key={p.id} style={{
+                        ...cell,
+                        ...(vote?.is_discard ? { background: '#ddd' } : {}),
+                      }}>
                         {vote ? getNum(vote.voter_id) : ''}
                       </td>
                     )
