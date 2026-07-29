@@ -1,11 +1,13 @@
-import type { Participant, Execution, NightKill, KnightGuard } from '../types'
+import type { Participant, Execution, NightKill, KnightGuard, CoEvent, MediumResult } from '../types'
 
 type Props = {
-  participants: Participant[]
-  executions:   Execution[]
-  nightKills:   NightKill[]
-  knightGuards: KnightGuard[]
-  maxDay:       number   // 表示する最大日数（呼び出し側で算出）
+  participants:  Participant[]
+  executions:    Execution[]
+  nightKills:    NightKill[]
+  knightGuards:  KnightGuard[]
+  coEvents:      CoEvent[]
+  mediumResults: MediumResult[]
+  maxDay:        number   // 表示する最大日数（呼び出し側で算出）
 }
 
 // ── 三角分割ヘッダーセル ──────────────────────────────────────────
@@ -58,14 +60,26 @@ function TriDiagonalHeader({ dayNumber, execLabel, guardLabel, killLabel }: TriH
   )
 }
 
-// ── メインコンポーネント（現時点ではヘッダー行のみ） ──────────────────
+// ── メインコンポーネント ──────────────────────────────────────────
 export default function ExecutionKillTable({
-  participants, executions, nightKills, knightGuards, maxDay,
+  participants, executions, nightKills, knightGuards, coEvents, mediumResults, maxDay,
 }: Props) {
   const getNum = (pid: number | null) =>
     pid == null ? null : participants.find(p => p.id === pid)?.participant_number ?? '?'
 
   const days = Array.from({ length: Math.max(maxDay, 1) }, (_, i) => i + 1)
+
+  const rowCell: React.CSSProperties = {
+    border: '1px solid #bbb', textAlign: 'center', fontSize: 12, padding: '3px 0', minWidth: 60,
+  }
+  const nameCell: React.CSSProperties = {
+    ...rowCell, fontWeight: 'bold', background: '#fafafa', minWidth: 60,
+  }
+
+  // 霊媒師CO済みの参加者を co_day 順に取得
+  const mediumCOs = coEvents
+    .filter(c => c.claimed_role_name === '霊媒師')
+    .sort((a, b) => (a.co_day ?? 999) - (b.co_day ?? 999))
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -93,7 +107,29 @@ export default function ExecutionKillTable({
             })}
           </tr>
         </thead>
-        {/* 行（参加者ごとの内訳など）は仕様確定後に追加 */}
+        <tbody>
+          {/* 霊媒師CO者ごとの行：左列＝COした人の番号、各日＝その日の霊結果 */}
+          {mediumCOs.map(co => (
+            <tr key={co.id}>
+              <td style={nameCell}>{co.participant_number ?? '?'}</td>
+              {days.map(d => {
+                const result = mediumResults.find(
+                  r => r.medium_participant_id === co.participant_id &&
+                       r.day_number === d && r.disclosed_day != null
+                )
+                const label = result ? (result.result === 'black' ? 'W' : '○') : ''
+                return (
+                  <td
+                    key={d}
+                    style={{ ...rowCell, color: result?.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}
+                  >
+                    {label}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
       </table>
     </div>
   )
