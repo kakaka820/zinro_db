@@ -142,28 +142,7 @@ export default function CoStatusTable({
             })}
           </tr>
 
-          {/* 役職グループラベル行 */}
-          <tr>
-            <td style={{ ...borderCell, background: '#f5f5f5' }} colSpan={2} />
-            <td style={{
-              ...borderCell, background: '#fff3e0', textAlign: 'center',
-              fontWeight: 'bold', fontSize: 11,
-            }} colSpan={SEER_SLOTS}>
-              占い師
-            </td>
-            <td style={{
-              ...borderCell, background: '#e8f5e9', textAlign: 'center',
-              fontWeight: 'bold', fontSize: 11, borderLeft: '2px solid #666',
-            }} colSpan={MEDIUM_SLOTS}>
-              霊媒師
-            </td>
-            <td style={{
-              ...borderCell, background: '#e3f2fd', textAlign: 'center',
-              fontWeight: 'bold', fontSize: 11, borderLeft: '2px solid #666',
-            }} colSpan={KNIGHT_SLOTS}>
-              騎士
-            </td>
-          </tr>
+          
         </thead>
 
         <tbody>
