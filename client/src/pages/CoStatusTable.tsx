@@ -44,11 +44,11 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
       verticalAlign: 'middle',
       overflow:    'hidden',
     }}>
-      {/* 右上 = 何番 */}
+      {/* 左上 = 日付 */}
       <span style={{
         position:   'absolute',
         top:        3,
-        right:      4,
+        left:      4,
         fontSize:   10,
         fontWeight: 'bold',
         lineHeight: 1,
@@ -56,11 +56,11 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
       }}>
         {co ? co.participant_number : '番'}
       </span>
-      {/* 左下 = 何日目 */}
+      {/* 右下 = 番号 */}
       <span style={{
         position:   'absolute',
         bottom:     3,
-        left:       4,
+        right:       4,
         fontSize:   10,
         fontWeight: 'bold',
         lineHeight: 1,
