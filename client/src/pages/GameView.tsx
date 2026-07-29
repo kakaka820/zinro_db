@@ -180,6 +180,7 @@ const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
   ])
   const normalVotes  = votes.filter(v => v.vote_type === 'normal')
   const runoffVotes  = votes.filter(v => v.vote_type === 'runoff')
+  const runoff2Votes = votes.filter(v => v.vote_type === 'runoff2')
   const dayExecs     = executions.filter(e => e.day_number === day)
   const dayKills     = nightKills.filter(n => n.day_number === day)
 
@@ -445,7 +446,7 @@ const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
             <VoteMatrix
   participants={participants}
   votes={normalVotes}
-  label={runoffVotes.length > 0 ? '通常投票' : null}
+  label={(runoffVotes.length > 0 || runoff2Votes.length > 0) ? '通常投票' : null}
   showVoteOrder={day === 1}
 />
 {runoffVotes.length > 0 && (
@@ -453,6 +454,14 @@ const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
     participants={participants}
     votes={runoffVotes}
     label="決選投票"
+    showVoteOrder={day === 1}
+  />
+)}
+{runoff2Votes.length > 0 && (
+  <VoteMatrix
+    participants={participants}
+    votes={runoff2Votes}
+    label="2回目決選投票"
     showVoteOrder={day === 1}
   />
 )}
