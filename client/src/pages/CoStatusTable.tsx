@@ -240,11 +240,7 @@ const entries = isOwner ? [] : getResultEntries(p, slot)
 
 return (
   <td key={`cell-${p.id}-${i}`} style={{ ...borderCell, ...(isGroupStart ? groupBorder : {}), background: isOwner ? (fake ? '#fce4ec' : '#e8f5e9') : undefined }}>
-    {isOwner && (
-      <span style={fake ? fakeStyle : { color: '#2e7d32', fontWeight: 'bold' }}>
-        {fake ? '偽' : 'CO'}
-      </span>
-    )}
+    {isOwner && <span>★</span>}
     {!isOwner && entries.map((entry, idx) => (
       <span key={idx} style={entry.isBlack ? fakeStyle : undefined}>
         {entry.label}{idx < entries.length - 1 ? ' ' : ''}
