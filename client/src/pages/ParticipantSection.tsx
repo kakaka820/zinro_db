@@ -115,10 +115,6 @@ setPPlayerText(''); setPPlayerId(''); setPNumber('')
             </div>
           )}
         </div>
-        <select value={pRoleId} onChange={e => setPRoleId(e.target.value)} required>
-          <option value="">役職を選択</option>
-          {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-        </select>
         <input
           type="number" min="1"
           value={pNumber}
