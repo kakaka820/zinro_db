@@ -230,7 +230,7 @@ const assignRoles = async () => {
           </p>
           <table>
             <tbody>
-              {roles.filter(r => r.needs_co).map(r => (
+              {roles.filter(r => r.needs_co || r.team !== 'village').map(r => (
                 <tr key={r.id}>
                   <td style={{ paddingRight: 12, whiteSpace: 'nowrap' }}>{r.name}</td>
                   <td>
