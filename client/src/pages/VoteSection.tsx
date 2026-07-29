@@ -13,7 +13,7 @@ export default function VoteSection({ gameId, participants, day }: Props) {
   const [votes,         setVotes]         = useState<Vote[]>([])
   const [voteInputMode, setVoteInputMode] = useState<'form' | 'table'>('form')
   const [matrixInput,   setMatrixInput]   = useState<Record<string, string[]>>({})
-  const [matrixType,    setMatrixType]    = useState('normal')
+  const [matrixType, setMatrixType] = useState<'normal' | 'runoff' | 'runoff2'>('normal')
 
   const [vVoterInput,   setVVoterInput]   = useState('')
   const [vTargetInput,  setVTargetInput]  = useState('')
