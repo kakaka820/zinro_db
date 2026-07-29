@@ -230,7 +230,17 @@ const assignRoles = async () => {
           </p>
           <table>
             <tbody>
-              {roles.filter(r => r.needs_co || r.team !== 'village').map(r => (
+              {[...roles]
+  .filter(r => r.needs_co || r.team !== 'village')
+  .sort((a, b) => {
+    const order = ['人狼', '狂人', '占い師', '霊媒師', '騎士']
+    const ai = order.indexOf(a.name)
+    const bi = order.indexOf(b.name)
+    const aOrder = ai === -1 ? 999 : ai
+    const bOrder = bi === -1 ? 999 : bi
+    return aOrder - bOrder
+  })
+  .map(r => (
                 <tr key={r.id}>
                   <td style={{ paddingRight: 12, whiteSpace: 'nowrap' }}>{r.name}</td>
                   <td>
