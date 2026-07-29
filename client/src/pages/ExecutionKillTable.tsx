@@ -7,7 +7,8 @@ type Props = {
   knightGuards:  KnightGuard[]
   coEvents:      CoEvent[]
   mediumResults: MediumResult[]
-  maxDay:        number   // 表示する最大日数（呼び出し側で算出）
+  maxDay:        number   // 表示する列数（試合全体の最大日数。閲覧中の日に関わらず固定）
+  viewDay:       number   // 現在閲覧中の日（ここまでのデータのみ数字を表示）
 }
 
 // ── 三角分割ヘッダーセル ──────────────────────────────────────────
@@ -62,7 +63,7 @@ function TriDiagonalHeader({ dayNumber, execLabel, guardLabel, killLabel }: TriH
 
 // ── メインコンポーネント ──────────────────────────────────────────
 export default function ExecutionKillTable({
-  participants, executions, nightKills, knightGuards, coEvents, mediumResults, maxDay,
+  participants, executions, nightKills, knightGuards, coEvents, mediumResults, maxDay, viewDay,
 }: Props) {
   const getNum = (pid: number | null) =>
     pid == null ? null : participants.find(p => p.id === pid)?.participant_number ?? '?'
@@ -83,13 +84,13 @@ export default function ExecutionKillTable({
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ borderCollapse: 'collapse' }}>
+      <table style={{ borderCollapse: 'collapse', width: 'auto' }}>
         <thead>
           <tr>
             {days.map(d => {
-              const exec = executions.find(e => e.day_number === d && e.participant_id != null)
-              const kill = nightKills.find(n => n.day_number === d)
-              const guard = knightGuards.find(g => g.day_number === d && g.disclosed_day != null)
+              const exec = d <= viewDay ? executions.find(e => e.day_number === d && e.participant_id != null) : undefined
+              const kill = d <= viewDay ? nightKills.find(n => n.day_number === d) : undefined
+              const guard = d <= viewDay ? knightGuards.find(g => g.day_number === d && g.disclosed_day != null) : undefined
 
               const execLabel = exec ? String(getNum(exec.participant_id)) : null
               const killLabel = kill ? (kill.participant_id == null ? 'GJ' : String(getNum(kill.participant_id))) : null
@@ -113,10 +114,10 @@ export default function ExecutionKillTable({
             <tr key={co.id}>
               <td style={nameCell}>{co.participant_number ?? '?'}</td>
               {days.map(d => {
-                const result = mediumResults.find(
+                const result = d <= viewDay ? mediumResults.find(
                   r => r.medium_participant_id === co.participant_id &&
                        r.day_number === d && r.disclosed_day != null
-                )
+                ) : undefined
                 const label = result ? (result.result === 'black' ? 'W' : '○') : ''
                 return (
                   <td
