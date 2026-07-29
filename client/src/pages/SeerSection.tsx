@@ -33,6 +33,11 @@ export default function SeerSection({
     if (!real) return
     setSeerCoId(String(real.id))
     if (real.co_day != null) setSeerDisclosedDay(d => d || String(real.co_day))
+    // この占い師の既存結果の最大日 + 1 をデフォルトにする
+   const maxDay = seerResults
+     .filter(r => r.seer_participant_id === real.participant_id)
+     .reduce((m, r) => Math.max(m, r.day_number), 0)
+   setSeerDay(maxDay + 1)
   }, [seers])
 
   const resolve = (input: string) => {
@@ -80,7 +85,14 @@ export default function SeerSection({
           const newCoId = e.target.value
           setSeerCoId(newCoId)
           const co = coEvents.find(c => c.id === Number(newCoId))
-          if (co) setSeerDisclosedDay(String(Math.max(co.co_day ?? 1, Number(seerDay) || 1)))
+          if (co) {
+     const maxDay = seerResults
+       .filter(r => r.seer_participant_id === co.participant_id)
+       .reduce((m, r) => Math.max(m, r.day_number), 0)
+     const nextDay = maxDay + 1
+     setSeerDay(nextDay)
+     setSeerDisclosedDay(String(Math.max(co.co_day ?? 1, nextDay)))
+   }
         }} required>
           {seers.map(co => (
             <option key={co.id} value={co.id}>
