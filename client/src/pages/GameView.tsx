@@ -489,6 +489,8 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('list
             executions={executions}
             nightKills={nightKills}
             knightGuards={knightGuards}
+            coEvents={coEvents}
+            mediumResults={mediumResults}
             maxDay={day}
           />
         )}
