@@ -21,12 +21,12 @@ export default (pool: Pool) => {
    // 参加者登録
   router.post('/', async (req: Request, res: Response): Promise<void> => {
      const { game_id, player_id, role_id, survived, participant_number }
-       : { game_id: number; player_id: number; role_id: number; survived?: boolean; participant_number?: number }
-       = req.body;
-    const result = await pool.query(
-      'INSERT INTO game_participants (game_id, player_id, role_id, survived, participant_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [game_id, player_id, role_id, survived ?? false, participant_number ?? null]
-    );
+  : { game_id: number; player_id: number; role_id?: number; survived?: boolean; participant_number?: number }
+  = req.body;
+const result = await pool.query(
+  'INSERT INTO game_participants (game_id, player_id, role_id, survived, participant_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+  [game_id, player_id, role_id ?? null, survived ?? false, participant_number ?? null]
+);
     res.json(result.rows[0]);
   });
 
