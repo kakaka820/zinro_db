@@ -22,7 +22,6 @@ export default function ParticipantSection({
   const [pFiltered,   setPFiltered]   = useState<Player[]>([])
   const [pShowList,   setPShowList]   = useState(false)
   const [pPlayerId,   setPPlayerId]   = useState('')
-  const [pRoleId,     setPRoleId]     = useState('')
   const [pNumber,     setPNumber]     = useState('')
 
   const [editingId,  setEditingId]  = useState<number | null>(null)
