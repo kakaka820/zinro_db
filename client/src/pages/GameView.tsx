@@ -117,6 +117,7 @@ const [seerResults,   setSeerResults]  = useState<SeerResult[]>([])
 const [mediumResults, setMediumResults] = useState<MediumResult[]>([])
 const [knightGuards,  setKnightGuards] = useState<KnightGuard[]>([])
 const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
+const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('list')
   
 
    useEffect(() => {
