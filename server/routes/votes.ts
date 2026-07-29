@@ -48,5 +48,15 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   res.json(result.rows[0]);
 });
 
+    // 捨て票フラグ更新
+  router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+    const { is_discard }: { is_discard: boolean } = req.body;
+    const result = await pool.query(
+      `UPDATE votes SET is_discard = $1 WHERE id = $2 RETURNING *`,
+      [is_discard, req.params.id]
+    );
+    res.json(result.rows[0]);
+  });
+
   return router;
 };
