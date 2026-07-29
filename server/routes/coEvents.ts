@@ -9,13 +9,14 @@ export default (pool: Pool) => {
   router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await pool.query(
-        `SELECT ce.*, p.name AS player_name, r.name AS claimed_role_name
-         FROM co_events ce
-         JOIN game_participants gp ON gp.id = ce.participant_id
-         JOIN players p ON p.id = gp.player_id
-         JOIN roles r ON r.id = ce.claimed_role_id
-         WHERE ce.game_id = $1
-         ORDER BY ce.co_day`,
+        `SELECT ce.*, p.name AS player_name, r.name AS claimed_role_name,
+       gp.participant_number AS participant_number
+FROM co_events ce
+JOIN game_participants gp ON gp.id = ce.participant_id
+JOIN players p ON p.id = gp.player_id
+JOIN roles r ON r.id = ce.claimed_role_id
+WHERE ce.game_id = $1
+ORDER BY ce.co_day`,
         [req.params.gameId]
       );
       res.json(result.rows);
