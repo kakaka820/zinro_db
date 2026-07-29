@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
 import type { Game, Participant, Vote, Execution, NightKill, CoEvent, SeerResult, MediumResult, KnightGuard } from '../types'
+import CoStatusTable from './CoStatusTable'
+
 
 
 // ── 投票マトリクス ────────────────────────────────────────────────
@@ -114,6 +116,8 @@ const [coEvents,      setCoEvents]     = useState<CoEvent[]>([])
 const [seerResults,   setSeerResults]  = useState<SeerResult[]>([])
 const [mediumResults, setMediumResults] = useState<MediumResult[]>([])
 const [knightGuards,  setKnightGuards] = useState<KnightGuard[]>([])
+const [coViewMode,    setCoViewMode]   = useState<'list' | 'table'>('list')
+  
 
    useEffect(() => {
     api.get('/games').then(gs =>
@@ -144,6 +148,12 @@ const [knightGuards,  setKnightGuards] = useState<KnightGuard[]>([])
     participants.find(p => p.id === pid)?.participant_number ?? '?'
   const fmt = (pid: number) =>
     pid ? `${getNum(pid)}. ${getName(pid)}` : '—'
+
+
+  const isFake = (co: CoEvent) => {
+   const p = participants.find(p => p.id === co.participant_id)
+   return p != null && p.role_name !== co.claimed_role_name
+ }
 
   const execLabel = (type: string) =>
     type === 'normal'             ? '通常吊り'
@@ -276,8 +286,31 @@ const [knightGuards,  setKnightGuards] = useState<KnightGuard[]>([])
 
         return (
           <div className="card">
-            <h2>CO状況（{day}日目時点）</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+             CO状況（{day}日目時点）
+             <button
+               className="secondary"
+               style={{ fontSize: 12, padding: '2px 10px' }}
+               onClick={() => setCoViewMode(m => m === 'list' ? 'table' : 'list')}
+             >
+               {coViewMode === 'list' ? '表で見る' : 'リストで見る'}
+             </button>
+          </h2>
 
+           {coViewMode === 'table' && (
+            <CoStatusTable
+               participants={participants}
+               coEvents={coEvents.filter(c => c.co_day != null && c.co_day <= day)}
+               seerResults={seerResults.filter(r => r.disclosed_day != null && r.disclosed_day <= day)}
+               mediumResults={mediumResults.filter(r => r.disclosed_day != null && r.disclosed_day <= day)}
+               knightGuards={knightGuards.filter(g => g.disclosed_day != null && g.disclosed_day <= day)}
+               isFake={isFake}
+             />
+           )}
+
+           {coViewMode === 'list' && (
+
+            <>
             {/* 占い師 */}
             {seerCOs.length > 0 && (
               <div style={{ marginBottom: 16 }}>
@@ -397,6 +430,8 @@ const [knightGuards,  setKnightGuards] = useState<KnightGuard[]>([])
                   )
                 })}
               </div>
+            )}
+            </>
             )}
           </div>
         )
