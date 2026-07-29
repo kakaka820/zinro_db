@@ -24,8 +24,8 @@ export default (pool: Pool) => {
   // 投票登録
 router.post('/', async (req: Request, res: Response): Promise<void> => {
      const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order }:
-       { game_id: number; day_number: number; vote_type?: 'normal' | 'runoff';
-         voter_id: number; target_id: number; vote_order?: number; receive_order?: number } = req.body;
+       { game_id: number; day_number: number; vote_type?: 'normal' | 'runoff' | 'runoff2';
+  voter_id: number; target_id: number; vote_order?: number; receive_order?: number } = req.body;
 
   let finalReceiveOrder = receive_order ?? null;
 
