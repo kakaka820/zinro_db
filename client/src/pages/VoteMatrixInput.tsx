@@ -93,7 +93,7 @@ const handleKeyDown = (
           <tbody>
             {Array.from({ length: ROWS }, (_, row) => (
               <tr key={row}>
-                sortedP.map((p, colIdx) => (
+               {sortedP.map((p, colIdx) => (
                   <td key={p.id} style={cell}>
                     <input
                       type="text"
