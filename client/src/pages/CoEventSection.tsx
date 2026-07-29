@@ -98,9 +98,16 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
                 </td>
                 <td>
                   {editingCoId === co.id ? (
+                <>
                     <input type="number" min="1" value={editCoDay}
                       onChange={e => setEditCoDay(e.target.value)}
                       placeholder="未COは空欄" style={{ width: 80 }} />
+                   <select value={editCoTiming} onChange={e => setEditCoTiming(e.target.value as any)}>
+                        <option value="">通常CO</option>
+                        <option value="runoff">決戦CO</option>
+                        <option value="testament">遺言CO</option>
+                      </select>
+                    </>
                   ) : (
                     <>
                       {co.co_day != null
