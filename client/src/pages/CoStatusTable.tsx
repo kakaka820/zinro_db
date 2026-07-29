@@ -75,7 +75,7 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
 
 // ── メインコンポーネント ───────────────────────────────────────────
 export default function CoStatusTable({
-  participants, coEvents, seerResults, mediumResults, knightGuards, isFake,
+  participants, coEvents, seerResults, mediumResults, knightGuards,
 }: Props) {
   const [showNames, setShowNames] = useState(true)   // デフォルト：表示
   const [showRole,  setShowRole]  = useState(false)  // デフォルト：非表示
@@ -235,11 +235,16 @@ const getResultEntries = (p: Participant, slot: CoSlot): ResultEntry[] => {
                   (slot.role === '騎士'   && slot.index === 0)
                 // この列の CO 本人行はハイライト
 const isOwner = slot.co?.participant_id === p.id
-const fake    = slot.co ? isFake(slot.co) : false
 const entries = isOwner ? [] : getResultEntries(p, slot)
 
 return (
-  <td key={`cell-${p.id}-${i}`} style={{ ...borderCell, ...(isGroupStart ? groupBorder : {}), background: isOwner ? (fake ? '#fce4ec' : '#e8f5e9') : undefined }}>
+ <td
+  key={`cell-${p.id}-${i}`}
+  style={{
+    ...borderCell,
+    ...(isGroupStart ? groupBorder : {}),
+  }}
+>
     {isOwner && <span>★</span>}
     {!isOwner && entries.map((entry, idx) => (
       <span key={idx} style={entry.isBlack ? fakeStyle : undefined}>
