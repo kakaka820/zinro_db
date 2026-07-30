@@ -1,5 +1,22 @@
 import { useState } from 'react'
-import type { Participant, CoEvent, SeerResult, MediumResult, KnightGuard } from '../types'
+import type { Participant, CoEvent, SeerResult, MediumResult, KnightGuard, NightKill } from '../types'
+
+
+
+const getVisibleMediumResults = (mediumCo: CoEvent, currentDay: number) => {
+  const deathNight = getMediumDeathNight(mediumCo)
+  
+  // 霊媒師が死んでいれば、死んだ夜以降の開示分は非表示
+  // 例：2夜に噛まれた → disclosed_day <= 2 のもののみ表示
+  const maxDisclosedDay = deathNight ?? Infinity
+
+  return mediumResults.filter(mr =>
+    mr.medium_co_id === mediumCo.id &&
+    mr.disclosed_day <= currentDay &&    // 現在日以前
+    mr.disclosed_day <= maxDisclosedDay  // 霊媒師生存期間内
+  )
+}
+
 
 // ── 列定義 ────────────────────────────────────────────────────────
 // 占い師4枠・霊媒師3枠・騎士2枠（固定スロット数）
@@ -20,6 +37,7 @@ type Props = {
   mediumResults: MediumResult[]
   knightGuards:  KnightGuard[]
   isFake:        (co: CoEvent) => boolean
+  nightKills:   NightKill[]
 }
 
 // ── 斜線ヘッダーセル ──────────────────────────────────────────────
@@ -93,6 +111,14 @@ export default function CoStatusTable({
   const sortedP = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
   )
+  // 霊媒師の死亡夜を取得するヘルパーを追加
+  const getMediumDeathNight = (mediumCo: CoEvent): number | null => {
+  // CoEventのplayer_idでparticipantを特定
+  const mediumParticipant = participants.find(p => p.player_id === mediumCo.player_id)
+  if (!mediumParticipant) return null
+  const kill = nightKills.find(nk => nk.participant_id === mediumParticipant.id)
+  return kill?.day_number ?? null
+}
 
   // 各役職のCOを co_day 順に並べてスロットに割り当て
   const slotsByRole = (role: '占い師' | '霊媒師' | '騎士', maxSlots: number): CoSlot[] => {
