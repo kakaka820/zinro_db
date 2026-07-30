@@ -102,7 +102,7 @@ export default function VoteSection({ gameId, participants, day }: Props) {
   }
 
   return (
-    <div className="card">
+    <div className="card" id="vote-section">
       <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {day}日目：投票
         <button
