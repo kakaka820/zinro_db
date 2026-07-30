@@ -73,19 +73,22 @@ export default function VoteSection({ gameId, participants, day }: Props) {
     loadVotes()
   }
 
-  const submitMatrix = async () => {
+  const isSubmittingMatrix = useRef(false)              // ★追加
+const [matrixSubmitting, setMatrixSubmitting] = useState(false)  // ★追加
+
+const submitMatrix = async () => {
+  if (isSubmittingMatrix.current) return              // ★連打を即ブロック
+  isSubmittingMatrix.current = true
+  setMatrixSubmitting(true)
+  try {
     const toSubmit: object[] = []
     for (const [targetIdStr, voterNums] of Object.entries(matrixInput)) {
       for (const voterNumStr of (voterNums ?? [])) {
         if (!voterNumStr.trim()) continue
         const voter = resolveParticipant(voterNumStr.trim())
         if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
-        const alreadyExists = votes.some(
-          v => v.voter_id  === voter.id &&
-               v.target_id === Number(targetIdStr) &&
-               v.vote_type === matrixType
-        )
-        if (alreadyExists) continue
+        // alreadyExists のチェックは削除
+        // → サーバー側がupsertするので不要（むしろ修正の再送信もできるようになる）
         const orderStr = voteOrderInput[voter.id]
         const voteOrder = (day === 1 && matrixType === 'normal' && orderStr && orderStr.trim())
           ? Number(orderStr) : null
@@ -96,10 +99,14 @@ export default function VoteSection({ gameId, participants, day }: Props) {
         })
       }
     }
-    if (!toSubmit.length) { loadVotes(); return }
-    for (const v of toSubmit) await api.post('/votes', v)
-    loadVotes()
+    if (!toSubmit.length) { await loadVotes(); return }
+    await api.post('/votes/bulk', { votes: toSubmit })   // ★1回のリクエストに変更
+    await loadVotes()
+  } finally {
+    isSubmittingMatrix.current = false
+    setMatrixSubmitting(false)
   }
+}
 
   return (
     <div className="card" id="vote-section">
