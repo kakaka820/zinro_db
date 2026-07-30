@@ -21,31 +21,69 @@ export default (pool: DbPool) => {
     res.json(result.rows);
   });
 
-  // 投票登録
-router.post('/', async (req: Request, res: Response): Promise<void> => {
-     const { game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order, is_discard }:
-  { game_id: number; day_number: number; vote_type?: 'normal' | 'runoff' | 'runoff2';
-    voter_id: number; target_id: number; vote_order?: number; receive_order?: number; is_discard?: boolean } = req.body;
+// upsertVote() は POST '/' と POST '/bulk' の両方から呼ばれる共通処理として
+// ファイル冒頭に新設（ON CONFLICT DO UPDATE で重複INSERTを上書きに変える）
+async function upsertVote(db: Queryable, v: VoteInput) {
+  const { game_id, day_number, voter_id, target_id, is_discard } = v
+  const vote_type = v.vote_type ?? 'normal'
+  let finalReceiveOrder = v.receive_order ?? null
 
-  let finalReceiveOrder = receive_order ?? null;
-
-  // 初日は vote_order から自動計算
-  if (Number(day_number) === 1 && vote_order != null) {
-    const countResult = await pool.query(
+  if (Number(day_number) === 1 && v.vote_order != null) {
+    const countResult = await db.query<{ count: number }>(
       `SELECT COUNT(*) AS count FROM votes
        WHERE game_id = $1 AND day_number = $2 AND vote_type = $3
-         AND target_id = $4 AND vote_order < $5`,
-      [game_id, day_number, vote_type ?? 'normal', target_id, vote_order]
-    );
-    finalReceiveOrder = parseInt(countResult.rows[0].count, 10) + 1;
+         AND target_id = $4 AND vote_order < $5
+         AND voter_id != $6`,
+      [game_id, day_number, vote_type, target_id, v.vote_order, voter_id]
+    )
+    finalReceiveOrder = parseInt(String(countResult.rows[0].count), 10) + 1
   }
 
-  const result = await pool.query(
-  `INSERT INTO votes (game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order, is_discard)
-   VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-  [game_id, day_number, vote_type ?? 'normal', voter_id, target_id, vote_order ?? null, finalReceiveOrder, is_discard ?? false]
-);
-  res.json(result.rows[0]);
+  const result = await db.query<Vote>(
+    `INSERT INTO votes (game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order, is_discard)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     ON CONFLICT (game_id, day_number, vote_type, voter_id)
+     DO UPDATE SET
+       target_id     = excluded.target_id,
+       vote_order    = excluded.vote_order,
+       receive_order = excluded.receive_order,
+       is_discard    = excluded.is_discard
+     RETURNING *`,
+    [game_id, day_number, vote_type, voter_id, target_id, v.vote_order ?? null, finalReceiveOrder, is_discard ?? false]
+  )
+  return result.rows[0]
+}
+
+// 投票登録（1件）
+router.post('/', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const row = await upsertVote(pool, req.body as VoteInput)
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// 投票登録（複数まとめて・1トランザクション）
+router.post('/bulk', async (req: Request, res: Response): Promise<void> => {
+  const { votes }: { votes: VoteInput[] } = req.body;
+  if (!Array.isArray(votes) || votes.length === 0) {
+    res.status(400).json({ error: 'votes は空でない配列で指定してください' });
+    return;
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const rows: Vote[] = [];
+    for (const v of votes) rows.push(await upsertVote(client, v));
+    await client.query('COMMIT');
+    res.json(rows);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: (err as Error).message });
+  } finally {
+    client.release();
+  }
 });
 
     // 捨て票フラグ更新
