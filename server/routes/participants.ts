@@ -30,7 +30,24 @@ const result = await pool.query(
 
   // 参加者削除
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+  const existing = await pool.query<{ player_id: number }>(
+    'SELECT player_id FROM game_participants WHERE id = $1',
+    [req.params.id]
+  );
+  const playerId = existing.rows[0]?.player_id ?? null;
+
   await pool.query('DELETE FROM game_participants WHERE id = $1', [req.params.id]);
+
+  // どの試合にも参加していなくなったら、プレイヤー一覧からも削除
+  if (playerId != null) {
+    await pool.query(
+      `DELETE FROM players
+       WHERE id = $1
+         AND id NOT IN (SELECT DISTINCT player_id FROM game_participants)`,
+      [playerId]
+    );
+  }
+
   res.json({ success: true });
 });
 
