@@ -362,10 +362,12 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('list
             {mediumCOs.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <h3 style={{ fontSize: 14, marginBottom: 6 }}>👻 霊媒師CO</h3>
-                {mediumCOs.map(co => {
+                                {mediumCOs.map(co => {
+                  const mediumDeathNight = nightKills.find(nk => nk.participant_id === co.participant_id)?.day_number ?? Infinity
                   const results = mediumResults.filter(
                     r => r.medium_participant_id === co.participant_id &&
-                         r.disclosed_day != null && r.disclosed_day <= day
+                         r.disclosed_day != null && r.disclosed_day <= day &&
+                         r.disclosed_day <= mediumDeathNight
                   )
                   return (
                     <div key={co.id} style={{ marginBottom: 8 }}>
