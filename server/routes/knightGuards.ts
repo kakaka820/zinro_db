@@ -1,11 +1,9 @@
 import express, { Request, Response } from 'express';
- import { Pool } from 'pg';
+ import type { DbPool } from '../db';
  import { KnightGuard } from '../types/db';
-
  const router = express.Router();
-
-
-export default (pool: Pool) => {
+export default (pool: DbPool) => {
+ 
   // 試合の護衛記録一覧
 router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     try {
