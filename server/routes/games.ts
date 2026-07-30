@@ -34,6 +34,11 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
+        // 削除対象試合に参加していたプレイヤーIDを先に控えておく（削除後の孤立チェック用）
+        const affectedPlayers = await client.query<{ player_id: number }>(
+          `SELECT DISTINCT player_id FROM game_participants WHERE game_id IN (${placeholders})`,
+          ids
+        );
         // 子テーブルを依存順に削除
         await client.query(`DELETE FROM votes             WHERE game_id IN (${placeholders})`, ids);
         await client.query(`DELETE FROM executions        WHERE game_id IN (${placeholders})`, ids);
@@ -44,6 +49,19 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         await client.query(`DELETE FROM knight_guards     WHERE game_id IN (${placeholders})`, ids);
         await client.query(`DELETE FROM game_participants WHERE game_id IN (${placeholders})`, ids);
         await client.query(`DELETE FROM games             WHERE id      IN (${placeholders})`, ids);
+
+        // どの試合にも参加していなくなったプレイヤーを一覧からも削除
+        const playerIds = affectedPlayers.rows.map(r => r.player_id);
+        if (playerIds.length > 0) {
+          const playerPlaceholders = playerIds.map(() => '?').join(', ');
+          await client.query(
+            `DELETE FROM players
+             WHERE id IN (${playerPlaceholders})
+               AND id NOT IN (SELECT DISTINCT player_id FROM game_participants)`,
+            playerIds
+          );
+        }
+
         await client.query('COMMIT');
         res.json({ deleted: ids.length });
       } catch (err) {
