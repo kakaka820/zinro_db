@@ -1,10 +1,8 @@
 import express, { Request, Response } from 'express';
- import { Pool } from 'pg';
+ import type { DbPool } from '../db';
  import { Execution } from '../types/db';
-
  const router = express.Router();
-
- export default (pool: Pool) => {
+ export default (pool: DbPool) => {
    
  // 吊り結果登録
    router.post('/', async (req: Request, res: Response): Promise<void> => {
