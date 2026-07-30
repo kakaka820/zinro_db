@@ -1,8 +1,7 @@
 import 'dotenv/config';
  import express from 'express';
- import { Pool } from 'pg';
+ import { createDbPool } from './db';
  import cors from 'cors';
-
  import playersRouter from './routes/players';
  import rolesRouter from './routes/roles';
  import gamesRouter from './routes/games';
@@ -24,10 +23,7 @@ app.use(cors({
 app.options('*', cors());
 app.use(express.json());
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const pool = createDbPool();
 
 app.get('/health', async (req, res) => {
   try {
