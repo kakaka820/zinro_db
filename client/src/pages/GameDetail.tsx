@@ -92,6 +92,7 @@ export default function GameDetail() {
             gameId={id!}
             participants={participants}
             day={day}
+            executions={executions}
           />
 
           <ExecutionSection
