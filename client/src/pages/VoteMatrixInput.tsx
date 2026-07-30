@@ -18,6 +18,7 @@ type VoteMatrixInputProps = {
   matrixType:     'normal' | 'runoff' | 'runoff2'
   setMatrixType:  React.Dispatch<React.SetStateAction<'normal' | 'runoff' | 'runoff2'>>
   onSubmit:       () => void
+ submitting:     boolean
   votes:          Vote[]
   day:            number
   voteOrderInput:    Record<number, string>
@@ -86,8 +87,10 @@ const handleKeyDown = (
   <option value="runoff">決選投票</option>
   <option value="runoff2">2回目決選投票</option>
 </select>
-        <button type="button" onClick={onSubmit}>一括登録</button>
-        <button type="button" className="secondary" onClick={() => setMatrixInput({})}>クリア</button>
+        <button type="button" onClick={onSubmit} disabled={submitting}>
+  {submitting ? '登録中…' : '一括登録'}
+</button>
+<button type="button" className="secondary" onClick={() => setMatrixInput({})} disabled={submitting}>クリア</button>
       </div>
       <p style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
         各列の参加者番号の上のセルに、投票した人の番号を入力してください
