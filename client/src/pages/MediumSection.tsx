@@ -39,41 +39,44 @@ export default function MediumSection({
   }, [mediums])
 
   // 霊媒結果を自動記入
-  useEffect(() => {
-    if (!executions.length || !coEvents.length) return
-    const realCo = mediums.find(co => !isFake(co))
-    if (!realCo) return
+// 霊媒結果を自動記入（真霊媒のみ）
+useEffect(() => {
+  if (!executions.length) return
 
-    const mid = realCo.participant_id
-    const executedDay    = executions.find(e => e.participant_id === mid)?.day_number ?? Infinity
-    const nightKilledDay = nightKills.find(e => e.participant_id === mid)?.day_number ?? Infinity
-    const mediumDeadDay  = Math.min(executedDay, nightKilledDay)
+  const realCo = mediums.find(co => !isFake(co))
+  if (!realCo) return
 
-    const targets  = executions.filter(
-      e => e.day_number < mediumDeadDay &&
-           e.participant_id != null &&
-           e.participant_id !== mid
-    )
-    const recorded = new Set(mediumResults.map(r => r.target_participant_id))
-    const toAdd    = targets.filter(e => !recorded.has(e.participant_id))
-    if (!toAdd.length) return
+  const autoFill = async () => {
+    for (const execution of executions) {
+      // すでにこの処刑日の記録があればスキップ
+      const alreadyExists = mediumResults.some(
+        mr => mr.medium_co_id === realCo.id && mr.day_number === execution.day_number
+      )
+      if (alreadyExists) continue
 
-    ;(async () => {
-      for (const ex of toAdd) {
-        const p = participants.find(p => p.id === ex.participant_id)
-        if (!p) continue
-        await mediumResultsApi.add({
-          game_id:               Number(gameId),
-          medium_participant_id: mid,
-          target_participant_id: ex.participant_id,
-          day_number:            ex.day_number,
-          result:                p.role_name === '人狼' ? 'black' : 'white',
-          disclosed_day:         null,
-        })
-      }
-      onRefresh()
-    })()
-  }, [executions, nightKills, coEvents, mediumResults])
+      // 処刑された参加者のチームを取得
+      const target = participants.find(p => p.id === execution.participant_id)
+      if (!target) continue
+
+      // 結果判定：狼陣営なら黒、それ以外は白
+      const result: 'white' | 'black' = target.team === 'wolf' ? 'black' : 'white'
+
+      // 開示日 = 処刑日 + 1
+      const disclosed_day = execution.day_number + 1
+
+      await mediumResultsApi.add({
+        medium_co_id: realCo.id,
+        participant_id: target.id,
+        day_number: execution.day_number,
+        disclosed_day,
+        result,
+      })
+    }
+    onRefresh()
+  }
+
+  autoFill()
+}, [executions, mediums, mediumResults, participants])
 
   const resolve = (input: string) => {
     const trimmed = input.trim()
