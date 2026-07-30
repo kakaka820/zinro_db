@@ -6,7 +6,7 @@ import type { Player, Role, Game, Participant, Vote,
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 const get = <T>(path: string): Promise<T> =>
-   fetch(`${BASE}${path}`).then(r => r.json());
+   fetch(`${BASE}${path}`, { cache: 'no-store' }).then(r => r.json());
  const post = <T>(path: string, body: unknown): Promise<T> =>
    fetch(`${BASE}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
  const put = <T>(path: string, body: unknown): Promise<T> =>
