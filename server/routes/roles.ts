@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express';
- import { Pool } from 'pg';
+ import type { DbPool } from '../db';
  import { Role } from '../types/db';
  const router = express.Router();
 
-export default (pool: Pool) => {
+export default (pool: DbPool) => {
   // 役職一覧
 router.get('/', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query('SELECT * FROM roles ORDER BY id');
