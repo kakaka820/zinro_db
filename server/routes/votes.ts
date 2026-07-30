@@ -1,10 +1,10 @@
 import express, { Request, Response } from 'express';
- import { Pool } from 'pg';
+ import type { DbPool } from '../db';
  import { Vote } from '../types/db';
 
  const router = express.Router();
 
-export default (pool: Pool) => {
+export default (pool: DbPool) => {
   // 試合・日付ごとの投票一覧
   router.get('/game/:gameId/day/:dayNumber', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query(
@@ -32,7 +32,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   // 初日は vote_order から自動計算
   if (Number(day_number) === 1 && vote_order != null) {
     const countResult = await pool.query(
-      `SELECT COUNT(*) FROM votes
+      `SELECT COUNT(*) AS count FROM votes
        WHERE game_id = $1 AND day_number = $2 AND vote_type = $3
          AND target_id = $4 AND vote_order < $5`,
       [game_id, day_number, vote_type ?? 'normal', target_id, vote_order]
