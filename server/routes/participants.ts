@@ -9,7 +9,7 @@ export default (pool: DbPool) => {
       `SELECT gp.*, p.name as player_name, r.name as role_name, r.team
        FROM game_participants gp
        JOIN players p ON p.id = gp.player_id
-       JOIN roles r ON r.id = gp.role_id
+       LEFT JOIN roles r ON r.id = gp.role_id
        WHERE gp.game_id = $1`,
       [req.params.gameId]
     );
