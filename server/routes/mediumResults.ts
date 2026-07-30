@@ -1,10 +1,10 @@
 import express, { Request, Response } from 'express';
- import { Pool } from 'pg';
+ import type { DbPool } from '../db';
  import { MediumResult } from '../types/db';
-
  const router = express.Router();
+export default (pool: DbPool) => {
 
-export default (pool: Pool) => {
+ 
   // 試合の霊媒結果一覧
   router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> => {
     try {
