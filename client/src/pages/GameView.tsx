@@ -310,6 +310,7 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('list
                mediumResults={mediumResults.filter(r => r.disclosed_day != null && r.disclosed_day <= day)}
                knightGuards={knightGuards.filter(g => g.disclosed_day != null && g.disclosed_day <= day)}
                isFake={isFake}
+              nightKills={nightKills}
              />
            )}
 
