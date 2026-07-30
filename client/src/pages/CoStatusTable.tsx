@@ -103,7 +103,7 @@ function DiagonalHeader({ co }: { co: CoEvent | null }) {
 
 // ── メインコンポーネント ───────────────────────────────────────────
 export default function CoStatusTable({
-  participants, coEvents, seerResults, mediumResults, knightGuards,
+  participants, coEvents, seerResults, mediumResults, knightGuards, nightKills,
 }: Props) {
   const [showNames, setShowNames] = useState(true)   // デフォルト：表示
   const [showRole,  setShowRole]  = useState(false)  // デフォルト：非表示
