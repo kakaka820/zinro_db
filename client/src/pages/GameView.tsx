@@ -271,9 +271,10 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('list
         <h2>日付選択</h2>
         <form style={{ marginBottom: 0 }}>
           <label>何日目：</label>
-          <input type="number" min="1" value={day}
-            onChange={e => setDay(Number(e.target.value))}
-            style={{ width: 80 }} />
+         <input type="number" min="1" value={day}
+  onChange={e => setDay(Number(e.target.value))}
+  onWheel={e => e.currentTarget.blur()}
+  style={{ width: 80 }} />
         </form>
       </div>
 
