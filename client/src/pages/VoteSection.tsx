@@ -99,8 +99,12 @@ const submitMatrix = async () => {
         })
       }
     }
-    if (!toSubmit.length) { await loadVotes(); return }
-    await api.post('/votes/bulk', { votes: toSubmit })   // ★1回のリクエストに変更
+    await api.post('/votes/replace', {
+  game_id: Number(gameId),
+  day_number: day,
+  vote_type: matrixType,
+  votes: toSubmit,
+})
     await loadVotes()
   } finally {
     isSubmittingMatrix.current = false
