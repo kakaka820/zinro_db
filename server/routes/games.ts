@@ -29,20 +29,21 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'ids は空でない配列で指定してください' });
       return;
     }
+    const placeholders = ids.map(() => '?').join(', ');
     try {
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
         // 子テーブルを依存順に削除
-        await client.query(`DELETE FROM votes          WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM executions     WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM night_kills    WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM co_events      WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM seer_results   WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM medium_results WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM knight_guards  WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM game_participants WHERE game_id = ANY($1::int[])`, [ids]);
-        await client.query(`DELETE FROM games          WHERE id = ANY($1::int[])`, [ids]);
+        await client.query(`DELETE FROM votes             WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM executions        WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM night_kills       WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM co_events         WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM seer_results      WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM medium_results    WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM knight_guards     WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM game_participants WHERE game_id IN (${placeholders})`, ids);
+        await client.query(`DELETE FROM games             WHERE id      IN (${placeholders})`, ids);
         await client.query('COMMIT');
         res.json({ deleted: ids.length });
       } catch (err) {
