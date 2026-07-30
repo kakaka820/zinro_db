@@ -26,7 +26,8 @@ type VoteMatrixInputProps = {
 
 export default function VoteMatrixInput({
   participants, matrixInput, setMatrixInput,
-  matrixType, setMatrixType, onSubmit, votes, day
+  matrixType, setMatrixType, onSubmit, votes, day,
+  voteOrderInput, setVoteOrderInput,
 }: VoteMatrixInputProps) {
   const sortedP = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
