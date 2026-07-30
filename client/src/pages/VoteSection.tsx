@@ -21,6 +21,7 @@ export default function VoteSection({ gameId, participants, day }: Props) {
   const [vVoteOrder,    setVVoteOrder]    = useState('')
   const [vReceiveOrder, setVReceiveOrder] = useState('')
   const [vIsDiscard,    setVIsDiscard]    = useState(false)
+  const [showNames, setShowNames] = useState(false)
 
   const loadVotes = () =>
     api.get<Vote[]>(`/votes/game/${gameId}/day/${day}`).then(setVotes)
@@ -114,17 +115,23 @@ const submitMatrix = async () => {
 
   return (
     <div className="card" id="vote-section">
-      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        {day}日目：投票
-        <button
-          type="button" className="secondary"
-          style={{ fontSize: 12, padding: '2px 10px' }}
-          onClick={() => { setVoteInputMode(m => m === 'form' ? 'table' : 'form'); setMatrixInput({}) }}
-        >
-          {voteInputMode === 'form' ? '表入力に切替' : 'フォーム入力に切替'}
-        </button>
-      </h2>
-
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+  {day}日目：投票
+  <button
+    type="button" className="secondary"
+    style={{ fontSize: 12, padding: '2px 10px' }}
+    onClick={() => { setVoteInputMode(m => m === 'form' ? 'table' : 'form'); setMatrixInput({}) }}
+  >
+    {voteInputMode === 'form' ? '表入力に切替' : 'フォーム入力に切替'}
+  </button>
+  <button
+    type="button" className="secondary"
+    style={{ fontSize: 12, padding: '2px 10px' }}
+    onClick={() => setShowNames(v => !v)}
+  >
+    {showNames ? '名前を非表示' : '名前を表示'}
+  </button>
+</h2>
       {voteInputMode === 'form' ? (
         <form onSubmit={addVote}>
           {day === 1 ? (
@@ -192,8 +199,18 @@ const submitMatrix = async () => {
           <tbody>
                         {votes.map(v => (
               <tr key={v.id}>
-                <td>{participants.find(p => p.id === v.voter_id)?.player_name  ?? v.voter_id}</td>
-                <td>{participants.find(p => p.id === v.target_id)?.player_name ?? v.target_id}</td>
+                <td>
+  {showNames
+    ? participants.find(p => p.id === v.voter_id)?.player_name ?? v.voter_id
+    : (participants.find(p => p.id === v.voter_id)?.participant_number ?? v.voter_id)}
+</td>
+<td>
+  {showNames
+    ? participants.find(p => p.id === v.target_id)?.player_name ?? v.target_id
+    : (participants.find(p => p.id === v.target_id)?.participant_number ?? v.target_id)}
+</td>
+
+
                 <td>
   {v.vote_type === 'normal' ? '通常'
     : v.vote_type === 'runoff' ? '決選'
