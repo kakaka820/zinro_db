@@ -155,15 +155,23 @@ const getResultEntries = (p: Participant, slot: CoSlot): ResultEntry[] => {
       }))
   }
 
-  if (slot.role === '霊媒師') {
-    return mediumResults
-      .filter(r => r.medium_participant_id === ownerId && r.target_participant_id === p.id)
-      .sort((a, b) => a.day_number - b.day_number)
-      .map(r => ({
-        label:   r.result === 'white' ? circled(r.day_number) : `${r.day_number}W`,
-        isBlack: r.result === 'black',
-      }))
-  }
+  // L158〜165 を以下に置き換える
+if (slot.role === '霊媒師') {
+  const deathNight = getMediumDeathNight(slot.co)
+  const maxDisclosedDay = deathNight ?? Infinity
+
+  return mediumResults
+    .filter(r =>
+      r.medium_participant_id === ownerId &&
+      r.target_participant_id === p.id &&
+      r.disclosed_day <= maxDisclosedDay
+    )
+    .sort((a, b) => a.day_number - b.day_number)
+    .map(r => ({
+      label:   r.result === 'white' ? circled(r.day_number) : `${r.day_number}W`,
+      isBlack: r.result === 'black',
+    }))
+}
 
   if (slot.role === '騎士') {
     return knightGuards
