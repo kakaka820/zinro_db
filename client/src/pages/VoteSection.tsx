@@ -14,7 +14,7 @@ export default function VoteSection({ gameId, participants, day }: Props) {
   const [voteInputMode, setVoteInputMode] = useState<'form' | 'table'>('form')
   const [matrixInput,   setMatrixInput]   = useState<Record<string, string[]>>({})
   const [matrixType, setMatrixType] = useState<'normal' | 'runoff' | 'runoff2'>('normal')
-
+　const [voteOrderInput, setVoteOrderInput] = useState<Record<number, string>>({})
   const [vVoterInput,   setVVoterInput]   = useState('')
   const [vTargetInput,  setVTargetInput]  = useState('')
   const [vType,         setVType]         = useState('normal')
@@ -30,13 +30,16 @@ export default function VoteSection({ gameId, participants, day }: Props) {
   useEffect(() => {
     if (voteInputMode !== 'table') return
     const matrix: Record<string, string[]> = {}
+    const order: Record<number, string> = {}
     for (const v of votes.filter(v => v.vote_type === matrixType)) {
       const voterNum = participants.find(p => p.id === v.voter_id)?.participant_number
       if (voterNum == null) continue
       if (!matrix[v.target_id]) matrix[v.target_id] = []
       matrix[v.target_id].push(String(voterNum))
+      if (v.vote_order != null) order[v.voter_id] = String(v.vote_order)
     }
     setMatrixInput(matrix)
+    setVoteOrderInput(order)
   }, [votes, matrixType, voteInputMode])
 
   const resolveParticipant = (input: string) => {
@@ -83,10 +86,13 @@ export default function VoteSection({ gameId, participants, day }: Props) {
                v.vote_type === matrixType
         )
         if (alreadyExists) continue
+        const orderStr = voteOrderInput[voter.id]
+        const voteOrder = (day === 1 && matrixType === 'normal' && orderStr && orderStr.trim())
+          ? Number(orderStr) : null
         toSubmit.push({
           game_id: Number(gameId), day_number: day, vote_type: matrixType,
           voter_id: voter.id, target_id: Number(targetIdStr),
-          vote_order: null, receive_order: null,
+          vote_order: voteOrder, receive_order: null,
         })
       }
     }
@@ -157,6 +163,8 @@ export default function VoteSection({ gameId, participants, day }: Props) {
           onSubmit={submitMatrix}
           votes={votes}
           day={day}
+          voteOrderInput={voteOrderInput}
+          setVoteOrderInput={setVoteOrderInput}
         />
       )}
 
