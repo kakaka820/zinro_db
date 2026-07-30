@@ -20,6 +20,8 @@ type VoteMatrixInputProps = {
   onSubmit:       () => void
   votes:          Vote[]
   day:            number
+  voteOrderInput:    Record<number, string>
+  setVoteOrderInput: React.Dispatch<React.SetStateAction<Record<number, string>>>
 }
 
 export default function VoteMatrixInput({
@@ -115,11 +117,18 @@ const handleKeyDown = (
                 </td>
               ))}
             </tr>
-            {day === 1 && matrixType === 'normal' && (
+           {day === 1 && matrixType === 'normal' && (
               <tr>
                 {sortedP.map(p => (
-                  <td key={p.id} style={orderCell}>
-                    {votes.find(v => v.voter_id === p.id && v.vote_type === matrixType)?.vote_order ?? ''}
+                  <td key={p.id} style={cell}>
+                    <input
+                      type="text"
+                      value={voteOrderInput[p.id] ?? ''}
+                      onChange={e =>
+                        setVoteOrderInput(prev => ({ ...prev, [p.id]: e.target.value }))
+                      }
+                      style={{ display: 'block', width: '100%', height: '100%', textAlign: 'center', fontSize: 12, border: 'none', padding: '4px 0', boxSizing: 'border-box', color: '#666' }}
+                    />
                   </td>
                 ))}
               </tr>
