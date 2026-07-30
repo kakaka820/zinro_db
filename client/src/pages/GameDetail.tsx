@@ -24,6 +24,11 @@ export default function GameDetail() {
   const loadExecutions   = () => api.get<Execution[]>(`/executions/game/${id}`).then(setExecutions)
   const loadNightKills   = () => api.get<NightKill[]>(`/night-kills/game/${id}`).then(setNightKills)
 
+  const goToNextDay = () => {
+    setDay(d => d + 1)
+    document.getElementById('vote-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   useEffect(() => {
     loadPlayers()
     api.get<Role[]>('/roles').then(setRoles)
@@ -104,6 +109,12 @@ export default function GameDetail() {
             day={day}
             onRefresh={loadNightKills}
           />
+
+          <div className="card" style={{ textAlign: 'center' }}>
+            <button type="button" onClick={goToNextDay} style={{ fontSize: 16, padding: '10px 24px' }}>
+              {day + 1}日目へ進む ↑ 投票へ
+            </button>
+          </div>
         </>
       )}
 
