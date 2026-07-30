@@ -1,10 +1,10 @@
 import express, { Request, Response } from 'express';
- import { Pool } from 'pg';
+ import type { DbPool } from '../db';
  import { Game } from '../types/db';
 
  const router = express.Router();
 
-export default (pool: Pool) => {
+export default (pool: DbPool) => {
   // 試合一覧
 router.get('/', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query('SELECT * FROM games ORDER BY played_at DESC');
