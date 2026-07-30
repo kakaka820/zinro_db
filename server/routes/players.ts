@@ -1,10 +1,10 @@
- import express, { Request, Response } from 'express';
- import { Pool } from 'pg';
+import express, { Request, Response } from 'express';
+ import type { DbPool } from '../db';
  import { Player } from '../types/db';
 
  const router = express.Router();
 
-export default (pool: Pool) => {
+export default (pool: DbPool) => {
   // プレイヤー一覧
   router.get('/', async (req: Request, res: Response): Promise<void> => {
     const result = await pool.query('SELECT * FROM players ORDER BY id');
