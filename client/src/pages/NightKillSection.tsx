@@ -14,6 +14,10 @@ export default function NightKillSection({ gameId, participants, nightKills, day
   const [nParticipantId, setNParticipantId] = useState('')
   const [nIsGj,          setNIsGj]          = useState(false)
 
+  const [editingId,   setEditingId]   = useState<number | null>(null)
+  const [editTargetId,setEditTargetId]= useState('')
+  const [editIsGj,     setEditIsGj]   = useState(false)
+
   const resolveParticipant = (input: string) => {
     const trimmed = input.trim()
     if (!trimmed) return null
@@ -60,6 +64,37 @@ export default function NightKillSection({ gameId, participants, nightKills, day
     onRefresh()
   }
 
+  const startEdit = (n: NightKill) => {
+    setEditingId(n.id)
+    if (n.participant_id == null) {
+      setEditIsGj(true)
+      setEditTargetId('')
+    } else {
+      setEditIsGj(false)
+      const p = participants.find(p => String(p.id) === String(n.participant_id))
+      setEditTargetId(p?.participant_number != null ? String(p.participant_number) : (p?.player_name ?? ''))
+    }
+  }
+
+  const saveEdit = async (id: number) => {
+    const target = (!editIsGj && editTargetId.trim()) ? resolveParticipant(editTargetId) : null
+    if (!editIsGj && editTargetId.trim() && !target) {
+      alert('噛まれた人が見つかりません（番号か名前で入力してください）')
+      return
+    }
+    await api.put(`/night-kills/${id}`, {
+      participant_id: target ? target.id : null,
+    })
+    setEditingId(null)
+    onRefresh()
+  }
+
+  const deleteNightKill = async (id: number) => {
+    if (!window.confirm('この噛み結果を削除しますか？')) return
+    await api.del(`/night-kills/${id}`)
+    onRefresh()
+  }
+
   return (
     <div className="card">
       <h2>{day}日目：噛み結果</h2>
@@ -82,12 +117,41 @@ export default function NightKillSection({ gameId, participants, nightKills, day
       {nightKills.filter(n => n.day_number === day).length > 0 && (
         <table style={{ marginTop: 12 }}>
           <thead>
-            <tr><th>噛まれた人</th></tr>
+            <tr><th>噛まれた人</th><th></th></tr>
           </thead>
           <tbody>
             {nightKills.filter(n => n.day_number === day).map(n => (
               <tr key={n.id}>
-                <td>{participants.find(p => String(p.id) === String(n.participant_id))?.player_name ?? 'GJ'}</td>
+                {editingId === n.id ? (
+                  <>
+                    <td style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        value={editIsGj ? '' : editTargetId}
+                        onChange={ev => setEditTargetId(ev.target.value)}
+                        placeholder={editIsGj ? '（GJ）' : '噛まれた人（番号or名前）'}
+                        disabled={editIsGj}
+                        style={{ width: 180 }}
+                      />
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={editIsGj}
+                          onChange={ev => { setEditIsGj(ev.target.checked); setEditTargetId('') }} />
+                        GJ
+                      </label>
+                    </td>
+                    <td style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={() => saveEdit(n.id)}>保存</button>
+                      <button className="secondary" onClick={() => setEditingId(null)}>キャンセル</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td>{participants.find(p => String(p.id) === String(n.participant_id))?.player_name ?? 'GJ'}</td>
+                    <td style={{ display: 'flex', gap: 4 }}>
+                      <button className="secondary" onClick={() => startEdit(n)}>編集</button>
+                      <button className="secondary" onClick={() => deleteNightKill(n.id)}>削除</button>
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
