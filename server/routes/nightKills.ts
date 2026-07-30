@@ -30,5 +30,29 @@ router.get('/game/:gameId', async (req: Request, res: Response): Promise<void> =
     res.json(result.rows);
   });
 
+  // 噛み結果更新
+  router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { participant_id }: { participant_id?: number } = req.body;
+      const result = await pool.query(
+        `UPDATE night_kills SET participant_id = $1 WHERE id = $2 RETURNING *`,
+        [participant_id ?? null, req.params.id]
+      );
+      res.json(result.rows[0]);
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  // 噛み結果削除
+  router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+      await pool.query('DELETE FROM night_kills WHERE id = $1', [req.params.id]);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
   return router;
 };
