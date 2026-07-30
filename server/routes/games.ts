@@ -22,6 +22,21 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     res.json(result.rows[0]);
   });
 
+  // 試合更新（日付・結果・メモ）
+  router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { played_at, result: gameResult, notes }:
+        { played_at?: string; result?: string; notes?: string } = req.body;
+      const result = await pool.query(
+        `UPDATE games SET played_at = $1, result = $2, notes = $3 WHERE id = $4 RETURNING *`,
+        [played_at || null, gameResult || null, notes || null, req.params.id]
+      );
+      res.json(result.rows[0]);
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
     // 試合削除（複数まとめて・関連レコードも連鎖削除）
   router.delete('/', async (req: Request, res: Response): Promise<void> => {
     const { ids }: { ids: number[] } = req.body;
