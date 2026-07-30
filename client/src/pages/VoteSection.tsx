@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
-import type { Participant, Vote } from '../types'
+import type { Participant, Vote, Execution } from '../types'
 
 type Props = {
   gameId: string
@@ -10,7 +10,7 @@ type Props = {
   executions: Execution[]
 }
 
-export default function VoteSection({ gameId, participants, day }: Props) {
+export default function VoteSection({ gameId, participants, day, executions }: Props) {
   const [votes,         setVotes]         = useState<Vote[]>([])
   const [voteInputMode, setVoteInputMode] = useState<'form' | 'table'>('form')
 const [normalMatrix,    setNormalMatrix]    = useState<Record<string, string[]>>({})
@@ -94,56 +94,7 @@ const makeSubmitter = (
   }
 }
 
-{/* テーブルモードの描画部分 */}
-{voteInputMode === 'table' && (
-  <>
-    {/* 通常投票（常時表示） */}
-    <VoteMatrixInput
-      title="通常投票"
-      participants={participants}
-      matrixInput={normalMatrix}   setMatrixInput={setNormalMatrix}
-      onSubmit={makeSubmitter('normal', normalMatrix, normalVoteOrder)}
-      submitting={submitting === 'normal'}
-      day={day}
-      voteOrderInput={normalVoteOrder}   setVoteOrderInput={setNormalVoteOrder}
-    />
-    {/* 決選吊りが記録されたら自動表示 */}
-    {hasRunoffExecution && (
-      <>
-        <hr style={{ margin: '12px 0' }} />
-        <VoteMatrixInput
-          title="決選投票"
-          participants={participants}
-          matrixInput={runoffMatrix}   setMatrixInput={setRunoffMatrix}
-          onSubmit={makeSubmitter('runoff', runoffMatrix)}
-          submitting={submitting === 'runoff'}
-          day={day}
-          voteOrderInput={{}}   setVoteOrderInput={() => {}}
-        />
-        {!showRunoff2 ? (
-          <button className="secondary"
-            style={{ fontSize: 12, marginTop: 8 }}
-            onClick={() => setShowRunoff2(true)}>
-            ＋ 2回目決選投票を追加
-          </button>
-        ) : (
-          <>
-            <hr style={{ margin: '12px 0' }} />
-            <VoteMatrixInput
-              title="2回目決選投票"
-              participants={participants}
-              matrixInput={runoff2Matrix}   setMatrixInput={setRunoff2Matrix}
-              onSubmit={makeSubmitter('runoff2', runoff2Matrix)}
-              submitting={submitting === 'runoff2'}
-              day={day}
-              voteOrderInput={{}}   setVoteOrderInput={() => {}}
-            />
-          </>
-        )}
-      </>
-    )}
-  </>
-)}
+
   
   const resolveParticipant = (input: string) => {
     const trimmed = input.trim()
@@ -176,44 +127,7 @@ const makeSubmitter = (
     loadVotes()
   }
 
-  const isSubmittingMatrix = useRef(false)              // ★追加
-const [matrixSubmitting, setMatrixSubmitting] = useState(false)  // ★追加
 
-const submitMatrix = async () => {
-  if (isSubmittingMatrix.current) return              // ★連打を即ブロック
-  isSubmittingMatrix.current = true
-  setMatrixSubmitting(true)
-  try {
-    const toSubmit: object[] = []
-    for (const [targetIdStr, voterNums] of Object.entries(matrixInput)) {
-      for (const voterNumStr of (voterNums ?? [])) {
-        if (!voterNumStr.trim()) continue
-        const voter = resolveParticipant(voterNumStr.trim())
-        if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
-        // alreadyExists のチェックは削除
-        // → サーバー側がupsertするので不要（むしろ修正の再送信もできるようになる）
-        const orderStr = voteOrderInput[voter.id]
-        const voteOrder = (day === 1 && matrixType === 'normal' && orderStr && orderStr.trim())
-          ? Number(orderStr) : null
-        toSubmit.push({
-          game_id: Number(gameId), day_number: day, vote_type: matrixType,
-          voter_id: voter.id, target_id: Number(targetIdStr),
-          vote_order: voteOrder, receive_order: null,
-        })
-      }
-    }
-    await api.post('/votes/replace', {
-  game_id: Number(gameId),
-  day_number: day,
-  vote_type: matrixType,
-  votes: toSubmit,
-})
-    await loadVotes()
-  } finally {
-    isSubmittingMatrix.current = false
-    setMatrixSubmitting(false)
-  }
-}
 
   return (
     <div className="card" id="vote-section">
@@ -222,7 +136,7 @@ const submitMatrix = async () => {
   <button
     type="button" className="secondary"
     style={{ fontSize: 12, padding: '2px 10px' }}
-    onClick={() => { setVoteInputMode(m => m === 'form' ? 'table' : 'form'); setMatrixInput({}) }}
+    onClick={() => setVoteInputMode(m => m === 'form' ? 'table' : 'form')}
   >
     {voteInputMode === 'form' ? '表入力に切替' : 'フォーム入力に切替'}
   </button>
@@ -274,19 +188,58 @@ const submitMatrix = async () => {
           <button type="submit">記録</button>
         </form>
       ) : (
+  <>
+    <VoteMatrixInput
+      title="通常投票"
+      participants={participants}
+      matrixInput={normalMatrix}
+      setMatrixInput={setNormalMatrix}
+      onSubmit={makeSubmitter('normal', normalMatrix, normalVoteOrder)}
+      submitting={submitting === 'normal'}
+      day={day}
+      voteOrderInput={normalVoteOrder}
+      setVoteOrderInput={setNormalVoteOrder}
+    />
+    {hasRunoffExecution && (
+      <>
+        <hr style={{ margin: '12px 0' }} />
         <VoteMatrixInput
+          title="決選投票"
           participants={participants}
-          matrixInput={matrixInput}
-          setMatrixInput={setMatrixInput}
-          matrixType={matrixType}
-          setMatrixType={setMatrixType}
-          onSubmit={submitMatrix}
-          votes={votes}
+          matrixInput={runoffMatrix}
+          setMatrixInput={setRunoffMatrix}
+          onSubmit={makeSubmitter('runoff', runoffMatrix)}
+          submitting={submitting === 'runoff'}
           day={day}
-          voteOrderInput={voteOrderInput}
-          setVoteOrderInput={setVoteOrderInput}
+          voteOrderInput={{}}
+          setVoteOrderInput={() => {}}
         />
-      )}
+        {!showRunoff2 ? (
+          <button className="secondary"
+            style={{ fontSize: 12, marginTop: 8 }}
+            onClick={() => setShowRunoff2(true)}>
+            ＋ 2回目決選投票を追加
+          </button>
+        ) : (
+          <>
+            <hr style={{ margin: '12px 0' }} />
+            <VoteMatrixInput
+              title="2回目決選投票"
+              participants={participants}
+              matrixInput={runoff2Matrix}
+              setMatrixInput={setRunoff2Matrix}
+              onSubmit={makeSubmitter('runoff2', runoff2Matrix)}
+              submitting={submitting === 'runoff2'}
+              day={day}
+              voteOrderInput={{}}
+              setVoteOrderInput={() => {}}
+            />
+          </>
+        )}
+      </>
+    )}
+  </>
+)}
 
       {votes.length > 0 && (
         <table style={{ marginTop: 12 }}>
