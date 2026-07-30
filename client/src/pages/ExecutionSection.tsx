@@ -14,6 +14,10 @@ export default function ExecutionSection({ gameId, participants, executions, day
   const [eParticipantId, setEParticipantId] = useState('')
   const [eType,          setEType]          = useState('normal')
 
+  const [editingId,   setEditingId]   = useState<number | null>(null)
+  const [editTargetId,setEditTargetId]= useState('')
+  const [editType,    setEditType]    = useState('normal')
+
   const resolveParticipant = (input: string) => {
     const trimmed = input.trim()
     if (!trimmed) return null
@@ -41,6 +45,33 @@ export default function ExecutionSection({ gameId, participants, executions, day
     onRefresh()
   }
 
+  const startEdit = (e: Execution) => {
+    setEditingId(e.id)
+    setEditType(e.execution_type)
+    const p = participants.find(p => String(p.id) === String(e.participant_id))
+    setEditTargetId(p?.participant_number != null ? String(p.participant_number) : (p?.player_name ?? ''))
+  }
+
+  const saveEdit = async (id: number) => {
+    const target = editType === 'none' ? null : resolveParticipant(editTargetId)
+    if (editType !== 'none' && !target) {
+      alert('吊られた人が見つかりません（番号か名前で入力してください）')
+      return
+    }
+    await api.put(`/executions/${id}`, {
+      participant_id: target ? target.id : null,
+      execution_type: editType,
+    })
+    setEditingId(null)
+    onRefresh()
+  }
+
+  const deleteExecution = async (id: number) => {
+    if (!window.confirm('この吊り結果を削除しますか？')) return
+    await api.del(`/executions/${id}`)
+    onRefresh()
+  }
+
   return (
     <div className="card">
       <h2>{day}日目：吊り結果</h2>
@@ -61,18 +92,47 @@ export default function ExecutionSection({ gameId, participants, executions, day
       {executions.filter(e => e.day_number === day).length > 0 && (
         <table style={{ marginTop: 12 }}>
           <thead>
-            <tr><th>種別</th><th>吊られた人</th></tr>
+            <tr><th>種別</th><th>吊られた人</th><th></th></tr>
           </thead>
           <tbody>
             {executions.filter(e => e.day_number === day).map(e => (
               <tr key={e.id}>
-                <td>
-                  {e.execution_type === 'normal'             ? '通常吊り'
-                    : e.execution_type === 'random'          ? 'ランダム吊り'
-                    : e.execution_type === 'runoff_execution' ? '決戦釣り'
-                    : '吊りなし'}
-                </td>
-                <td>{participants.find(p => String(p.id) === String(e.participant_id))?.player_name ?? '―'}</td>
+                {editingId === e.id ? (
+                  <>
+                    <td>
+                      <select value={editType} onChange={ev => setEditType(ev.target.value)}>
+                        <option value="normal">通常吊り</option>
+                        <option value="random">ランダム吊り</option>
+                        <option value="runoff_execution">決戦釣り</option>
+                        <option value="none">吊りなし</option>
+                      </select>
+                    </td>
+                    <td>
+                      {editType !== 'none' && (
+                        <input value={editTargetId} onChange={ev => setEditTargetId(ev.target.value)}
+                          placeholder="吊られた人（番号or名前）" style={{ width: 180 }} />
+                      )}
+                    </td>
+                    <td style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={() => saveEdit(e.id)}>保存</button>
+                      <button className="secondary" onClick={() => setEditingId(null)}>キャンセル</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td>
+                      {e.execution_type === 'normal'             ? '通常吊り'
+                        : e.execution_type === 'random'          ? 'ランダム吊り'
+                        : e.execution_type === 'runoff_execution' ? '決戦釣り'
+                        : '吊りなし'}
+                    </td>
+                    <td>{participants.find(p => String(p.id) === String(e.participant_id))?.player_name ?? '―'}</td>
+                    <td style={{ display: 'flex', gap: 4 }}>
+                      <button className="secondary" onClick={() => startEdit(e)}>編集</button>
+                      <button className="secondary" onClick={() => deleteExecution(e.id)}>削除</button>
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
