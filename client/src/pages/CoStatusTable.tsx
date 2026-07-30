@@ -3,19 +3,7 @@ import type { Participant, CoEvent, SeerResult, MediumResult, KnightGuard, Night
 
 
 
-const getVisibleMediumResults = (mediumCo: CoEvent, currentDay: number) => {
-  const deathNight = getMediumDeathNight(mediumCo)
-  
-  // 霊媒師が死んでいれば、死んだ夜以降の開示分は非表示
-  // 例：2夜に噛まれた → disclosed_day <= 2 のもののみ表示
-  const maxDisclosedDay = deathNight ?? Infinity
 
-  return mediumResults.filter(mr =>
-    mr.medium_co_id === mediumCo.id &&
-    mr.disclosed_day <= currentDay &&    // 現在日以前
-    mr.disclosed_day <= maxDisclosedDay  // 霊媒師生存期間内
-  )
-}
 
 
 // ── 列定義 ────────────────────────────────────────────────────────
