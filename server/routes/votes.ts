@@ -86,6 +86,36 @@ router.post('/bulk', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+
+ // 投票全置き換え（DELETE → 一括INSERT）
+router.post('/replace', async (req: Request, res: Response): Promise<void> => {
+  const { game_id, day_number, vote_type, votes: voteInputs }:
+    { game_id: number; day_number: number; vote_type: string; votes: VoteInput[] } = req.body
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    // 既存の投票を全削除（このゲーム・日・種別）
+    await client.query(
+      `DELETE FROM votes WHERE game_id = $1 AND day_number = $2 AND vote_type = $3`,
+      [game_id, day_number, vote_type]
+    )
+    // 新しい投票を挿入（空配列なら全削除のみで終わる）
+    const rows: Vote[] = []
+    for (const v of voteInputs) {
+      rows.push(await upsertVote(client, { ...v, game_id, day_number, vote_type }))
+    }
+    await client.query('COMMIT')
+    res.json(rows)
+  } catch (err) {
+    await client.query('ROLLBACK')
+    res.status(500).json({ error: (err as Error).message })
+  } finally {
+    client.release()
+  }
+})
+ 
+
     // 捨て票フラグ更新
   router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     const { is_discard }: { is_discard: boolean } = req.body;
