@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import type { Participant, NightKill } from '../types'
 
@@ -10,7 +10,13 @@ type Props = {
   onRefresh:     () => void
 }
 
-export default function NightKillSection({ gameId, participants, nightKills, day, onRefresh }: Props) {
+export type NightKillSectionHandle = {
+  flush: () => Promise<void>
+}
+
+const NightKillSection = forwardRef<NightKillSectionHandle, Props>(function NightKillSection(
+  { gameId, participants, nightKills, day, onRefresh }, ref
+) {
   const [nParticipantId, setNParticipantId] = useState('')
   const [nIsGj,          setNIsGj]          = useState(false)
 
@@ -28,8 +34,7 @@ export default function NightKillSection({ gameId, participants, nightKills, day
     return participants.find(p => p.player_name === trimmed) ?? null
   }
 
-  const addNightKill = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitNightKill = async () => {
     const target = (!nIsGj && nParticipantId.trim()) ? resolveParticipant(nParticipantId) : null
     await api.post('/night-kills', {
       game_id:        Number(gameId),
@@ -64,6 +69,19 @@ export default function NightKillSection({ gameId, participants, nightKills, day
     onRefresh()
   }
 
+const addNightKill = (e: React.FormEvent) => {
+  e.preventDefault()
+  return submitNightKill()
+}
+
+useImperativeHandle(ref, () => ({
+  async flush() {
+    const hasPendingInput = nIsGj || nParticipantId.trim() !== ''
+    if (!hasPendingInput) return
+    await submitNightKill()
+  },
+}))
+  
   const startEdit = (n: NightKill) => {
     setEditingId(n.id)
     if (n.participant_id == null) {
@@ -159,4 +177,6 @@ export default function NightKillSection({ gameId, participants, nightKills, day
       )}
     </div>
   )
-}
+})
+
+export default NightKillSection
