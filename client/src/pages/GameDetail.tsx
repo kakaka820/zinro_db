@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
 import ParticipantSection from './ParticipantSection'
-import VoteSection from './VoteSection'
-import RunoffVoteSection from './RunoffVoteSection'
-import ExecutionSection from './ExecutionSection'
-import NightKillSection from './NightKillSection'
+import VoteSection, { VoteSectionHandle } from './VoteSection'
+import RunoffVoteSection, { RunoffVoteSectionHandle } from './RunoffVoteSection'
+import ExecutionSection, { ExecutionSectionHandle } from './ExecutionSection'
+import NightKillSection, { NightKillSectionHandle } from './NightKillSection'
 import COSection from './COSection'
 import type { Player, Role, Participant, Execution, NightKill, Vote } from '../types'
 
@@ -20,6 +20,12 @@ export default function GameDetail() {
   const [votes,        setVotes]        = useState<Vote[]>([])
   const [day,          setDay]          = useState(1)
   const [activeTab,    setActiveTab]    = useState<'log' | 'co'>('log')
+  const [savingAll,    setSavingAll]    = useState(false)
+
+  const voteSectionRef   = useRef<VoteSectionHandle>(null)
+  const runoffSectionRef = useRef<RunoffVoteSectionHandle>(null)
+  const executionSectionRef = useRef<ExecutionSectionHandle>(null)
+  const nightKillSectionRef = useRef<NightKillSectionHandle>(null)
 
   const loadPlayers      = () => api.get<Player[]>('/players').then(setPlayers)
   const loadParticipants = () => api.get<Participant[]>(`/participants/game/${id}`).then(setParticipants)
@@ -27,10 +33,37 @@ export default function GameDetail() {
   const loadNightKills   = () => api.get<NightKill[]>(`/night-kills/game/${id}`).then(setNightKills)
   const loadVotes        = () => api.get<Vote[]>(`/votes/game/${id}/day/${day}`).then(setVotes)
   
-  const goToNextDay = () => {
-    setDay(d => d + 1)
-    document.getElementById('vote-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const flushAllDrafts = async () => {
+  await voteSectionRef.current?.flush()
+  await executionSectionRef.current?.flush()
+  await runoffSectionRef.current?.flush()
+  await nightKillSectionRef.current?.flush()
+}
+
+const handleSaveAllClick = async () => {
+  if (savingAll) return
+  setSavingAll(true)
+  try {
+    await flushAllDrafts()
+    alert('入力中の内容をまとめて保存しました')
+  } catch (err) {
+    console.error(err)
+    alert('保存中にエラーが発生しました。内容を確認してください。')
+  } finally {
+    setSavingAll(false)
   }
+}
+
+const goToNextDay = async () => {
+  try {
+    await flushAllDrafts()
+  } catch (err) {
+    console.error(err)
+    if (!window.confirm('入力中の内容の保存に失敗した可能性があります。このまま次の日に進みますか？')) return
+  }
+  setDay(d => d + 1)
+  document.getElementById('vote-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
   useEffect(() => {
     loadPlayers()
@@ -97,14 +130,16 @@ export default function GameDetail() {
           </div>
 
           <VoteSection
-            gameId={id!}
-            participants={participants}
-            day={day}
-            votes={votes}
-            onRefresh={loadVotes}
-          />
+  ref={voteSectionRef}
+  gameId={id!}
+  participants={participants}
+  day={day}
+  votes={votes}
+  onRefresh={loadVotes}
+/>
 
           <ExecutionSection
+            ref={executionSectionRef}
             gameId={id}
             participants={participants}
             executions={executions}
@@ -113,6 +148,7 @@ export default function GameDetail() {
           />
 
           <RunoffVoteSection
+            ref={runoffSectionRef}
             gameId={id!}
             participants={participants}
             day={day}
@@ -124,6 +160,7 @@ export default function GameDetail() {
 
           
           <NightKillSection
+            ref={nightKillSectionRef}
             gameId={id}
             participants={participants}
             nightKills={nightKills}
@@ -131,11 +168,18 @@ export default function GameDetail() {
             onRefresh={loadNightKills}
           />
 
-          <div className="card" style={{ textAlign: 'center' }}>
-            <button type="button" onClick={goToNextDay} style={{ fontSize: 16, padding: '10px 24px' }}>
-              {day + 1}日目へ進む ↑ 投票へ
-            </button>
-          </div>
+          <div className="card" style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 12 }}>
+  <button
+    type="button" className="secondary"
+    onClick={handleSaveAllClick} disabled={savingAll}
+    style={{ fontSize: 16, padding: '10px 24px' }}
+  >
+    {savingAll ? '保存中…' : '📝 まとめて保存'}
+  </button>
+  <button type="button" onClick={goToNextDay} style={{ fontSize: 16, padding: '10px 24px' }}>
+    {day + 1}日目へ進む ↑ 投票へ
+  </button>
+</div>
         </>
       )}
 
