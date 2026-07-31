@@ -3,10 +3,11 @@ import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
 import ParticipantSection from './ParticipantSection'
 import VoteSection from './VoteSection'
+import RunoffVoteSection from './RunoffVoteSection'
 import ExecutionSection from './ExecutionSection'
 import NightKillSection from './NightKillSection'
 import COSection from './COSection'
-import type { Player, Role, Participant, Execution, NightKill } from '../types'
+import type { Player, Role, Participant, Execution, NightKill, Vote } from '../types'
 
 export default function GameDetail() {
   const { id } = useParams<{ id: string }>()
@@ -16,6 +17,7 @@ export default function GameDetail() {
   const [participants, setParticipants] = useState<Participant[]>([])
   const [executions,   setExecutions]   = useState<Execution[]>([])
   const [nightKills,   setNightKills]   = useState<NightKill[]>([])
+  const [votes,        setVotes]        = useState<Vote[]>([])
   const [day,          setDay]          = useState(1)
   const [activeTab,    setActiveTab]    = useState<'log' | 'co'>('log')
 
@@ -23,7 +25,8 @@ export default function GameDetail() {
   const loadParticipants = () => api.get<Participant[]>(`/participants/game/${id}`).then(setParticipants)
   const loadExecutions   = () => api.get<Execution[]>(`/executions/game/${id}`).then(setExecutions)
   const loadNightKills   = () => api.get<NightKill[]>(`/night-kills/game/${id}`).then(setNightKills)
-
+  const loadVotes        = () => api.get<Vote[]>(`/votes/game/${id}/day/${day}`).then(setVotes)
+  
   const goToNextDay = () => {
     setDay(d => d + 1)
     document.getElementById('vote-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -39,6 +42,11 @@ export default function GameDetail() {
     loadExecutions()
     loadNightKills()
   }, [id])
+
+  useEffect(() => {
+    loadVotes()
+  }, [id, day])
+  
 
   return (
     <div>
@@ -92,7 +100,8 @@ export default function GameDetail() {
             gameId={id!}
             participants={participants}
             day={day}
-            executions={executions}
+            votes={votes}
+            onRefresh={loadVotes}
           />
 
           <ExecutionSection
@@ -103,6 +112,17 @@ export default function GameDetail() {
             onRefresh={loadExecutions}
           />
 
+          <RunoffVoteSection
+            gameId={id!}
+            participants={participants}
+            day={day}
+            executions={executions}
+            votes={votes}
+            onRefresh={loadVotes}
+          />
+
+
+          
           <NightKillSection
             gameId={id}
             participants={participants}
