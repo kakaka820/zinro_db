@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
 import type { Participant, Vote, Execution } from '../types'
@@ -14,7 +14,13 @@ type Props = {
 
 // 「決選投票」の入力欄。吊り結果が「決選釣り」になった日にだけ、
 // 吊り結果セクションの下に表示する（投票セクションからは分離）。
-export default function RunoffVoteSection({ gameId, participants, day, executions, votes, onRefresh }: Props) {
+export type RunoffVoteSectionHandle = {
+  flush: () => Promise<void>
+}
+
+const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function RunoffVoteSection(
+  { gameId, participants, day, executions, votes, onRefresh }, ref
+) {
   const [runoffMatrix,  setRunoffMatrix]  = useState<Record<string, string[]>>({})
   const [runoff2Matrix, setRunoff2Matrix] = useState<Record<string, string[]>>({})
   const [showRunoff2,   setShowRunoff2]   = useState(false)
@@ -78,6 +84,14 @@ export default function RunoffVoteSection({ gameId, participants, day, execution
     }
   }
 
+useImperativeHandle(ref, () => ({
+    async flush() {
+      if (!hasRunoffExecution) return
+      await makeSubmitter('runoff', runoffMatrix)()
+      if (showRunoff2) await makeSubmitter('runoff2', runoff2Matrix)()
+    },
+  }))
+
   if (!hasRunoffExecution) return null
 
   return (
@@ -120,4 +134,6 @@ export default function RunoffVoteSection({ gameId, participants, day, execution
       )}
     </div>
   )
-}
+})
+
+export default RunoffVoteSection
