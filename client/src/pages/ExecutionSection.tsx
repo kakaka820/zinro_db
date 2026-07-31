@@ -79,7 +79,7 @@ export default function ExecutionSection({ gameId, participants, executions, day
         <select value={eType} onChange={e => setEType(e.target.value)}>
           <option value="normal">通常吊り</option>
           <option value="random">ランダム吊り</option>
-          <option value="runoff_execution">決戦釣り</option>
+          <option value="runoff_execution">決選吊り</option>
           <option value="none">吊りなし</option>
         </select>
         {eType !== 'none' && (
@@ -103,7 +103,7 @@ export default function ExecutionSection({ gameId, participants, executions, day
                       <select value={editType} onChange={ev => setEditType(ev.target.value)}>
                         <option value="normal">通常吊り</option>
                         <option value="random">ランダム吊り</option>
-                        <option value="runoff_execution">決戦釣り</option>
+                        <option value="runoff_execution">決選吊り</option>
                         <option value="none">吊りなし</option>
                       </select>
                     </td>
@@ -123,7 +123,7 @@ export default function ExecutionSection({ gameId, participants, executions, day
                     <td>
                       {e.execution_type === 'normal'             ? '通常吊り'
                         : e.execution_type === 'random'          ? 'ランダム吊り'
-                        : e.execution_type === 'runoff_execution' ? '決戦釣り'
+                        : e.execution_type === 'runoff_execution' ? '決選吊り'
                         : '吊りなし'}
                     </td>
                     <td>{participants.find(p => String(p.id) === String(e.participant_id))?.player_name ?? '―'}</td>
