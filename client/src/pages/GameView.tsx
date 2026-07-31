@@ -162,7 +162,7 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('list
   const execLabel = (type: string) =>
     type === 'normal'             ? '通常吊り'
     : type === 'random'           ? 'ランダム吊り'
-    : type === 'runoff_execution' ? '決戦釣り'
+    : type === 'runoff_execution' ? '決選吊り'
     : '吊りなし'
 
   const resultLabel = (r: string) =>
