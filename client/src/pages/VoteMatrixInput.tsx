@@ -18,7 +18,6 @@ type VoteMatrixInputProps = {
   title?: string
   onSubmit:       () => void
  submitting:     boolean
-  votes:          Vote[]
   day:            number
   voteOrderInput:    Record<number, string>
   setVoteOrderInput: React.Dispatch<React.SetStateAction<Record<number, string>>>
