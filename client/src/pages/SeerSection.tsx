@@ -32,12 +32,15 @@ export default function SeerSection({
     const real = seers.find(co => !isFake(co))
     if (!real) return
     setSeerCoId(String(real.id))
-    if (real.co_day != null) setSeerDisclosedDay(d => d || String(real.co_day))
+    
     // この占い師の既存結果の最大日 + 1 をデフォルトにする
    const maxDay = seerResults
      .filter(r => r.seer_participant_id === real.participant_id)
      .reduce((m, r) => Math.max(m, r.day_number), 0)
-   setSeerDay(maxDay + 1)
+const nextDay = maxDay + 1
+   setSeerDay(nextDay)
+   // 開示日はCO日と占った日の遅い方をデフォルトにする
+   setSeerDisclosedDay(d => d || String(Math.max(real.co_day ?? 1, nextDay)))
   }, [seers])
 
   const resolve = (input: string) => {
