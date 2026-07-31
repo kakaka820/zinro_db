@@ -108,7 +108,7 @@ const makeSubmitter = (
       is_discard:    vIsDiscard,
     })
     setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder(''); setVIsDiscard(false)
-    loadVotes()
+    onRefresh()
   }
 
 
