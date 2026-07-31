@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
 import type { Participant, Vote } from '../types'
@@ -10,6 +10,17 @@ type Props = {
   votes: Vote[]
   onRefresh: () => void
 }
+
+export type VoteSectionHandle = {
+  // フォーム／表の「まだ記録ボタンを押していない入力」があれば保存する
+  flush: () => Promise<void>
+}
+
+const VoteSection = forwardRef<VoteSectionHandle, Props>(function VoteSection(
+  { gameId, participants, day, votes, onRefresh }, ref
+) {
+
+
 
 export default function VoteSection({ gameId, participants, day, votes, onRefresh }: Props) {
   const [voteInputMode, setVoteInputMode] = useState<'form' | 'table'>('form')
@@ -89,14 +100,13 @@ const makeSubmitter = (
     return participants.find(p => p.player_name === trimmed) ?? null
   }
 
-  const addVote = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const voter  = resolveParticipant(vVoterInput)
-    const target = resolveParticipant(vTargetInput)
-    if (!voter || !target) {
-      alert('投票した人・投票先が見つかりません（番号か名前で入力してください）')
-      return
-    }
+  const submitFormVote = async () => {
+  const voter  = resolveParticipant(vVoterInput)
+  const target = resolveParticipant(vTargetInput)
+  if (!voter || !target) {
+    alert('投票した人・投票先が見つかりません（番号か名前で入力してください）')
+    return
+  }
         await api.post('/votes', {
       game_id:       Number(gameId),
       day_number:    day,
@@ -111,6 +121,23 @@ const makeSubmitter = (
     onRefresh()
   }
 
+
+  const addVote = (e: React.FormEvent) => {
+  e.preventDefault()
+  return submitFormVote()
+}
+
+useImperativeHandle(ref, () => ({
+  async flush() {
+    if (voteInputMode === 'form') {
+      if (vVoterInput.trim() && vTargetInput.trim()) {
+        await submitFormVote()
+      }
+    } else {
+      await makeSubmitter('normal', normalMatrix, normalVoteOrder)()
+    }
+  },
+}))
 
 
   return (
@@ -235,4 +262,4 @@ const makeSubmitter = (
       )}
     </div>
   )
-}
+})
