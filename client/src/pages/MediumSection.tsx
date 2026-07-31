@@ -35,7 +35,8 @@ export default function MediumSection({
     const real = mediums.find(co => !isFake(co))
     if (!real) return
     setMediumCoId(String(real.id))
-    if (real.co_day != null) setMediumDisclosedDay(d => d || String(real.co_day))
+    // 開示日はCO日と処刑日の遅い方をデフォルトにする
+    setMediumDisclosedDay(d => d || String(Math.max(real.co_day ?? 1, mediumDay +1)))
   }, [mediums])
 
   // 霊媒結果を自動記入
@@ -123,7 +124,7 @@ useEffect(() => {
           const newCoId = e.target.value
           setMediumCoId(newCoId)
           const co = coEvents.find(c => c.id === Number(newCoId))
-          if (co) setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, Number(mediumDay) || 1)))
+          if (co) setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, (Number(mediumDay) || 1) + 1)))
         }} required>
           {mediums.map(co => (
             <option key={co.id} value={co.id}>
@@ -140,7 +141,7 @@ useEffect(() => {
               const newDay = e.target.value
               setMediumDay(Number(newDay))
               const co = coEvents.find(c => c.id === Number(mediumCoId))
-              if (co && newDay) setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, Number(newDay))))
+              if (co && newDay) setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, Number(newDay) + 1)))
             }} style={{ width: 55 }} />
         </label>
         <select value={mediumResult} onChange={e => setMediumResult(e.target.value as 'white' | 'black')}>
