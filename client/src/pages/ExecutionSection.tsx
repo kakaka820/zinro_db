@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import type { Participant, Execution } from '../types'
 
@@ -10,7 +10,13 @@ type Props = {
   onRefresh:   () => void
 }
 
-export default function ExecutionSection({ gameId, participants, executions, day, onRefresh }: Props) {
+export type ExecutionSectionHandle = {
+  flush: () => Promise<void>
+}
+
+const ExecutionSection = forwardRef<ExecutionSectionHandle, Props>(function ExecutionSection(
+  { gameId, participants, executions, day, onRefresh }, ref
+) {
   const [eParticipantId, setEParticipantId] = useState('')
   const [eType,          setEType]          = useState('normal')
 
@@ -28,13 +34,12 @@ export default function ExecutionSection({ gameId, participants, executions, day
     return participants.find(p => p.player_name === trimmed) ?? null
   }
 
-  const addExecution = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const target = eType === 'none' ? null : resolveParticipant(eParticipantId)
-    if (eType !== 'none' && !target) {
-      alert('吊られた人が見つかりません（番号か名前で入力してください）')
-      return
-    }
+  const submitExecution = async () => {
+  const target = eType === 'none' ? null : resolveParticipant(eParticipantId)
+  if (eType !== 'none' && !target) {
+    alert('吊られた人が見つかりません（番号か名前で入力してください）')
+    return
+  }
     await api.post('/executions', {
       game_id:        Number(gameId),
       day_number:     day,
@@ -45,6 +50,22 @@ export default function ExecutionSection({ gameId, participants, executions, day
     onRefresh()
   }
 
+
+  const addExecution = (e: React.FormEvent) => {
+  e.preventDefault()
+  return submitExecution()
+}
+
+useImperativeHandle(ref, () => ({
+  async flush() {
+    // デフォルト（通常吊り・未入力）のままなら「まだ何も入力していない」とみなして何もしない
+    const hasPendingInput = eType !== 'normal' || eParticipantId.trim() !== ''
+    if (!hasPendingInput) return
+    await submitExecution()
+  },
+}))
+
+  
   const startEdit = (e: Execution) => {
     setEditingId(e.id)
     setEditType(e.execution_type)
@@ -140,4 +161,6 @@ export default function ExecutionSection({ gameId, participants, executions, day
       )}
     </div>
   )
-}
+})
+
+export default ExecutionSection
