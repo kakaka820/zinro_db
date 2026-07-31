@@ -21,37 +21,22 @@ export default (pool: DbPool) => {
     res.json(result.rows);
   });
 
-// upsertVote() は POST '/' と POST '/bulk' の両方から呼ばれる共通処理として
-// ファイル冒頭に新設（ON CONFLICT DO UPDATE で重複INSERTを上書きに変える）
-async function upsertVote(db: Queryable, v: VoteInput) {
-  const { game_id, day_number, voter_id, target_id, is_discard } = v
-  const vote_type = v.vote_type ?? 'normal'
-  let finalReceiveOrder = v.receive_order ?? null
+// upsertVote() は pool（DbPool）からも client（DbClient、トランザクション中）からも
+// 呼べるように、共通する query() だけを持つ最小インターフェースとして定義する
+type Queryable = {
+  query<T = any>(sql: string, params?: any[]): Promise<QueryResult<T>>
+}
 
-  if (Number(day_number) === 1 && v.vote_order != null) {
-    const countResult = await db.query<{ count: number }>(
-      `SELECT COUNT(*) AS count FROM votes
-       WHERE game_id = $1 AND day_number = $2 AND vote_type = $3
-         AND target_id = $4 AND vote_order < $5
-         AND voter_id != $6`,
-      [game_id, day_number, vote_type, target_id, v.vote_order, voter_id]
-    )
-    finalReceiveOrder = parseInt(String(countResult.rows[0].count), 10) + 1
-  }
-
-  const result = await db.query<Vote>(
-    `INSERT INTO votes (game_id, day_number, vote_type, voter_id, target_id, vote_order, receive_order, is_discard)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-     ON CONFLICT (game_id, day_number, vote_type, voter_id)
-     DO UPDATE SET
-       target_id     = excluded.target_id,
-       vote_order    = excluded.vote_order,
-       receive_order = excluded.receive_order,
-       is_discard    = excluded.is_discard
-     RETURNING *`,
-    [game_id, day_number, vote_type, voter_id, target_id, v.vote_order ?? null, finalReceiveOrder, is_discard ?? false]
-  )
-  return result.rows[0]
+// 投票登録・更新時にクライアントから受け取るデータの形
+type VoteInput = {
+  game_id: number
+  day_number: number
+  voter_id: number
+  target_id: number
+  vote_type?: 'normal' | 'runoff' | 'runoff2'
+  vote_order?: number | null
+  receive_order?: number | null
+  is_discard?: boolean
 }
 
 // 投票登録（1件）
