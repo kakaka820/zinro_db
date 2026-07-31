@@ -1,28 +1,22 @@
 import { useState, useEffect, useRef } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
-import type { Participant, Vote, Execution } from '../types'
+import type { Participant, Vote } from '../types'
 
 type Props = {
   gameId: string
   participants: Participant[]
   day: number
-  executions: Execution[]
+  votes: Vote[]
+  onRefresh: () => void
 }
 
-export default function VoteSection({ gameId, participants, day, executions }: Props) {
-  const [votes,         setVotes]         = useState<Vote[]>([])
+export default function VoteSection({ gameId, participants, day, votes, onRefresh }: Props) {
   const [voteInputMode, setVoteInputMode] = useState<'form' | 'table'>('form')
 const [normalMatrix,    setNormalMatrix]    = useState<Record<string, string[]>>({})
-const [runoffMatrix,    setRunoffMatrix]    = useState<Record<string, string[]>>({})
-const [runoff2Matrix,   setRunoff2Matrix]   = useState<Record<string, string[]>>({})
 const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({})
-const [showRunoff2,     setShowRunoff2]     = useState(false)
-const [submitting,      setSubmitting]      = useState<'normal'|'runoff'|'runoff2'|null>(null)
-// 決選吊りが今日あるか
-const hasRunoffExecution = executions.some(
-  e => e.day_number === day && e.execution_type === 'runoff_execution'
-)
+
+  const [submitting,      setSubmitting]      = useState<'normal'|null>(null)
 　const [voteOrderInput, setVoteOrderInput] = useState<Record<number, string>>({})
   const [vVoterInput,   setVVoterInput]   = useState('')
   const [vTargetInput,  setVTargetInput]  = useState('')
@@ -32,16 +26,11 @@ const hasRunoffExecution = executions.some(
   const [vIsDiscard,    setVIsDiscard]    = useState(false)
   const [showNames, setShowNames] = useState(false)
 
-  const loadVotes = () =>
-    api.get<Vote[]>(`/votes/game/${gameId}/day/${day}`).then(setVotes)
 
-  useEffect(() => { loadVotes() }, [gameId, day])
 
   useEffect(() => {
     if (voteInputMode !== 'table') return
   const nm: Record<string, string[]> = {}
-  const rm: Record<string, string[]> = {}
-  const r2m: Record<string, string[]> = {}
   const order: Record<number, string> = {}
   for (const v of votes) {
     const voterNum = participants.find(p => p.id === v.voter_id)?.participant_number
@@ -50,20 +39,15 @@ const hasRunoffExecution = executions.some(
     if (v.vote_type === 'normal') {
       nm[target] = [...(nm[target] ?? []), String(voterNum)]
       if (v.vote_order != null) order[v.voter_id] = String(v.vote_order)
-    } else if (v.vote_type === 'runoff') {
-      rm[target] = [...(rm[target] ?? []), String(voterNum)]
-    } else if (v.vote_type === 'runoff2') {
-      r2m[target] = [...(r2m[target] ?? []), String(voterNum)]
     }
   }
-  setNormalMatrix(nm); setRunoffMatrix(rm); setRunoff2Matrix(r2m)
+  setNormalMatrix(nm)
   setNormalVoteOrder(order)
-  if (votes.some(v => v.vote_type === 'runoff2')) setShowRunoff2(true)
 }, [votes, voteInputMode])
 
-// submit を汎用化（matrixType ごとに呼ぶ）
+// 通常投票の一括登録（決選投票はRunoffVoteSectionへ移動）
 const makeSubmitter = (
-  voteType: 'normal' | 'runoff' | 'runoff2',
+  voteType: 'normal',
   matrixData: Record<string, string[]>,
   voteOrderData: Record<number, string> = {},
 ) => async () => {
@@ -80,7 +64,7 @@ const makeSubmitter = (
         toSubmit.push({
           game_id: Number(gameId), day_number: day, vote_type: voteType,
           voter_id: voter.id, target_id: Number(targetIdStr),
-          vote_order: (day === 1 && voteType === 'normal' && orderStr?.trim()) ? Number(orderStr) : null,
+          vote_order: (day === 1 && orderStr?.trim()) ? Number(orderStr) : null,
           receive_order: null,
         })
       }
@@ -88,7 +72,7 @@ const makeSubmitter = (
     await api.post('/votes/replace', {
       game_id: Number(gameId), day_number: day, vote_type: voteType, votes: toSubmit,
     })
-    await loadVotes()
+    await onRefresh()
   } finally {
     setSubmitting(null)
   }
@@ -188,7 +172,6 @@ const makeSubmitter = (
           <button type="submit">記録</button>
         </form>
       ) : (
-  <>
     <VoteMatrixInput
       title="通常投票"
       participants={participants}
@@ -200,45 +183,7 @@ const makeSubmitter = (
       voteOrderInput={normalVoteOrder}
       setVoteOrderInput={setNormalVoteOrder}
     />
-    {hasRunoffExecution && (
-      <>
-        <hr style={{ margin: '12px 0' }} />
-        <VoteMatrixInput
-          title="決選投票"
-          participants={participants}
-          matrixInput={runoffMatrix}
-          setMatrixInput={setRunoffMatrix}
-          onSubmit={makeSubmitter('runoff', runoffMatrix)}
-          submitting={submitting === 'runoff'}
-          day={day}
-          voteOrderInput={{}}
-          setVoteOrderInput={() => {}}
-        />
-        {!showRunoff2 ? (
-          <button className="secondary"
-            style={{ fontSize: 12, marginTop: 8 }}
-            onClick={() => setShowRunoff2(true)}>
-            ＋ 2回目決選投票を追加
-          </button>
-        ) : (
-          <>
-            <hr style={{ margin: '12px 0' }} />
-            <VoteMatrixInput
-              title="2回目決選投票"
-              participants={participants}
-              matrixInput={runoff2Matrix}
-              setMatrixInput={setRunoff2Matrix}
-              onSubmit={makeSubmitter('runoff2', runoff2Matrix)}
-              submitting={submitting === 'runoff2'}
-              day={day}
-              voteOrderInput={{}}
-              setVoteOrderInput={() => {}}
-            />
-          </>
-        )}
-      </>
-    )}
-  </>
+    
 )}
 
       {votes.length > 0 && (
@@ -279,7 +224,7 @@ const makeSubmitter = (
                     checked={!!v.is_discard}
                     onChange={async e => {
                       await api.put(`/votes/${v.id}`, { is_discard: e.target.checked })
-                      loadVotes()
+                      onRefresh()
                     }}
                   />
                 </td>
