@@ -20,9 +20,6 @@ const VoteSection = forwardRef<VoteSectionHandle, Props>(function VoteSection(
   { gameId, participants, day, votes, onRefresh }, ref
 ) {
 
-
-
-export default function VoteSection({ gameId, participants, day, votes, onRefresh }: Props) {
   const [voteInputMode, setVoteInputMode] = useState<'form' | 'table'>('form')
 const [normalMatrix,    setNormalMatrix]    = useState<Record<string, string[]>>({})
 const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({})
@@ -263,3 +260,5 @@ useImperativeHandle(ref, () => ({
     </div>
   )
 })
+
+export default VoteSection
