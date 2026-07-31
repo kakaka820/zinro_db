@@ -53,7 +53,7 @@ const handleKeyDown = (
    row: number,
  ) => {
    const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
-   if (!arrows.includes(e.key)) return
+   if (!arrows.includes(e.key) && e.key !== 'Enter') return
    e.preventDefault()
    const cols = sortedP.length
    let nextCol = colIdx
@@ -61,7 +61,7 @@ const handleKeyDown = (
    if (e.key === 'ArrowLeft')  nextCol = Math.max(0, colIdx - 1)
    if (e.key === 'ArrowRight') nextCol = Math.min(cols - 1, colIdx + 1)
    if (e.key === 'ArrowUp')    nextRow = Math.max(0, row - 1)
-   if (e.key === 'ArrowDown')  nextRow = Math.min(ROWS - 1, row + 1)
+   if (e.key === 'ArrowDown' || e.key === 'Enter')  nextRow = Math.min(ROWS - 1, row + 1)
    focusCell(nextRow, nextCol)
  }
 
