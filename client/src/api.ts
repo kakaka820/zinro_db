@@ -5,10 +5,39 @@ import type { Player, Role, Game, Participant, Vote,
 
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
+const requestJson = async <T>(
+  path: string,
+  init?: RequestInit
+): Promise<T> => {
+  const response = await fetch(`${BASE}${path}`, {
+    cache: 'no-store',
+    ...init,
+  })
+
+  const body = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    const message =
+      body && typeof body === 'object' && 'error' in body
+        ? String(body.error)
+        : `HTTP ${response.status}`
+
+    throw new Error(message)
+  }
+
+  return body as T
+}
+
 const get = <T>(path: string): Promise<T> =>
-   fetch(`${BASE}${path}`, { cache: 'no-store' }).then(r => r.json());
- const post = <T>(path: string, body: unknown): Promise<T> =>
-   fetch(`${BASE}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
+  requestJson<T>(path)
+
+const post = <T>(path: string, body: unknown): Promise<T> =>
+  requestJson<T>(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
  const put = <T>(path: string, body: unknown): Promise<T> =>
    fetch(`${BASE}${path}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
  const del = <T>(path: string, body?: unknown): Promise<T> =>
