@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { seerResultsApi } from '../api'
 import type { Participant, CoEvent, SeerResult } from '../types'
 
@@ -18,6 +18,15 @@ export default function SeerSection({
   // 参加者IDから番号を引く
   const getNum = (participantId: number) =>
     participants.find(p => p.id === participantId)?.participant_number ?? '?'
+
+  // ── 保存メッセージ ──
+  const [saveMessage, setSaveMessage] = useState('')
+  const saveMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showSaveMessage = () => {
+    if (saveMessageTimer.current) clearTimeout(saveMessageTimer.current)
+    setSaveMessage('保存しました！')
+    saveMessageTimer.current = setTimeout(() => setSaveMessage(''), 3000)
+  }
 
   // ── 追加フォーム ──
   const [seerCoId,         setSeerCoId]         = useState('')
@@ -77,6 +86,7 @@ const nextDay = maxDay + 1
     setSeerTargetInput(''); setSeerResult('white')
     setSeerDay(nextDay)
     setSeerDisclosedDay(String(Math.max(co.co_day ?? 1, nextDay)))
+    showSaveMessage()
     onRefresh()
   }
 
@@ -91,7 +101,12 @@ const nextDay = maxDay + 1
 
   return (
     <div className="card">
-      <h2>占い師CO</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        占い師CO
+        {saveMessage && (
+          <span style={{ color: '#080', fontWeight: 'bold', fontSize: 14 }}>{saveMessage}</span>
+        )}
+      </h2>
 
       <form onSubmit={addSeerResult} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <select value={seerCoId} onChange={e => {
@@ -109,7 +124,7 @@ const nextDay = maxDay + 1
         }} required>
           {seers.map(co => (
             <option key={co.id} value={co.id}>
-              {co.participant_number ?? getNum(co.participant_id)}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
+              {co.participant_number ?? getNum(co.participant_id)}番（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
             </option>
           ))}
         </select>
@@ -146,8 +161,8 @@ const nextDay = maxDay + 1
           <tbody>
             {seerResults.map(r => (
               <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
-                <td>{getNum(r.seer_participant_id)}</td>
-                <td>{getNum(r.target_participant_id)}</td>
+                <td>{getNum(r.seer_participant_id)}番</td>
+                <td>{getNum(r.target_participant_id)}番</td>
                 <td>{r.day_number}日目</td>
                 <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
                   {editingSeerId === r.id ? (
