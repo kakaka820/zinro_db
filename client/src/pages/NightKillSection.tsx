@@ -69,10 +69,6 @@ const NightKillSection = forwardRef<NightKillSectionHandle, Props>(function Nigh
     onRefresh()
   }
 
-const addNightKill = (e: React.FormEvent) => {
-  e.preventDefault()
-  return submitNightKill()
-}
 
 useImperativeHandle(ref, () => ({
   async flush() {
@@ -116,7 +112,7 @@ useImperativeHandle(ref, () => ({
   return (
     <div className="card">
       <h2>{day}日目：噛み結果</h2>
-      <form onSubmit={addNightKill} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           value={nIsGj ? '' : nParticipantId}
           onChange={e => setNParticipantId(e.target.value)}
@@ -129,8 +125,7 @@ useImperativeHandle(ref, () => ({
             onChange={e => { setNIsGj(e.target.checked); setNParticipantId('') }} />
           GJ
         </label>
-        <button type="submit">記録</button>
-      </form>
+      </div>
 
       {nightKills.filter(n => n.day_number === day).length > 0 && (
         <table style={{ marginTop: 12 }}>
