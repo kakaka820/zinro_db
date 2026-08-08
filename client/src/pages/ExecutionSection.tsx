@@ -1,5 +1,4 @@
-// client/src/pages/ExecutionSection.tsx
-import { useState, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import type { Participant, Execution } from '../types'
 
@@ -9,6 +8,7 @@ type Props = {
   executions:  Execution[]
   day:         number
   onRefresh:   () => void
+  onDraftTypeChange?: (type: string) => void
 }
 
 export type ExecutionSectionHandle = {
@@ -16,7 +16,7 @@ export type ExecutionSectionHandle = {
 }
 
 const ExecutionSection = forwardRef<ExecutionSectionHandle, Props>(function ExecutionSection(
-  { gameId, participants, executions, day, onRefresh }, ref
+  { gameId, participants, executions, day, onRefresh, onDraftTypeChange }, ref
 ) {
   const [eParticipantId, setEParticipantId] = useState('')
   const [eType,          setEType]          = useState('normal')
@@ -24,6 +24,18 @@ const ExecutionSection = forwardRef<ExecutionSectionHandle, Props>(function Exec
   const [editingId,   setEditingId]   = useState<number | null>(null)
   const [editTargetId,setEditTargetId]= useState('')
   const [editType,    setEditType]    = useState('normal')
+
+  // 日付が変わったら、前日の下書き選択を引きずらないようリセットする
+  useEffect(() => {
+    setEType('normal')
+    setEParticipantId('')
+  }, [day])
+
+  // 種別の選択（未保存の下書き状態）が変わるたびに親へ通知する。
+  // これにより「まとめて保存」を押す前でも、決選吊りを選んだ時点で決選投票欄が出せる。
+  useEffect(() => {
+    onDraftTypeChange?.(eType)
+  }, [eType, onDraftTypeChange])
 
   const resolveParticipant = (input: string) => {
     const trimmed = input.trim()
