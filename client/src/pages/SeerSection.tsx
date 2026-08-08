@@ -15,6 +15,10 @@ type Props = {
 export default function SeerSection({
   gameId, participants, coEvents, seers, seerResults, isFake, onRefresh,
 }: Props) {
+  // 参加者IDから番号を引く
+  const getNum = (participantId: number) =>
+    participants.find(p => p.id === participantId)?.participant_number ?? '?'
+
   // ── 追加フォーム ──
   const [seerCoId,         setSeerCoId]         = useState('')
   const [seerTargetInput,  setSeerTargetInput]  = useState('')
@@ -105,7 +109,7 @@ const nextDay = maxDay + 1
         }} required>
           {seers.map(co => (
             <option key={co.id} value={co.id}>
-              {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
+              {co.participant_number ?? getNum(co.participant_id)}番（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
             </option>
           ))}
         </select>
@@ -142,8 +146,8 @@ const nextDay = maxDay + 1
           <tbody>
             {seerResults.map(r => (
               <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
-                <td>{r.seer_name}</td>
-                <td>{r.target_name}</td>
+                <td>{getNum(r.seer_participant_id)}番</td>
+                <td>{getNum(r.target_participant_id)}番</td>
                 <td>{r.day_number}日目</td>
                 <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
                   {editingSeerId === r.id ? (
