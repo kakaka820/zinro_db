@@ -27,8 +27,9 @@ export default function SeerSection({
   const [editSeerResult,       setEditSeerResult]       = useState<'white' | 'black'>('white')
   const [editSeerDisclosedDay, setEditSeerDisclosedDay] = useState('')
 
-  // 本物の占い師COを自動選択
+  // 本物の占い師COを自動選択（すでに有効な選択がある場合は上書きしない＝偽COも選び続けられる）
   useEffect(() => {
+    if (seerCoId && seers.some(co => String(co.id) === seerCoId)) return
     const real = seers.find(co => !isFake(co))
     if (!real) return
     setSeerCoId(String(real.id))
