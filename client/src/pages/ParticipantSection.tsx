@@ -89,8 +89,8 @@ const assignRoles = async () => {
     }
   }
 
-  // 村人ロールのIDを取得（needs_co=false かつ team=village の最初の役職）
-  const villager = roles.find(r => !r.needs_co && r.team === 'village')
+  // 村人ロールのIDを取得（役職名が「村人」のもの）
+  const villager = roles.find(r => r.name === '村人')
 
   await Promise.all(
     participants.map(p => {
@@ -247,7 +247,7 @@ const assignRoles = async () => {
           <table>
             <tbody>
               {[...roles]
-  .filter(r => r.needs_co || r.team !== 'village')
+  .filter(r => r.name !== '村人')
   .sort((a, b) => {
     const order = ['人狼', '狂人', '占い師', '霊媒師', '騎士']
     const ai = order.indexOf(a.name)
