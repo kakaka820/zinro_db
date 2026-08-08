@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../api'
 import type { Player, Role, Participant, Execution, NightKill } from '../types'
 
@@ -19,6 +19,7 @@ export default function ParticipantSection({
   onRefresh, onPlayersRefresh,
 }: Props) {
   const [pPlayerText, setPPlayerText] = useState('')
+  const playerNameInputRef = useRef<HTMLInputElement>(null)
   const [pFiltered,   setPFiltered]   = useState<Player[]>([])
   const [pShowList,   setPShowList]   = useState(false)
   const [pPlayerId,   setPPlayerId]   = useState('')
@@ -62,6 +63,7 @@ export default function ParticipantSection({
 })
 setPPlayerText(''); setPPlayerId(''); setPNumber('')
     onRefresh()
+    requestAnimationFrame(() => playerNameInputRef.current?.focus())
   }
 
   const saveEdit = async (p: Participant) => {
@@ -113,7 +115,13 @@ const assignRoles = async () => {
       <form onSubmit={addParticipant}>
         <div style={{ position: 'relative' }}>
           <input
+            ref={playerNameInputRef}
             value={pPlayerText}
+            lang="ja-JP"
+            inputMode="text"
+            autoComplete="off"
+            className="player-name-input"
+            style={{ imeMode: 'active' } as React.CSSProperties}
             onChange={e => {
               const val = e.target.value
               setPPlayerText(val)
@@ -158,7 +166,13 @@ const assignRoles = async () => {
           placeholder="番号"
           style={{ width: 70 }}
         />
-        <button type="submit">追加</button>
+        <button
+          type="submit"
+          // ボタンへフォーカスを移さず、IMEの状態を維持する。
+          onMouseDown={e => e.preventDefault()}
+        >
+          追加
+        </button>
       </form>
 
       <table>
