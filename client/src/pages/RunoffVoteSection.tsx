@@ -1,4 +1,3 @@
-// client/src/pages/RunoffVoteSection.tsx
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
@@ -11,6 +10,7 @@ type Props = {
   executions:   Execution[]
   votes:        Vote[]
   onRefresh:    () => void
+  draftIsRunoff?: boolean
 }
  
 // 「決選投票」の入力欄。吊り結果が「決選釣り」になった日にだけ、
@@ -20,16 +20,18 @@ export type RunoffVoteSectionHandle = {
 }
  
 const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function RunoffVoteSection(
-  { gameId, participants, day, executions, votes, onRefresh }, ref
+  { gameId, participants, day, executions, votes, onRefresh, draftIsRunoff }, ref
 ) {
   const [runoffMatrix,  setRunoffMatrix]  = useState<Record<string, string[]>>({})
   const [runoff2Matrix, setRunoff2Matrix] = useState<Record<string, string[]>>({})
   const [showRunoff2,   setShowRunoff2]   = useState(false)
   const [submitting,    setSubmitting]    = useState<'runoff' | 'runoff2' | null>(null)
  
-  const hasRunoffExecution = executions.some(
-    e => e.day_number === day && e.execution_type === 'runoff_execution'
-  )
+  // 保存済みの吊り結果だけでなく、まだ保存前の下書き選択（プルダウン）が
+  // 「決選吊り」になっている場合も表示対象に含める。
+  const hasRunoffExecution =
+    executions.some(e => e.day_number === day && e.execution_type === 'runoff_execution') ||
+    !!draftIsRunoff
  
   useEffect(() => {
     const rm: Record<string, string[]> = {}
