@@ -36,8 +36,14 @@ export default function MediumSection({
     const real = mediums.find(co => !isFake(co))
     if (!real) return
     setMediumCoId(String(real.id))
+    // この霊媒師の既存結果の最大処刑日 + 1 をデフォルトにする（真偽問わず）
+    const maxDay = mediumResults
+      .filter(r => r.medium_participant_id === real.participant_id)
+      .reduce((m, r) => Math.max(m, r.day_number), 0)
+    const nextDay = maxDay + 1
+    setMediumDay(nextDay)
     // 開示日はCO日と処刑日の遅い方をデフォルトにする
-    setMediumDisclosedDay(d => d || String(Math.max(real.co_day ?? 1, mediumDay +1)))
+    setMediumDisclosedDay(d => d || String(Math.max(real.co_day ?? 1, nextDay + 1)))
   }, [mediums])
 
 // 霊媒結果を自動記入（真霊媒のみ）
@@ -103,15 +109,20 @@ useEffect(() => {
     if (!target) return alert('霊媒対象が見つかりません')
     const co = coEvents.find(c => c.id === Number(mediumCoId))
     if (!co) return alert('COを選択してください')
+    const usedDay = Number(mediumDay)
     await mediumResultsApi.add({
       game_id:               Number(gameId),
       medium_participant_id: co.participant_id,
       target_participant_id: target.id,
-      day_number:            Number(mediumDay),
+      day_number:            usedDay,
       result:                mediumResult,
       disclosed_day:         mediumDisclosedDay ? Number(mediumDisclosedDay) : null,
     })
-    setMediumTargetInput(''); setMediumDay(1); setMediumResult('white'); setMediumDisclosedDay('')
+    // 真偽問わず、追加した処刑日の次を自動セット（開示日も連動）
+    const nextDay = usedDay + 1
+    setMediumTargetInput(''); setMediumResult('white')
+    setMediumDay(nextDay)
+    setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, nextDay + 1)))
     onRefresh()
   }
 
@@ -133,7 +144,15 @@ useEffect(() => {
           const newCoId = e.target.value
           setMediumCoId(newCoId)
           const co = coEvents.find(c => c.id === Number(newCoId))
-          if (co) setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, (Number(mediumDay) || 1) + 1)))
+          if (co) {
+            // このCO（真偽問わず）の既存結果の最大処刑日 + 1 をデフォルトにする
+            const maxDay = mediumResults
+              .filter(r => r.medium_participant_id === co.participant_id)
+              .reduce((m, r) => Math.max(m, r.day_number), 0)
+            const nextDay = maxDay + 1
+            setMediumDay(nextDay)
+            setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, nextDay + 1)))
+          }
         }} required>
           {mediums.map(co => (
             <option key={co.id} value={co.id}>
