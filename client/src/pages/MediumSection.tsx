@@ -60,16 +60,18 @@ export default function MediumSection({
   }, [mediums])
 
 // 霊媒結果を自動記入（真霊媒のみ）
+// ※ CO自動追加（needs_co）がOFFでも動くよう、co_eventsではなく
+//   参加者の本物の役職から直接「本物の霊媒師」を特定する。
 useEffect(() => {
   if (!executions.length) return
 
-  const realCo = mediums.find(co => !isFake(co))
-  if (!realCo) return
+  const realMedium = participants.find(p => p.role_name === '霊媒師')
+  if (!realMedium) return
 
   // 霊媒師自身の死亡日（吊り・噛みのうち早い方）。生存中なら Infinity。
   const deathDay = Math.min(
-    ...executions.filter(e => e.participant_id === realCo.participant_id).map(e => e.day_number),
-    ...nightKills.filter(n => n.participant_id === realCo.participant_id).map(n => n.day_number),
+    ...executions.filter(e => e.participant_id === realMedium.id).map(e => e.day_number),
+    ...nightKills.filter(n => n.participant_id === realMedium.id).map(n => n.day_number),
     Infinity,
   )
 
@@ -85,7 +87,7 @@ useEffect(() => {
 
       // すでにこの処刑日の記録があればスキップ
       const alreadyExists = mediumResults.some(
-        mr => mr.medium_participant_id === realCo.participant_id &&
+        mr => mr.medium_participant_id === realMedium.id &&
               mr.day_number === execution.day_number
       )
       if (alreadyExists) continue
@@ -100,7 +102,7 @@ useEffect(() => {
       try {
         await mediumResultsApi.add({
           game_id:               Number(gameId),
-          medium_participant_id: realCo.participant_id,
+          medium_participant_id: realMedium.id,
           target_participant_id: target.id,
           day_number:            execution.day_number,
           disclosed_day,
@@ -116,7 +118,8 @@ useEffect(() => {
   }
 
   autoFill()
-}, [executions, nightKills, mediums, mediumResults, participants])
+}, [executions, nightKills, mediumResults, participants])
+
 
   const resolve = (input: string) => {
     const trimmed = input.trim()
@@ -151,7 +154,8 @@ useEffect(() => {
     onRefresh()
   }
 
-  if (mediums.length === 0) {
+  // CO（co_events）が無くても、霊媒結果が自動記入されていれば表示する
+  if (mediums.length === 0 && mediumResults.length === 0) {
     return (
       <div className="card">
         <h2>霊媒師CO</h2>
