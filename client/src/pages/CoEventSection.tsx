@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { coEventsApi } from '../api'
 import type { Participant, Role, CoEvent } from '../types'
-
+ 
 type Props = {
   gameId: string | number
   participants: Participant[]
@@ -10,7 +10,7 @@ type Props = {
   isFake: (co: CoEvent) => boolean
   onRefresh: () => void
 }
-
+ 
 export default function CoEventSection({
   gameId, participants, roles, coEvents, isFake, onRefresh,
 }: Props) {
@@ -20,12 +20,21 @@ export default function CoEventSection({
   const [coDay,           setCoDay]           = useState(1)
 const [coTiming,     setCoTiming]     = useState<'runoff' | 'testament' | ''>('')
 const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>('')
-
+ 
   // ── インライン編集 ──
   const [editingCoId,       setEditingCoId]       = useState<number | null>(null)
   const [editCoClaimedRole, setEditCoClaimedRole] = useState('')
   const [editCoDay,         setEditCoDay]         = useState('')
-
+ 
+  const [showNames, setShowNames] = useState(false)
+ 
+  // 参加者番号順に並べ替え（未設定は末尾）
+  const sortedParticipants = [...participants].sort((a, b) => {
+    const an = a.participant_number ?? Infinity
+    const bn = b.participant_number ?? Infinity
+    return an - bn
+  })
+ 
   const addCo = async (e: React.FormEvent) => {
     e.preventDefault()
     await coEventsApi.add({
@@ -38,7 +47,7 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
     setCoParticipantId(''); setCoClaimedRoleId(''); setCoDay(1); setCoTiming('')
     onRefresh()
   }
-
+ 
   const saveCo = async (co: CoEvent) => {
     await coEventsApi.update(co.id, {
       claimed_role_id: Number(editCoClaimedRole),
@@ -48,15 +57,24 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
     setEditingCoId(null)
     onRefresh()
   }
-
+ 
   return (
     <div className="card">
-      <h2>COを記録する</h2>
-
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        COを記録する
+        <button
+          type="button" className="secondary"
+          style={{ fontSize: 12, padding: '2px 10px' }}
+          onClick={() => setShowNames(v => !v)}
+        >
+          {showNames ? '番号で表示' : '名前で表示'}
+        </button>
+      </h2>
+ 
       <form onSubmit={addCo} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <select value={coParticipantId} onChange={e => setCoParticipantId(e.target.value)} required>
           <option value="">参加者を選択</option>
-          {participants.map(p => (
+          {sortedParticipants.map(p => (
             <option key={p.id} value={p.id}>
               {p.participant_number ? `${p.participant_number}. ` : ''}{p.player_name}
             </option>
@@ -79,7 +97,7 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
 </select>
         <button type="submit">記録</button>
       </form>
-
+ 
       {coEvents.length > 0 && (
         <table style={{ marginTop: 12 }}>
           <thead>
@@ -88,7 +106,7 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
           <tbody>
             {coEvents.map(co => (
               <tr key={co.id}>
-                <td>{co.player_name}</td>
+                <td>{showNames ? co.player_name : (co.participant_number ?? co.player_name)}</td>
                 <td>
                   {editingCoId === co.id ? (
                     <select value={editCoClaimedRole} onChange={e => setEditCoClaimedRole(e.target.value)}>
@@ -150,3 +168,4 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
     </div>
   )
 }
+ 
