@@ -154,6 +154,14 @@ useEffect(() => {
     onRefresh()
   }
 
+  // 現在プルダウンで選択中のCO（無ければ自動記入された本物の霊媒師）に絞り込んで表示する
+  const selectedMediumCo = coEvents.find(c => c.id === Number(mediumCoId))
+  const realMediumParticipant = participants.find(p => p.role_name === '霊媒師')
+  const visibleMediumParticipantId = selectedMediumCo?.participant_id ?? realMediumParticipant?.id
+  const visibleMediumResults = visibleMediumParticipantId != null
+    ? mediumResults.filter(r => r.medium_participant_id === visibleMediumParticipantId)
+    : mediumResults
+
   // CO（co_events）が無くても、霊媒結果が自動記入されていれば表示する
   if (mediums.length === 0 && mediumResults.length === 0) {
     return (
@@ -219,13 +227,13 @@ useEffect(() => {
         <button type="submit">追加</button>
       </form>
 
-      {mediumResults.length > 0 && (
+      {visibleMediumResults.length > 0 && (
         <table style={{ marginTop: 12 }}>
           <thead>
             <tr><th>霊媒師</th><th>対象</th><th>処刑日</th><th>結果</th><th>開示日</th><th></th></tr>
           </thead>
           <tbody>
-            {mediumResults.map(r => (
+            {visibleMediumResults.map(r => (
               <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
                 <td>{getNum(r.medium_participant_id)}番</td>
                 <td>{getNum(r.target_participant_id)}番</td>
