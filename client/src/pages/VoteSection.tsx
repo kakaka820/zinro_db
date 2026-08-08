@@ -24,7 +24,6 @@ const [normalMatrix,    setNormalMatrix]    = useState<Record<string, string[]>>
 const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({})
  
   const [submitting,      setSubmitting]      = useState<'normal'|null>(null)
-  const [showNames, setShowNames] = useState(false)
  
  
  
@@ -113,13 +112,6 @@ useImperativeHandle(ref, () => ({
     <div className="card" id="vote-section">
       <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
   {day}日目：投票
-  <button
-    type="button" className="secondary"
-    style={{ fontSize: 12, padding: '2px 10px' }}
-    onClick={() => setShowNames(v => !v)}
-  >
-    {showNames ? '名前を非表示' : '名前を表示'}
-  </button>
 </h2>
     <VoteMatrixInput
       title="通常投票"
@@ -132,54 +124,6 @@ useImperativeHandle(ref, () => ({
       voteOrderInput={normalVoteOrder}
       setVoteOrderInput={setNormalVoteOrder}
     />
- 
-      {votes.length > 0 && (
-        <table style={{ marginTop: 12 }}>
-                    <thead>
-            <tr>
-              <th>投票した人</th><th>投票先</th><th>種別</th>
-              {day === 1 && <th>投票順</th>}
-              <th>受けた順番</th>
-              <th>捨て票</th>
-            </tr>
-          </thead>
-          <tbody>
-                        {votes.map(v => (
-              <tr key={v.id}>
-                <td>
-  {showNames
-    ? participants.find(p => p.id === v.voter_id)?.player_name ?? v.voter_id
-    : (participants.find(p => p.id === v.voter_id)?.participant_number ?? v.voter_id)}
-</td>
-<td>
-  {showNames
-    ? participants.find(p => p.id === v.target_id)?.player_name ?? v.target_id
-    : (participants.find(p => p.id === v.target_id)?.participant_number ?? v.target_id)}
-</td>
- 
- 
-                <td>
-  {v.vote_type === 'normal' ? '通常'
-    : v.vote_type === 'runoff' ? '決選'
-    : '2回目決選'}
-</td>
-                {day === 1 && <td>{v.vote_order    ?? '―'}</td>}
-                <td>{v.receive_order ?? '―'}</td>
-                <td style={{ textAlign: 'center' }}>
-                  <input
-                    type="checkbox"
-                    checked={!!v.is_discard}
-                    onChange={async e => {
-                      await api.put(`/votes/${v.id}`, { is_discard: e.target.checked })
-                      onRefresh()
-                    }}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
     </div>
   )
 })
