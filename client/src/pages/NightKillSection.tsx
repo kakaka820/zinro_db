@@ -42,11 +42,14 @@ const NightKillSection = forwardRef<NightKillSectionHandle, Props>(function Nigh
   }
 
   const submitNightKill = async () => {
-    const target = (!nIsGj && nParticipantId.trim()) ? resolveParticipant(nParticipantId) : null
+    // GJでも番号欄は生かしておき、「その夜 狼に狙われていた（が護衛で助かった）人」を入力できるようにする。
+    const target = nParticipantId.trim() ? resolveParticipant(nParticipantId) : null
+
     await api.post('/night-kills', {
       game_id:        Number(gameId),
       day_number:     day,
-      participant_id: target ? target.id : null,
+      // GJの夜は実際には誰も死んでいないので participant_id は常に null。
+      participant_id: nIsGj ? null : (target ? target.id : null),
     })
 
     if (nIsGj) {
@@ -55,7 +58,8 @@ const NightKillSection = forwardRef<NightKillSectionHandle, Props>(function Nigh
         await api.post('/knight-guards', {
           game_id:               Number(gameId),
           knight_participant_id: knight.id,
-          target_participant_id: null,
+          // 入力した番号があれば「護衛対象＝GJで守った相手」としてそのまま引き継ぐ。空欄なら不明のまま null。
+          target_participant_id: target ? target.id : null,
           day_number:            day,
           is_gj:                 true,
           disclosed_day:         null,
@@ -98,13 +102,15 @@ useImperativeHandle(ref, () => ({
   }
 
   const saveEdit = async (id: number) => {
-    const target = (!editIsGj && editTargetId.trim()) ? resolveParticipant(editTargetId) : null
-    if (!editIsGj && editTargetId.trim() && !target) {
-      alert('噛まれた人が見つかりません（番号か名前で入力してください）')
+    const target = editTargetId.trim() ? resolveParticipant(editTargetId) : null
+    if (editTargetId.trim() && !target) {
+      alert('入力した番号/名前の参加者が見つかりません')
       return
     }
     await api.put(`/night-kills/${id}`, {
-      participant_id: target ? target.id : null,
+      // GJの夜は実際には誰も死んでいないので participant_id は常に null。
+      // （GJ時に入力した番号は騎士CO側の護衛対象を直接編集してください。night_kills には反映されません）
+      participant_id: editIsGj ? null : (target ? target.id : null),
     })
     setEditingId(null)
     onRefresh()
@@ -121,15 +127,14 @@ useImperativeHandle(ref, () => ({
       <h2>{day}日目：噛み結果</h2>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
-          value={nIsGj ? '' : nParticipantId}
+          value={nParticipantId}
           onChange={e => setNParticipantId(e.target.value)}
-          placeholder={nIsGj ? '（GJ）' : '噛まれた人（番号or名前）'}
-          disabled={nIsGj}
+          placeholder={nIsGj ? '護衛された人（番号or名前・不明なら空欄）' : '噛まれた人（番号or名前）'}
           style={{ width: 220 }}
         />
         <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
           <input type="checkbox" checked={nIsGj}
-            onChange={e => { setNIsGj(e.target.checked); setNParticipantId('') }} />
+            onChange={e => setNIsGj(e.target.checked)} />
           GJ
         </label>
       </div>
@@ -146,15 +151,14 @@ useImperativeHandle(ref, () => ({
                   <>
                     <td style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <input
-                        value={editIsGj ? '' : editTargetId}
+                        value={editTargetId}
                         onChange={ev => setEditTargetId(ev.target.value)}
-                        placeholder={editIsGj ? '（GJ）' : '噛まれた人（番号or名前）'}
-                        disabled={editIsGj}
+                        placeholder={editIsGj ? '護衛された人（番号or名前・不明なら空欄）' : '噛まれた人（番号or名前）'}
                         style={{ width: 180 }}
                       />
                       <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
                         <input type="checkbox" checked={editIsGj}
-                          onChange={ev => { setEditIsGj(ev.target.checked); setEditTargetId('') }} />
+                          onChange={ev => setEditIsGj(ev.target.checked)} />
                         GJ
                       </label>
                     </td>
