@@ -73,9 +73,7 @@ const handleKeyDown = (
     ...cell, borderTop: '2px solid #555', background: '#f5f5f5',
     textAlign: 'center' as const, fontSize: 12, fontWeight: 'bold', padding: '3px 0',
   }
-  const orderCell = {
-    ...cell, textAlign: 'center' as const, fontSize: 12, padding: '3px 0', color: '#666',
-  }
+  
 
   return (
     <div>
