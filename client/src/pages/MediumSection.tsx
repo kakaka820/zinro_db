@@ -51,7 +51,8 @@ useEffect(() => {
     for (const execution of executions) {
       // すでにこの処刑日の記録があればスキップ
       const alreadyExists = mediumResults.some(
-        mr => mr.medium_co_id === realCo.id && mr.day_number === execution.day_number
+        mr => mr.medium_participant_id === realCo.participant_id &&
+              mr.day_number === execution.day_number
       )
       if (alreadyExists) continue
 
@@ -65,13 +66,18 @@ useEffect(() => {
       // 開示日 = 処刑日 + 1
       const disclosed_day = execution.day_number + 1
 
-      await mediumResultsApi.add({
-        medium_co_id: realCo.id,
-        participant_id: target.id,
-        day_number: execution.day_number,
-        disclosed_day,
-        result,
-      })
+      try {
+        await mediumResultsApi.add({
+          game_id:               Number(gameId),
+          medium_participant_id: realCo.participant_id,
+          target_participant_id: target.id,
+          day_number:             execution.day_number,
+          disclosed_day,
+          result,
+        })
+      } catch (err) {
+        console.error('霊媒結果の自動記入に失敗しました', err)
+      }
     }
     onRefresh()
   }
