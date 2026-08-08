@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
- import type { DbPool } from '../db';
+import type { DbPool, QueryResult } from '../db';
  import { Vote } from '../types/db';
 
  const router = express.Router();
@@ -37,6 +37,64 @@ type VoteInput = {
   vote_order?: number | null
   receive_order?: number | null
   is_discard?: boolean
+}
+
+async function upsertVote(db: Queryable, v: VoteInput): Promise<Vote> {
+  const {
+    game_id,
+    day_number,
+    voter_id,
+    target_id,
+    vote_order,
+    receive_order,
+    is_discard,
+  } = v
+  const vote_type = v.vote_type ?? 'normal'
+
+  let finalReceiveOrder = receive_order ?? null
+
+  // 初日の投票順が入力されている場合は、その投票順から
+  // 投票先ごとの受けた順番を自動計算する。
+  if (Number(day_number) === 1 && vote_order != null) {
+    const countResult = await db.query<{ count: number }>(
+      `SELECT COUNT(*) AS count
+       FROM votes
+       WHERE game_id = $1
+         AND day_number = $2
+         AND vote_type = $3
+         AND target_id = $4
+         AND vote_order < $5
+         AND voter_id != $6`,
+      [game_id, day_number, vote_type, target_id, vote_order, voter_id],
+    )
+    finalReceiveOrder = Number(countResult.rows[0]?.count ?? 0) + 1
+  }
+
+  const result = await db.query<Vote>(
+    `INSERT INTO votes
+       (game_id, day_number, vote_type, voter_id, target_id,
+        vote_order, receive_order, is_discard)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     ON CONFLICT (game_id, day_number, vote_type, voter_id)
+     DO UPDATE SET
+       target_id = excluded.target_id,
+       vote_order = excluded.vote_order,
+       receive_order = excluded.receive_order,
+       is_discard = excluded.is_discard
+     RETURNING *`,
+    [
+      game_id,
+      day_number,
+      vote_type,
+      voter_id,
+      target_id,
+      vote_order ?? null,
+      finalReceiveOrder,
+      is_discard ?? false,
+    ],
+  )
+
+  return result.rows[0]
 }
 
 // 投票登録（1件）
@@ -77,6 +135,16 @@ router.post('/replace', async (req: Request, res: Response): Promise<void> => {
   const { game_id, day_number, vote_type, votes: voteInputs }:
     { game_id: number; day_number: number; vote_type: string; votes: VoteInput[] } = req.body
 
+  if (
+    !Number.isFinite(Number(game_id)) ||
+    !Number.isFinite(Number(day_number)) ||
+    !['normal', 'runoff', 'runoff2'].includes(vote_type) ||
+    !Array.isArray(voteInputs)
+  ) {
+    res.status(400).json({ error: '投票データの形式が正しくありません' })
+    return
+  }
+
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
@@ -88,7 +156,12 @@ router.post('/replace', async (req: Request, res: Response): Promise<void> => {
     // 新しい投票を挿入（空配列なら全削除のみで終わる）
     const rows: Vote[] = []
     for (const v of voteInputs) {
-      rows.push(await upsertVote(client, { ...v, game_id, day_number, vote_type }))
+      rows.push(await upsertVote(client, {
+        ...v,
+        game_id,
+        day_number,
+        vote_type: vote_type as VoteInput['vote_type'],
+      }))
     }
     await client.query('COMMIT')
     res.json(rows)
