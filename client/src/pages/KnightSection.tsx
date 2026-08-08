@@ -31,7 +31,13 @@ export default function KnightSection({
   useEffect(() => {
     if (knightCoId && knights.some(co => String(co.id) === knightCoId)) return
     const real = knights.find(co => !isFake(co))
-    if (real) setKnightCoId(String(real.id))
+    if (!real) return
+    setKnightCoId(String(real.id))
+    // この騎士の既存記録の最大護衛日 + 1 をデフォルトにする（真偽問わず）
+    const maxDay = knightGuards
+      .filter(g => g.knight_participant_id === real.participant_id)
+      .reduce((m, g) => Math.max(m, g.day_number), 0)
+    setKnightDay(maxDay + 1)
   }, [knights])
 
   const resolve = (input: string) => {
@@ -48,15 +54,18 @@ export default function KnightSection({
     const target = knightTargetInput.trim() ? resolve(knightTargetInput) : null
     const co = coEvents.find(c => c.id === Number(knightCoId))
     if (!co) return alert('COを選択してください')
+    const usedDay = Number(knightDay)
     await knightGuardsApi.add({
       game_id:               Number(gameId),
       knight_participant_id: co.participant_id,
       target_participant_id: target ? target.id : null,
-      day_number:            Number(knightDay),
+      day_number:            usedDay,
       is_gj:                 knightIsGj,
       disclosed_day:         knightDisclosedDay ? Number(knightDisclosedDay) : null,
     })
-    setKnightTargetInput(''); setKnightDay(1); setKnightIsGj(false); setKnightDisclosedDay('')
+    // 真偽問わず、追加した護衛日の次を自動セット
+    setKnightTargetInput(''); setKnightIsGj(false); setKnightDisclosedDay('')
+    setKnightDay(usedDay + 1)
     onRefresh()
   }
 
@@ -74,7 +83,18 @@ export default function KnightSection({
       <h2>騎士CO</h2>
 
       <form onSubmit={addKnightGuard} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <select value={knightCoId} onChange={e => setKnightCoId(e.target.value)} required>
+        <select value={knightCoId} onChange={e => {
+          const newCoId = e.target.value
+          setKnightCoId(newCoId)
+          const co = coEvents.find(c => c.id === Number(newCoId))
+          if (co) {
+            // このCO（真偽問わず）の既存記録の最大護衛日 + 1 をデフォルトにする
+            const maxDay = knightGuards
+              .filter(g => g.knight_participant_id === co.participant_id)
+              .reduce((m, g) => Math.max(m, g.day_number), 0)
+            setKnightDay(maxDay + 1)
+          }
+        }} required>
           {knights.map(co => (
             <option key={co.id} value={co.id}>
               {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
