@@ -45,7 +45,8 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
     if (voterNum == null) continue
     const target = String(v.target_id)
     if (v.vote_type === 'normal') {
-      nm[target] = [...(nm[target] ?? []), String(voterNum)]
+      const label = v.is_discard ? `${voterNum}@` : String(voterNum)
+      nm[target] = [...(nm[target] ?? []), label]
       if (v.vote_order != null) order[v.voter_id] = String(v.vote_order)
     }
   }
@@ -66,10 +67,13 @@ const makeSubmitter = (
     for (const [targetIdStr, voterNums] of Object.entries(matrixData)) {
       for (const voterNumStr of voterNums ?? []) {
         if (!voterNumStr.trim()) continue
-        const voter = resolveParticipant(voterNumStr.trim())
+        // 末尾に「@」が付いていたら捨て票として扱う（例: 5@ → 5番の投票を捨て票扱い）
+        const trimmed = voterNumStr.trim()
+        const isDiscard = trimmed.endsWith('@')
+        const voter = resolveParticipant(isDiscard ? trimmed.slice(0, -1) : trimmed)
         if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
         const orderStr = voteOrderData[voter.id]
-        // 既存の投票があれば、表では編集できない項目（捨て票・受けた順番）を保持する
+        // 既存の投票があれば、表では編集できない項目（受けた順番）を保持する
         const existing = votes.find(v =>
           v.voter_id === voter.id &&
           v.target_id === Number(targetIdStr) &&
@@ -80,7 +84,7 @@ const makeSubmitter = (
           voter_id: voter.id, target_id: Number(targetIdStr),
           vote_order: (day === 1 && orderStr?.trim()) ? Number(orderStr) : null,
           receive_order: existing?.receive_order ?? null,
-          is_discard: existing?.is_discard ?? false,
+          is_discard: isDiscard,
         })
       }
     }
@@ -272,4 +276,3 @@ useImperativeHandle(ref, () => ({
 })
  
 export default VoteSection
- 
