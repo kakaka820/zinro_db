@@ -222,7 +222,6 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
         const seerCOs   = cosByRole('占い師')
         const mediumCOs = cosByRole('霊媒師')
         const knightCOs = cosByRole('騎士')
-        if (!seerCOs.length && !mediumCOs.length && !knightCOs.length) return null
 
         return (
           <div className="card">
@@ -252,6 +251,9 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
            {coViewMode === 'list' && (
 
             <>
+            {!seerCOs.length && !mediumCOs.length && !knightCOs.length && (
+              <p style={{ color: '#999', margin: 0 }}>CO記録なし</p>
+            )}
             {/* 占い師 */}
             {seerCOs.length > 0 && (
               <div style={{ marginBottom: 16 }}>
