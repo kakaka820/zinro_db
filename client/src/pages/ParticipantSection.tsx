@@ -81,7 +81,7 @@ const assignRoles = async () => {
   const numToRoleId: Record<number, number> = {}
   for (const [roleId, numsStr] of Object.entries(roleAssign)) {
     const nums = numsStr
-      .split(/[\s,、]+/)
+      .split(/[\s,、.]+/)
       .map(n => parseInt(n))
       .filter(n => !isNaN(n))
     for (const num of nums) {
@@ -242,7 +242,7 @@ const assignRoles = async () => {
         <div style={{ marginTop: 24 }}>
           <h3 style={{ marginBottom: 8 }}>役職割り当て</h3>
           <p style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
-            特殊役職の参加者番号を入力（複数はカンマ・スペース区切り）。未入力の参加者は村人になります。
+            特殊役職の参加者番号を入力（複数はカンマ・スペース・ピリオド区切り）。未入力の参加者は村人になります。
           </p>
           <table>
             <tbody>
@@ -265,7 +265,7 @@ const assignRoles = async () => {
                       onChange={e =>
                         setRoleAssign(prev => ({ ...prev, [r.id]: e.target.value }))
                       }
-                      placeholder="例: 3, 7, 11"
+                      placeholder="例: 3.7.11"
                       style={{ width: 160 }}
                     />
                   </td>
