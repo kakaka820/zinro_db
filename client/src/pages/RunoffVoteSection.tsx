@@ -1,3 +1,4 @@
+// client/src/pages/RunoffVoteSection.tsx
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
@@ -92,7 +93,7 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
       await api.post('/votes/replace', {
         game_id: Number(gameId), day_number: day, vote_type: voteType, votes: toSubmit,
       })
-      onRefresh()
+      await onRefresh()
     } finally {
       setSubmitting(null)
     }
