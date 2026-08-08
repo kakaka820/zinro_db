@@ -90,6 +90,12 @@ const nextDay = maxDay + 1
     onRefresh()
   }
 
+  // 現在プルダウンで選択中のCOに絞り込んで表示する
+  const selectedCo = coEvents.find(c => c.id === Number(seerCoId))
+  const visibleSeerResults = selectedCo
+    ? seerResults.filter(r => r.seer_participant_id === selectedCo.participant_id)
+    : seerResults
+
   if (seers.length === 0) {
     return (
       <div className="card">
@@ -153,13 +159,13 @@ const nextDay = maxDay + 1
         <button type="submit">追加</button>
       </form>
 
-      {seerResults.length > 0 && (
+      {visibleSeerResults.length > 0 && (
         <table style={{ marginTop: 12 }}>
           <thead>
             <tr><th>占い師</th><th>対象</th><th>占い日</th><th>結果</th><th>開示日</th><th></th></tr>
           </thead>
           <tbody>
-            {seerResults.map(r => (
+            {visibleSeerResults.map(r => (
               <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
                 <td>{getNum(r.seer_participant_id)}番</td>
                 <td>{getNum(r.target_participant_id)}番</td>
