@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { mediumResultsApi } from '../api'
 import type { Participant, CoEvent, MediumResult, Execution, NightKill } from '../types'
 
@@ -21,6 +21,15 @@ export default function MediumSection({
   // 参加者IDから番号を引く
   const getNum = (participantId: number) =>
     participants.find(p => p.id === participantId)?.participant_number ?? '?'
+
+  // ── 保存メッセージ ──
+  const [saveMessage, setSaveMessage] = useState('')
+  const saveMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showSaveMessage = () => {
+    if (saveMessageTimer.current) clearTimeout(saveMessageTimer.current)
+    setSaveMessage('保存しました！')
+    saveMessageTimer.current = setTimeout(() => setSaveMessage(''), 3000)
+  }
 
   // ── 追加フォーム ──
   const [mediumCoId,         setMediumCoId]         = useState('')
@@ -138,6 +147,7 @@ useEffect(() => {
     setMediumTargetInput(''); setMediumResult('white')
     setMediumDay(nextDay)
     setMediumDisclosedDay(String(Math.max(co.co_day ?? 1, nextDay + 1)))
+    showSaveMessage()
     onRefresh()
   }
 
@@ -152,7 +162,12 @@ useEffect(() => {
 
   return (
     <div className="card">
-      <h2>霊媒師CO</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        霊媒師CO
+        {saveMessage && (
+          <span style={{ color: '#080', fontWeight: 'bold', fontSize: 14 }}>{saveMessage}</span>
+        )}
+      </h2>
 
       <form onSubmit={addMediumResult} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <select value={mediumCoId} onChange={e => {
