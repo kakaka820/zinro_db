@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { knightGuardsApi } from '../api'
 import type { Participant, CoEvent, KnightGuard } from '../types'
 
@@ -18,6 +18,15 @@ export default function KnightSection({
   // 参加者IDから番号を引く
   const getNum = (participantId: number) =>
     participants.find(p => p.id === participantId)?.participant_number ?? '?'
+
+  // ── 保存メッセージ ──
+  const [saveMessage, setSaveMessage] = useState('')
+  const saveMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showSaveMessage = () => {
+    if (saveMessageTimer.current) clearTimeout(saveMessageTimer.current)
+    setSaveMessage('保存しました！')
+    saveMessageTimer.current = setTimeout(() => setSaveMessage(''), 3000)
+  }
 
   // ── 追加フォーム ──
   const [knightCoId,         setKnightCoId]         = useState('')
@@ -70,6 +79,7 @@ export default function KnightSection({
     // 真偽問わず、追加した護衛日の次を自動セット
     setKnightTargetInput(''); setKnightIsGj(false); setKnightDisclosedDay('')
     setKnightDay(usedDay + 1)
+    showSaveMessage()
     onRefresh()
   }
 
@@ -84,7 +94,12 @@ export default function KnightSection({
 
   return (
     <div className="card">
-      <h2>騎士CO</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        騎士CO
+        {saveMessage && (
+          <span style={{ color: '#080', fontWeight: 'bold', fontSize: 14 }}>{saveMessage}</span>
+        )}
+      </h2>
 
       <form onSubmit={addKnightGuard} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <select value={knightCoId} onChange={e => {
@@ -101,7 +116,7 @@ export default function KnightSection({
         }} required>
           {knights.map(co => (
             <option key={co.id} value={co.id}>
-              {co.participant_number ?? getNum(co.participant_id)}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
+              {co.participant_number ?? getNum(co.participant_id)}番（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
             </option>
           ))}
         </select>
@@ -135,8 +150,8 @@ export default function KnightSection({
           <tbody>
             {knightGuards.map(g => (
               <tr key={g.id} style={{ opacity: g.disclosed_day ? 1 : 0.6 }}>
-                <td>{getNum(g.knight_participant_id)}</td>
-                <td>{g.target_participant_id ? `${getNum(g.target_participant_id)}` : '不明'}</td>
+                <td>{getNum(g.knight_participant_id)}番</td>
+                <td>{g.target_participant_id ? `${getNum(g.target_participant_id)}番` : '不明'}</td>
                 <td>{g.day_number}日目</td>
                 <td>
                   {editingKnightId === g.id ? (
