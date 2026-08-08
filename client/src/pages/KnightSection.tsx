@@ -15,6 +15,10 @@ type Props = {
 export default function KnightSection({
   gameId, participants, coEvents, knights, knightGuards, isFake, onRefresh,
 }: Props) {
+  // 参加者IDから番号を引く
+  const getNum = (participantId: number) =>
+    participants.find(p => p.id === participantId)?.participant_number ?? '?'
+
   // ── 追加フォーム ──
   const [knightCoId,         setKnightCoId]         = useState('')
   const [knightTargetInput,  setKnightTargetInput]  = useState('')
@@ -97,7 +101,7 @@ export default function KnightSection({
         }} required>
           {knights.map(co => (
             <option key={co.id} value={co.id}>
-              {co.player_name}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
+              {co.participant_number ?? getNum(co.participant_id)}番（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
             </option>
           ))}
         </select>
@@ -131,8 +135,8 @@ export default function KnightSection({
           <tbody>
             {knightGuards.map(g => (
               <tr key={g.id} style={{ opacity: g.disclosed_day ? 1 : 0.6 }}>
-                <td>{g.knight_name}</td>
-                <td>{g.target_name ?? '不明'}</td>
+                <td>{getNum(g.knight_participant_id)}番</td>
+                <td>{g.target_participant_id ? `${getNum(g.target_participant_id)}番` : '不明'}</td>
                 <td>{g.day_number}日目</td>
                 <td>
                   {editingKnightId === g.id ? (
