@@ -83,6 +83,12 @@ export default function KnightSection({
     onRefresh()
   }
 
+  // 現在プルダウンで選択中のCOに絞り込んで表示する
+  const selectedKnightCo = coEvents.find(c => c.id === Number(knightCoId))
+  const visibleKnightGuards = selectedKnightCo
+    ? knightGuards.filter(g => g.knight_participant_id === selectedKnightCo.participant_id)
+    : knightGuards
+
   if (knights.length === 0) {
     return (
       <div className="card">
@@ -142,13 +148,13 @@ export default function KnightSection({
         <button type="submit">追加</button>
       </form>
 
-      {knightGuards.length > 0 && (
+      {visibleKnightGuards.length > 0 && (
         <table style={{ marginTop: 12 }}>
           <thead>
             <tr><th>騎士</th><th>護衛対象</th><th>護衛日</th><th>GJ</th><th>開示日</th><th></th></tr>
           </thead>
           <tbody>
-            {knightGuards.map(g => (
+            {visibleKnightGuards.map(g => (
               <tr key={g.id} style={{ opacity: g.disclosed_day ? 1 : 0.6 }}>
                 <td>{getNum(g.knight_participant_id)}番</td>
                 <td>{g.target_participant_id ? `${getNum(g.target_participant_id)}番` : '不明'}</td>
