@@ -8,10 +8,10 @@ import ExecutionSection, { ExecutionSectionHandle } from './ExecutionSection'
 import NightKillSection, { NightKillSectionHandle } from './NightKillSection'
 import COSection from './COSection'
 import type { Player, Role, Participant, Execution, NightKill, Vote } from '../types'
-
+ 
 export default function GameDetail() {
   const { id } = useParams<{ id: string }>()
-
+ 
   const [players,      setPlayers]      = useState<Player[]>([])
   const [roles,        setRoles]        = useState<Role[]>([])
   const [participants, setParticipants] = useState<Participant[]>([])
@@ -21,12 +21,14 @@ export default function GameDetail() {
   const [day,          setDay]          = useState(1)
   const [activeTab,    setActiveTab]    = useState<'log' | 'co'>('log')
   const [savingAll,    setSavingAll]    = useState(false)
-
+  const [saveMessage,  setSaveMessage]  = useState('')
+  const saveMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+ 
   const voteSectionRef   = useRef<VoteSectionHandle>(null)
   const runoffSectionRef = useRef<RunoffVoteSectionHandle>(null)
   const executionSectionRef = useRef<ExecutionSectionHandle>(null)
   const nightKillSectionRef = useRef<NightKillSectionHandle>(null)
-
+ 
   const loadPlayers      = () => api.get<Player[]>('/players').then(setPlayers)
   const loadParticipants = () => api.get<Participant[]>(`/participants/game/${id}`).then(setParticipants)
   const loadExecutions   = () => api.get<Execution[]>(`/executions/game/${id}`).then(setExecutions)
@@ -39,7 +41,7 @@ export default function GameDetail() {
   await runoffSectionRef.current?.flush()
   await nightKillSectionRef.current?.flush()
 }
-
+ 
 const handleSaveAllClick = async () => {
   if (savingAll) return
   setSavingAll(true)
@@ -55,7 +57,7 @@ const handleSaveAllClick = async () => {
     setSavingAll(false)
   }
 }
-
+ 
 const goToNextDay = async () => {
   try {
     await flushAllDrafts()
@@ -66,30 +68,30 @@ const goToNextDay = async () => {
   setDay(d => d + 1)
   document.getElementById('vote-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
-
+ 
   useEffect(() => {
     loadPlayers()
     api.get<Role[]>('/roles').then(setRoles)
     loadParticipants()
   }, [id])
-
+ 
   useEffect(() => {
     loadExecutions()
     loadNightKills()
   }, [id])
-
+ 
   useEffect(() => {
     loadVotes()
   }, [id, day])
   
-
+ 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
         <h1 style={{ margin: 0 }}>試合 #{id} 記録</h1>
         <Link to={`/games/${id}/view`}>👁 確認モード</Link>
       </div>
-
+ 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <button
           onClick={() => setActiveTab('log')}
@@ -104,7 +106,7 @@ const goToNextDay = async () => {
           CO状況
         </button>
       </div>
-
+ 
       {activeTab === 'log' && (
         <>
           <ParticipantSection
@@ -118,7 +120,7 @@ const goToNextDay = async () => {
             onRefresh={loadParticipants}
             onPlayersRefresh={loadPlayers}
           />
-
+ 
           <div className="card">
             <h2>日付選択</h2>
             <form style={{ marginBottom: 0 }}>
@@ -130,7 +132,7 @@ const goToNextDay = async () => {
               />
             </form>
           </div>
-
+ 
           <VoteSection
   ref={voteSectionRef}
   gameId={id!}
@@ -139,7 +141,7 @@ const goToNextDay = async () => {
   votes={votes}
   onRefresh={loadVotes}
 />
-
+ 
           <ExecutionSection
             ref={executionSectionRef}
             gameId={id}
@@ -148,7 +150,7 @@ const goToNextDay = async () => {
             day={day}
             onRefresh={loadExecutions}
           />
-
+ 
           <RunoffVoteSection
             ref={runoffSectionRef}
             gameId={id!}
@@ -158,8 +160,8 @@ const goToNextDay = async () => {
             votes={votes}
             onRefresh={loadVotes}
           />
-
-
+ 
+ 
           
           <NightKillSection
             ref={nightKillSectionRef}
@@ -169,8 +171,8 @@ const goToNextDay = async () => {
             day={day}
             onRefresh={loadNightKills}
           />
-
-          <div className="card" style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 12 }}>
+ 
+          <div className="card" style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 12, alignItems: 'center' }}>
   <button
     type="button" className="secondary"
     onClick={handleSaveAllClick} disabled={savingAll}
@@ -181,13 +183,13 @@ const goToNextDay = async () => {
   <button type="button" onClick={goToNextDay} style={{ fontSize: 16, padding: '10px 24px' }}>
     {day + 1}日目へ進む ↑ 投票へ
   </button>
-            {saveMessage && (
+  {saveMessage && (
     <span style={{ color: '#080', fontWeight: 'bold' }}>{saveMessage}</span>
   )}
 </div>
         </>
       )}
-
+ 
       {activeTab === 'co' && (
         <COSection
           gameId={id}
