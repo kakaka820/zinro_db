@@ -2,7 +2,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
 import type { Participant, Vote } from '../types'
-
+ 
 type Props = {
   gameId: string
   participants: Participant[]
@@ -10,20 +10,20 @@ type Props = {
   votes: Vote[]
   onRefresh: () => void
 }
-
+ 
 export type VoteSectionHandle = {
   // フォーム／表の「まだ記録ボタンを押していない入力」があれば保存する
   flush: () => Promise<void>
 }
-
+ 
 const VoteSection = forwardRef<VoteSectionHandle, Props>(function VoteSection(
   { gameId, participants, day, votes, onRefresh }, ref
 ) {
-
+ 
   const [voteInputMode, setVoteInputMode] =   useState<'form' | 'table'>('table')
 const [normalMatrix,    setNormalMatrix]    = useState<Record<string, string[]>>({})
 const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({})
-
+ 
   const [submitting,      setSubmitting]      = useState<'normal'|null>(null)
 　const [voteOrderInput, setVoteOrderInput] = useState<Record<number, string>>({})
   const [vVoterInput,   setVVoterInput]   = useState('')
@@ -33,9 +33,9 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
   const [vReceiveOrder, setVReceiveOrder] = useState('')
   const [vIsDiscard,    setVIsDiscard]    = useState(false)
   const [showNames, setShowNames] = useState(false)
-
-
-
+ 
+ 
+ 
   useEffect(() => {
     if (voteInputMode !== 'table') return
   const nm: Record<string, string[]> = {}
@@ -52,7 +52,7 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
   setNormalMatrix(nm)
   setNormalVoteOrder(order)
 }, [votes, voteInputMode])
-
+ 
 // 通常投票の一括登録（決選投票はRunoffVoteSectionへ移動）
 const makeSubmitter = (
   voteType: 'normal',
@@ -69,11 +69,18 @@ const makeSubmitter = (
         const voter = resolveParticipant(voterNumStr.trim())
         if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
         const orderStr = voteOrderData[voter.id]
+        // 既存の投票があれば、表では編集できない項目（捨て票・受けた順番）を保持する
+        const existing = votes.find(v =>
+          v.voter_id === voter.id &&
+          v.target_id === Number(targetIdStr) &&
+          v.vote_type === voteType
+        )
         toSubmit.push({
           game_id: Number(gameId), day_number: day, vote_type: voteType,
           voter_id: voter.id, target_id: Number(targetIdStr),
           vote_order: (day === 1 && orderStr?.trim()) ? Number(orderStr) : null,
-          receive_order: null,
+          receive_order: existing?.receive_order ?? null,
+          is_discard: existing?.is_discard ?? false,
         })
       }
     }
@@ -88,8 +95,8 @@ const makeSubmitter = (
     setSubmitting(null)
   }
 }
-
-
+ 
+ 
   
   const resolveParticipant = (input: string) => {
     const trimmed = input.trim()
@@ -99,7 +106,7 @@ const makeSubmitter = (
       return participants.find(p => p.participant_number === num) ?? null
     return participants.find(p => p.player_name === trimmed) ?? null
   }
-
+ 
   const submitFormVote = async () => {
   const voter  = resolveParticipant(vVoterInput)
   const target = resolveParticipant(vTargetInput)
@@ -120,13 +127,13 @@ const makeSubmitter = (
     setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder(''); setVIsDiscard(false)
     onRefresh()
   }
-
-
+ 
+ 
   const addVote = (e: React.FormEvent) => {
   e.preventDefault()
   return submitFormVote()
 }
-
+ 
 useImperativeHandle(ref, () => ({
   async flush() {
     if (voteInputMode === 'form') {
@@ -138,8 +145,8 @@ useImperativeHandle(ref, () => ({
     }
   },
 }))
-
-
+ 
+ 
   return (
     <div className="card" id="vote-section">
       <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -212,7 +219,7 @@ useImperativeHandle(ref, () => ({
     />
     
 )}
-
+ 
       {votes.length > 0 && (
         <table style={{ marginTop: 12 }}>
                     <thead>
@@ -236,8 +243,8 @@ useImperativeHandle(ref, () => ({
     ? participants.find(p => p.id === v.target_id)?.player_name ?? v.target_id
     : (participants.find(p => p.id === v.target_id)?.participant_number ?? v.target_id)}
 </td>
-
-
+ 
+ 
                 <td>
   {v.vote_type === 'normal' ? '通常'
     : v.vote_type === 'runoff' ? '決選'
@@ -263,5 +270,6 @@ useImperativeHandle(ref, () => ({
     </div>
   )
 })
-
+ 
 export default VoteSection
+ 
