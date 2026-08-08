@@ -57,9 +57,23 @@ useEffect(() => {
   const realCo = mediums.find(co => !isFake(co))
   if (!realCo) return
 
+  // 霊媒師自身の死亡日（吊り・噛みのうち早い方）。生存中なら Infinity。
+  const deathDay = Math.min(
+    ...executions.filter(e => e.participant_id === realCo.participant_id).map(e => e.day_number),
+    ...nightKills.filter(n => n.participant_id === realCo.participant_id).map(n => n.day_number),
+    Infinity,
+  )
+
   const autoFill = async () => {
     let inserted = false
     for (const execution of executions) {
+      // 開示日 = 処刑日 + 1
+      const disclosed_day = execution.day_number + 1
+
+      // 開示日の時点で霊媒師本人がすでに死亡している場合は、
+      // 村に情報が伝わらないため自動記入しない
+      if (disclosed_day > deathDay) continue
+
       // すでにこの処刑日の記録があればスキップ
       const alreadyExists = mediumResults.some(
         mr => mr.medium_participant_id === realCo.participant_id &&
@@ -73,9 +87,6 @@ useEffect(() => {
 
       // 結果判定：狼陣営なら黒、それ以外は白
       const result: 'white' | 'black' = target.team === 'wolf' ? 'black' : 'white'
-
-      // 開示日 = 処刑日 + 1
-      const disclosed_day = execution.day_number + 1
 
       try {
         await mediumResultsApi.add({
@@ -96,7 +107,7 @@ useEffect(() => {
   }
 
   autoFill()
-}, [executions, mediums, mediumResults, participants])
+}, [executions, nightKills, mediums, mediumResults, participants])
 
   const resolve = (input: string) => {
     const trimmed = input.trim()
@@ -160,7 +171,7 @@ useEffect(() => {
         }} required>
           {mediums.map(co => (
             <option key={co.id} value={co.id}>
-              {co.participant_number ?? getNum(co.participant_id)}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
+              {co.participant_number ?? getNum(co.participant_id)}番（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
             </option>
           ))}
         </select>
@@ -197,8 +208,8 @@ useEffect(() => {
           <tbody>
             {mediumResults.map(r => (
               <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
-                <td>{getNum(r.medium_participant_id)}</td>
-                <td>{getNum(r.target_participant_id)}</td>
+                <td>{getNum(r.medium_participant_id)}番</td>
+                <td>{getNum(r.target_participant_id)}番</td>
                 <td>{r.day_number}日目</td>
                 <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
                   {editingMediumId === r.id ? (
