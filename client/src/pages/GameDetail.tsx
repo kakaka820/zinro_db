@@ -1,3 +1,4 @@
+// client/src/pages/GameDetail.tsx
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
@@ -28,6 +29,7 @@ export default function GameDetail() {
   const runoffSectionRef = useRef<RunoffVoteSectionHandle>(null)
   const executionSectionRef = useRef<ExecutionSectionHandle>(null)
   const nightKillSectionRef = useRef<NightKillSectionHandle>(null)
+  const bottomBarRef = useRef<HTMLDivElement>(null)
  
   const loadPlayers      = () => api.get<Player[]>('/players').then(setPlayers)
   const loadParticipants = () => api.get<Participant[]>(`/participants/game/${id}`).then(setParticipants)
@@ -42,8 +44,21 @@ export default function GameDetail() {
   await nightKillSectionRef.current?.flush()
 }
  
+// 2フレーム待つ（Reactの再レンダー→ブラウザの実際のレイアウト確定までを待つ）。
+// setTimeoutではなくrAFなので、描画が終わり次第すぐ解決し、余計な遅延を作らない。
+const waitForLayout = () =>
+  new Promise<void>(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  })
+
 const handleSaveAllClick = async () => {
   if (savingAll) return
+
+  // 保存ボタン列（画面下部）が「今、画面のどの高さに見えているか」を保存前に記録しておく。
+  // 保存に伴って上のテーブルに行が増減しても、この位置がズレないよう後で補正する。
+  const anchorEl = bottomBarRef.current
+  const beforeTop = anchorEl?.getBoundingClientRect().top ?? null
+
   setSavingAll(true)
   try {
     await flushAllDrafts()
@@ -55,6 +70,16 @@ const handleSaveAllClick = async () => {
     alert('保存中にエラーが発生しました。内容を確認してください。')
   } finally {
     setSavingAll(false)
+    // レイアウトが落ち着くのを待ってから、ズレた分だけ一度だけ補正する。
+    // （継続的にスクロールを監視・強制するわけではないので、以降のホイール操作等は通常通り効く）
+    await waitForLayout()
+    if (anchorEl && beforeTop != null) {
+      const afterTop = anchorEl.getBoundingClientRect().top
+      const delta = afterTop - beforeTop
+      if (Math.abs(delta) > 1) {
+        window.scrollBy({ top: delta, left: 0, behavior: 'auto' })
+      }
+    }
   }
 }
  
@@ -172,7 +197,7 @@ const goToNextDay = async () => {
             onRefresh={loadNightKills}
           />
  
-          <div className="card" style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 12, alignItems: 'center' }}>
+          <div ref={bottomBarRef} className="card" style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 12, alignItems: 'center' }}>
   <button
     type="button" className="secondary"
     onClick={handleSaveAllClick} disabled={savingAll}
