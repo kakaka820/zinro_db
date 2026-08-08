@@ -12,7 +12,7 @@ type Props = {
 }
  
 export type VoteSectionHandle = {
-  // フォーム／表の「まだ記録ボタンを押していない入力」があれば保存する
+  // 表の「まだ記録ボタンを押していない入力」があれば保存する
   flush: () => Promise<void>
 }
  
@@ -20,24 +20,15 @@ const VoteSection = forwardRef<VoteSectionHandle, Props>(function VoteSection(
   { gameId, participants, day, votes, onRefresh }, ref
 ) {
  
-  const [voteInputMode, setVoteInputMode] =   useState<'form' | 'table'>('table')
 const [normalMatrix,    setNormalMatrix]    = useState<Record<string, string[]>>({})
 const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({})
  
   const [submitting,      setSubmitting]      = useState<'normal'|null>(null)
-　const [voteOrderInput, setVoteOrderInput] = useState<Record<number, string>>({})
-  const [vVoterInput,   setVVoterInput]   = useState('')
-  const [vTargetInput,  setVTargetInput]  = useState('')
-  const [vType,         setVType]         = useState('normal')
-  const [vVoteOrder,    setVVoteOrder]    = useState('')
-  const [vReceiveOrder, setVReceiveOrder] = useState('')
-  const [vIsDiscard,    setVIsDiscard]    = useState(false)
   const [showNames, setShowNames] = useState(false)
  
  
  
   useEffect(() => {
-    if (voteInputMode !== 'table') return
   const nm: Record<string, string[]> = {}
   const order: Record<number, string> = {}
   for (const v of votes) {
@@ -52,7 +43,7 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
   }
   setNormalMatrix(nm)
   setNormalVoteOrder(order)
-}, [votes, voteInputMode])
+}, [votes])
  
 // 通常投票の一括登録（決選投票はRunoffVoteSectionへ移動）
 const makeSubmitter = (
@@ -111,42 +102,9 @@ const makeSubmitter = (
     return participants.find(p => p.player_name === trimmed) ?? null
   }
  
-  const submitFormVote = async () => {
-  const voter  = resolveParticipant(vVoterInput)
-  const target = resolveParticipant(vTargetInput)
-  if (!voter || !target) {
-    alert('投票した人・投票先が見つかりません（番号か名前で入力してください）')
-    return
-  }
-        await api.post('/votes', {
-      game_id:       Number(gameId),
-      day_number:    day,
-      vote_type:     vType,
-      voter_id:      voter.id,
-      target_id:     target.id,
-      vote_order:    day === 1 && vVoteOrder    ? Number(vVoteOrder)    : null,
-      receive_order: day !== 1 && vReceiveOrder ? Number(vReceiveOrder) : null,
-      is_discard:    vIsDiscard,
-    })
-    setVVoterInput(''); setVTargetInput(''); setVVoteOrder(''); setVReceiveOrder(''); setVIsDiscard(false)
-    onRefresh()
-  }
- 
- 
-  const addVote = (e: React.FormEvent) => {
-  e.preventDefault()
-  return submitFormVote()
-}
- 
 useImperativeHandle(ref, () => ({
   async flush() {
-    if (voteInputMode === 'form') {
-      if (vVoterInput.trim() && vTargetInput.trim()) {
-        await submitFormVote()
-      }
-    } else {
-      await makeSubmitter('normal', normalMatrix, normalVoteOrder)()
-    }
+    await makeSubmitter('normal', normalMatrix, normalVoteOrder)()
   },
 }))
  
@@ -158,58 +116,11 @@ useImperativeHandle(ref, () => ({
   <button
     type="button" className="secondary"
     style={{ fontSize: 12, padding: '2px 10px' }}
-    onClick={() => setVoteInputMode(m => m === 'form' ? 'table' : 'form')}
-  >
-    {voteInputMode === 'form' ? '表入力に切替' : 'フォーム入力に切替'}
-  </button>
-  <button
-    type="button" className="secondary"
-    style={{ fontSize: 12, padding: '2px 10px' }}
     onClick={() => setShowNames(v => !v)}
   >
     {showNames ? '名前を非表示' : '名前を表示'}
   </button>
 </h2>
-      {voteInputMode === 'form' ? (
-        <form onSubmit={addVote}>
-          {day === 1 ? (
-            <>
-              <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
-                placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
-              <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
-                placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
-              <select value={vType} onChange={e => setVType(e.target.value)}>
-  <option value="normal">通常投票</option>
-  <option value="runoff">決選投票</option>
-  <option value="runoff2">2回目決選投票</option>
-</select>
-              <input type="number" min="1" value={vVoteOrder}
-                onChange={e => setVVoteOrder(e.target.value)}
-                placeholder="投票順（初日のみ）" style={{ width: 150 }} />
-            </>
-          ) : (
-            <>
-              <input value={vTargetInput} onChange={e => setVTargetInput(e.target.value)}
-                placeholder="投票先（番号or名前）" style={{ width: 170 }} required />
-              <input type="number" min="1" value={vReceiveOrder}
-                onChange={e => setVReceiveOrder(e.target.value)}
-                placeholder="受けた順番" style={{ width: 120 }} />
-              <select value={vType} onChange={e => setVType(e.target.value)}>
-  <option value="normal">通常投票</option>
-  <option value="runoff">決選投票</option>
-  <option value="runoff2">2回目決選投票</option>
-</select>
-              <input value={vVoterInput} onChange={e => setVVoterInput(e.target.value)}
-                placeholder="投票した人（番号or名前）" style={{ width: 180 }} required />
-            </>
-          )}
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <input type="checkbox" checked={vIsDiscard} onChange={e => setVIsDiscard(e.target.checked)} />
-            捨て票
-          </label>
-          <button type="submit">記録</button>
-        </form>
-      ) : (
     <VoteMatrixInput
       title="通常投票"
       participants={participants}
@@ -221,8 +132,6 @@ useImperativeHandle(ref, () => ({
       voteOrderInput={normalVoteOrder}
       setVoteOrderInput={setNormalVoteOrder}
     />
-    
-)}
  
       {votes.length > 0 && (
         <table style={{ marginTop: 12 }}>
