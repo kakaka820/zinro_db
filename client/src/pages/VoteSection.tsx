@@ -20,7 +20,7 @@ const VoteSection = forwardRef<VoteSectionHandle, Props>(function VoteSection(
   { gameId, participants, day, votes, onRefresh }, ref
 ) {
 
-  const [voteInputMode, setVoteInputMode] = useState<'form' | 'table'>('form')
+  const [voteInputMode, setVoteInputMode] =   useState<'form' | 'table'>('table')
 const [normalMatrix,    setNormalMatrix]    = useState<Record<string, string[]>>({})
 const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({})
 
