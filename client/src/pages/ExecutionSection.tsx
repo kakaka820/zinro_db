@@ -34,6 +34,12 @@ const ExecutionSection = forwardRef<ExecutionSectionHandle, Props>(function Exec
     return participants.find(p => p.player_name === trimmed) ?? null
   }
 
+  // 「番号.名前」形式で表示する（番号が無ければ名前のみ）
+  const formatParticipant = (p?: Participant | null) => {
+    if (!p) return '―'
+    return p.participant_number != null ? `${p.participant_number}.${p.player_name}` : p.player_name
+  }
+
   const submitExecution = async () => {
   const target = eType === 'none' ? null : resolveParticipant(eParticipantId)
   if (eType !== 'none' && !target) {
@@ -142,7 +148,7 @@ useImperativeHandle(ref, () => ({
                         : e.execution_type === 'runoff_execution' ? '決選吊り'
                         : '吊りなし'}
                     </td>
-                    <td>{participants.find(p => String(p.id) === String(e.participant_id))?.player_name ?? '―'}</td>
+                    <td>{formatParticipant(participants.find(p => String(p.id) === String(e.participant_id)))}</td>
                     <td style={{ display: 'flex', gap: 4 }}>
                       <button className="secondary" onClick={() => startEdit(e)}>編集</button>
                       <button className="secondary" onClick={() => deleteExecution(e.id)}>削除</button>
