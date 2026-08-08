@@ -160,7 +160,7 @@ useEffect(() => {
         }} required>
           {mediums.map(co => (
             <option key={co.id} value={co.id}>
-              {co.participant_number ?? getNum(co.participant_id)}番（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
+              {co.participant_number ?? getNum(co.participant_id)}（{co.co_day != null ? `${co.co_day}日目CO` : '未CO'}）{isFake(co) ? ' ⚠️偽' : ''}
             </option>
           ))}
         </select>
@@ -197,8 +197,8 @@ useEffect(() => {
           <tbody>
             {mediumResults.map(r => (
               <tr key={r.id} style={{ opacity: r.disclosed_day ? 1 : 0.6 }}>
-                <td>{getNum(r.medium_participant_id)}番</td>
-                <td>{getNum(r.target_participant_id)}番</td>
+                <td>{getNum(r.medium_participant_id)}</td>
+                <td>{getNum(r.target_participant_id)}</td>
                 <td>{r.day_number}日目</td>
                 <td style={{ color: r.result === 'black' ? '#c00' : '#080', fontWeight: 'bold' }}>
                   {editingMediumId === r.id ? (
