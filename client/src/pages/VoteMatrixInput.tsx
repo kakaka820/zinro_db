@@ -86,7 +86,7 @@ const handleKeyDown = (
   onClick={() => setMatrixInput({})} disabled={submitting}>クリア</button>
       </div>
       <p style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
-        各列の参加者番号の上のセルに、投票した人の番号を入力してください
+        各列の参加者番号の上のセルに、投票した人の番号を入力してください（捨て票は末尾に@を付ける。例: 5@）
       </p>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse' }}>
