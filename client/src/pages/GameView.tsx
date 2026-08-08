@@ -113,7 +113,6 @@ const [day,           setDay]          = useState(1)
 const [votes,         setVotes]        = useState<Vote[]>([])
 const [executions,    setExecutions]   = useState<Execution[]>([])
 const [nightKills,    setNightKills]   = useState<NightKill[]>([])
-const [showRoles,     setShowRoles]    = useState(false)
 const [showNames,     setShowNames]    = useState(true)
 const [coEvents,      setCoEvents]     = useState<CoEvent[]>([])
 const [seerResults,   setSeerResults]  = useState<SeerResult[]>([])
@@ -170,18 +169,6 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
     : r === 'wolf_win'  ? '人狼勝利'
     : r === 'other'     ? 'その他' : '—'
 
-      const sortedP      = [...participants].sort(
-    (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
-  )
-
-  // day日目時点でCO済みのイベントを取得（co_day <= day）
-  const getCOs = (participantId: number) =>
-    coEvents.filter(c => c.participant_id === participantId && c.co_day != null && c.co_day <= day)
-    // day日目開始時点での死亡者ID（前日までの処刑・噛みが反映）
-  const deadByDay = new Set([
-    ...executions.filter(e => e.day_number < day && e.participant_id != null).map(e => e.participant_id),
-    ...nightKills.filter(n => n.day_number < day && n.participant_id != null).map(n => n.participant_id),
-  ])
   const normalVotes  = votes.filter(v => v.vote_type === 'normal')
   const runoffVotes  = votes.filter(v => v.vote_type === 'runoff')
   const runoff2Votes = votes.filter(v => v.vote_type === 'runoff2')
@@ -190,9 +177,16 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8, flexWrap: 'wrap' }}>
         <h1 style={{ margin: 0 }}>試合 #{id} ログ</h1>
         <Link to={`/games/${id}`}>✏️ 入力モード</Link>
+        <button
+          className="secondary"
+          style={{ fontSize: 12, padding: '2px 10px' }}
+          onClick={() => setShowNames(v => !v)}
+        >
+          {showNames ? '名前を隠す' : '名前を表示'}
+        </button>
       </div>
 
       {/* 試合情報 */}
@@ -205,66 +199,6 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
           </tbody></table>
         </div>
       )}
-
-      {/* 参加者 */}
-      <div className="card">
-                        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          参加者
-          <button
-            className="secondary"
-            style={{ fontSize: 12, padding: '2px 10px' }}
-            onClick={() => setShowNames(v => !v)}
-          >
-            {showNames ? '名前を隠す' : '名前を表示'}
-          </button>
-          <button
-            className="secondary"
-            style={{ fontSize: 12, padding: '2px 10px' }}
-            onClick={() => setShowRoles(v => !v)}
-          >
-            {showRoles ? '役職・陣営を隠す' : '役職・陣営を表示'}
-          </button>
-        </h2>
-        {sortedP.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
-          <table>
-                        <thead>
-              <tr>
-                <th>番号</th>
-                {showNames && <th>名前</th>}
-                <th>CO</th>
-                {showRoles && <><th>役職</th><th>陣営</th></>}
-                <th>生存</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedP.map(p => (
-                <tr key={p.id}>
-                  <td>{p.participant_number ?? '—'}</td>
-                  {showNames && <td>{p.player_name}</td>}
-                  <td>
-                    {getCOs(p.id).map(c => (
-                      <span key={c.id} style={{
-                        marginRight: 4, fontSize: 11, padding: '1px 6px',
-                        borderRadius: 10, background: '#dbeafe', color: '#1d4ed8',
-                        fontWeight: 'bold', whiteSpace: 'nowrap',
-                      }}>
-                        CO:{c.claimed_role_name}
-                      </span>
-                    ))}
-                  </td>
-                  {showRoles && (
-                    <>
-                      <td>{p.role_name}</td>
-                      <td><span className={`tag ${p.team}`}>{p.team}</span></td>
-                    </>
-                  )}
-                  <td>{deadByDay.has(p.id) ? '❌' : '✅'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
 
       {/* 日付選択 */}
       <div className="card">
