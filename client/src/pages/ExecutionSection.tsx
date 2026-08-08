@@ -1,3 +1,4 @@
+// client/src/pages/ExecutionSection.tsx
 import { useState, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import type { Participant, Execution } from '../types'
@@ -53,7 +54,7 @@ const ExecutionSection = forwardRef<ExecutionSectionHandle, Props>(function Exec
       execution_type: eType,
     })
     setEParticipantId(''); setEType('normal')
-    onRefresh()
+    await onRefresh()
   }
 
 
