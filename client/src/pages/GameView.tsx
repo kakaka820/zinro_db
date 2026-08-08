@@ -341,17 +341,20 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
               <div>
                 <h3 style={{ fontSize: 14, marginBottom: 6 }}>🛡 騎士CO</h3>
                 {knightCOs.map(co => {
+                  // GJの事実（is_gj）は噛み結果同様に公開情報として扱い、day_number <= day なら常に一覧に出す。
+                  // 護衛"対象"の氏名だけ秘匿情報なので、行ごとに disclosed_day <= day で個別に隠す。
                   const guards = knightGuards.filter(
-                    g => g.knight_participant_id === co.participant_id &&
-                         g.disclosed_day != null && g.disclosed_day <= day
+                    g => g.knight_participant_id === co.participant_id && g.day_number <= day
                   )
+                  const targetDisclosed = (g: KnightGuard) =>
+                    g.disclosed_day != null && g.disclosed_day <= day
                   return (
                     <div key={co.id} style={{ marginBottom: 8 }}>
                                             <strong>
                         {showNames ? co.player_name : `${getNum(co.participant_id)}番`}
                       </strong>
                       {guards.length === 0
-                        ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>開示なし</span>
+                        ? <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>記録なし</span>
                         : (
                           <table style={{ marginTop: 4 }}>
                             <thead>
@@ -360,7 +363,11 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
                             <tbody>
                               {guards.map(g => (
                                 <tr key={g.id}>
-                                                                    <td>{showNames ? (g.target_name ?? '不明') : (g.target_participant_id ? `${getNum(g.target_participant_id)}番` : '不明')}</td>
+                                  <td>
+                                    {targetDisclosed(g) && g.target_participant_id != null
+                                      ? (showNames ? (g.target_name ?? '不明') : `${getNum(g.target_participant_id)}番`)
+                                      : '不明'}
+                                  </td>
                                   <td>{g.day_number}日目</td>
                                   <td>{g.is_gj ? '✅ GJ' : '―'}</td>
                                 </tr>
