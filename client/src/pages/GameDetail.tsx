@@ -45,7 +45,9 @@ const handleSaveAllClick = async () => {
   setSavingAll(true)
   try {
     await flushAllDrafts()
-    alert('入力中の内容をまとめて保存しました')
+    if (saveMessageTimer.current) clearTimeout(saveMessageTimer.current)
+    setSaveMessage('保存しました！')
+    saveMessageTimer.current = setTimeout(() => setSaveMessage(''), 3000)
   } catch (err) {
     console.error(err)
     alert('保存中にエラーが発生しました。内容を確認してください。')
@@ -179,6 +181,9 @@ const goToNextDay = async () => {
   <button type="button" onClick={goToNextDay} style={{ fontSize: 16, padding: '10px 24px' }}>
     {day + 1}日目へ進む ↑ 投票へ
   </button>
+            {saveMessage && (
+    <span style={{ color: '#080', fontWeight: 'bold' }}>{saveMessage}</span>
+  )}
 </div>
         </>
       )}
