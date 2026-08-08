@@ -446,37 +446,6 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
         )
       })()}
       
-      {/* 投票マトリクス */}
-      <div className="card">
-        <h2>{day}日目：投票</h2>
-        {votes.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
-          <>
-            <VoteMatrix
-  participants={participants}
-  votes={normalVotes}
-  label={(runoffVotes.length > 0 || runoff2Votes.length > 0) ? '通常投票' : null}
-  showVoteOrder={day === 1}
-/>
-{runoffVotes.length > 0 && (
-  <VoteMatrix
-    participants={participants}
-    votes={runoffVotes}
-    label="決選投票"
-    showVoteOrder={false}
-  />
-)}
-{runoff2Votes.length > 0 && (
-  <VoteMatrix
-    participants={participants}
-    votes={runoff2Votes}
-    label="2回目決選投票"
-    showVoteOrder={false}
-  />
-)}
-          </>
-        )}
-      </div>
-
       {/* 吊り・噛み・護衛 */}
       <div className="card">
         <h2 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -539,6 +508,37 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
                 </tbody>
               </table>
             )}
+          </>
+        )}
+      </div>
+
+      {/* 投票マトリクス */}
+      <div className="card">
+        <h2>{day}日目：投票</h2>
+        {votes.length === 0 ? <p style={{ color: '#999' }}>記録なし</p> : (
+          <>
+            <VoteMatrix
+  participants={participants}
+  votes={normalVotes}
+  label={(runoffVotes.length > 0 || runoff2Votes.length > 0) ? '通常投票' : null}
+  showVoteOrder={day === 1}
+/>
+{runoffVotes.length > 0 && (
+  <VoteMatrix
+    participants={participants}
+    votes={runoffVotes}
+    label="決選投票"
+    showVoteOrder={false}
+  />
+)}
+{runoff2Votes.length > 0 && (
+  <VoteMatrix
+    participants={participants}
+    votes={runoff2Votes}
+    label="2回目決選投票"
+    showVoteOrder={false}
+  />
+)}
           </>
         )}
       </div>
