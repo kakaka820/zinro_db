@@ -91,11 +91,19 @@ export default function ExecutionKillTable({
             {days.map(d => {
               const exec = d <= viewDay ? executions.find(e => e.day_number === d && e.participant_id != null) : undefined
               const kill = d <= viewDay ? nightKills.find(n => n.day_number === d) : undefined
-              const guard = d <= viewDay ? knightGuards.find(g => g.day_number === d && g.disclosed_day != null) : undefined
+              // 護衛成功の事実（is_gj）は噛み結果と同じく「その日が来れば常に公開情報」として扱う。
+              // 護衛"対象"の氏名だけが秘匿情報なので、disclosed_day はそちらのみをゲートする。
+              const guard = d <= viewDay ? knightGuards.find(g => g.day_number === d) : undefined
+              const guardTargetDisclosed =
+                !!guard && guard.disclosed_day != null && guard.disclosed_day <= viewDay
 
               const execLabel = exec ? String(getNum(exec.participant_id)) : null
               const killLabel = kill ? (kill.participant_id == null ? 'GJ' : String(getNum(kill.participant_id))) : null
-              const guardLabel = guard ? (guard.target_participant_id == null ? 'GJ' : String(getNum(guard.target_participant_id))) : null
+              const guardLabel = guard
+                ? (guardTargetDisclosed && guard.target_participant_id != null
+                    ? String(getNum(guard.target_participant_id))
+                    : (guard.is_gj ? 'GJ' : null))
+                : null
 
               return (
                 <TriDiagonalHeader
