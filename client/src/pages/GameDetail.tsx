@@ -1,4 +1,3 @@
-// client/src/pages/GameDetail.tsx
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api'
@@ -23,6 +22,7 @@ export default function GameDetail() {
   const [activeTab,    setActiveTab]    = useState<'log' | 'co'>('log')
   const [savingAll,    setSavingAll]    = useState(false)
   const [saveMessage,  setSaveMessage]  = useState('')
+  const [draftExecutionType, setDraftExecutionType] = useState('normal')
   const saveMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
  
   const voteSectionRef   = useRef<VoteSectionHandle>(null)
@@ -174,6 +174,7 @@ const goToNextDay = async () => {
             executions={executions}
             day={day}
             onRefresh={loadExecutions}
+            onDraftTypeChange={setDraftExecutionType}
           />
  
           <RunoffVoteSection
@@ -184,6 +185,7 @@ const goToNextDay = async () => {
             executions={executions}
             votes={votes}
             onRefresh={loadVotes}
+            draftIsRunoff={draftExecutionType === 'runoff_execution'}
           />
  
  
