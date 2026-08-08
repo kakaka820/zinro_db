@@ -59,15 +59,20 @@ const nextDay = maxDay + 1
     if (!target) return alert('占い対象が見つかりません')
     const co = coEvents.find(c => c.id === Number(seerCoId))
     if (!co) return alert('COを選択してください')
+    const usedDay = Number(seerDay)
     await seerResultsApi.add({
       game_id:               Number(gameId),
       seer_participant_id:   co.participant_id,
       target_participant_id: target.id,
-      day_number:            Number(seerDay),
+      day_number:            usedDay,
       result:                seerResult,
       disclosed_day:         seerDisclosedDay ? Number(seerDisclosedDay) : null,
     })
-    setSeerTargetInput(''); setSeerDay(1); setSeerResult('white'); setSeerDisclosedDay('')
+    // 真偽問わず、追加した日の次の日を自動セット（開示日も連動）
+    const nextDay = usedDay + 1
+    setSeerTargetInput(''); setSeerResult('white')
+    setSeerDay(nextDay)
+    setSeerDisclosedDay(String(Math.max(co.co_day ?? 1, nextDay)))
     onRefresh()
   }
 
