@@ -75,6 +75,8 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
           })
         }
       }
+      // 空の表を保存しても、既存の決選投票を削除しない。
+      if (toSubmit.length === 0) return
       await api.post('/votes/replace', {
         game_id: Number(gameId), day_number: day, vote_type: voteType, votes: toSubmit,
       })
