@@ -92,7 +92,7 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
         </label>
 <select value={coTiming} onChange={e => setCoTiming(e.target.value as any)}>
   <option value="">通常CO</option>
-  <option value="runoff">決選CO</option>
+  <option value="runoff">投票時CO</option>
   <option value="testament">遺言CO</option>
 </select>
         <button type="submit">記録</button>
@@ -122,21 +122,21 @@ const [editCoTiming, setEditCoTiming] = useState<'runoff' | 'testament' | ''>(''
                       placeholder="未COは空欄" style={{ width: 80 }} />
                    <select value={editCoTiming} onChange={e => setEditCoTiming(e.target.value as any)}>
                         <option value="">通常CO</option>
-                        <option value="runoff">決選CO</option>
+                        <option value="runoff">投票時CO</option>
                         <option value="testament">遺言CO</option>
                       </select>
                     </>
                   ) : (
                     <>
                       {co.co_day != null
-                        ? co.co_timing === 'runoff'   ? `${co.co_day}日目（決選CO）`
+                        ? co.co_timing === 'runoff'   ? `${co.co_day}日目（投票時CO）`
                         : co.co_timing === 'testament' ? `${co.co_day}日目（遺言CO）`
                         : `${co.co_day}日目`
                         : '未CO'}
                     </>
                   )}
                 </td>
-                <td>{isFake(co) ? '⚠️ 偽CO' : '本物'}</td>
+                <td>{isFake(co) ? '偽CO' : '本物'}</td>
                 <td style={{ display: 'flex', gap: 4 }}>
                   {editingCoId === co.id ? (
                     <>
