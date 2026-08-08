@@ -51,10 +51,6 @@ const ExecutionSection = forwardRef<ExecutionSectionHandle, Props>(function Exec
   }
 
 
-  const addExecution = (e: React.FormEvent) => {
-  e.preventDefault()
-  return submitExecution()
-}
 
 useImperativeHandle(ref, () => ({
   async flush() {
@@ -96,7 +92,7 @@ useImperativeHandle(ref, () => ({
   return (
     <div className="card">
       <h2>{day}日目：吊り結果</h2>
-      <form onSubmit={addExecution}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <select value={eType} onChange={e => setEType(e.target.value)}>
           <option value="normal">通常吊り</option>
           <option value="random">ランダム吊り</option>
@@ -105,10 +101,9 @@ useImperativeHandle(ref, () => ({
         </select>
         {eType !== 'none' && (
           <input value={eParticipantId} onChange={e => setEParticipantId(e.target.value)}
-            placeholder="吊られた人（番号or名前）" style={{ width: 200 }} required />
+            placeholder="吊られた人（番号or名前）" style={{ width: 200 }} />
         )}
-        <button type="submit">記録</button>
-      </form>
+      </div>
 
       {executions.filter(e => e.day_number === day).length > 0 && (
         <table style={{ marginTop: 12 }}>
