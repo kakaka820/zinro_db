@@ -37,6 +37,7 @@ export default function KnightSection({
 
   // ── インライン編集 ──
   const [editingKnightId,        setEditingKnightId]        = useState<number | null>(null)
+  const [editKnightTargetInput,  setEditKnightTargetInput]  = useState('')
   const [editKnightIsGj,         setEditKnightIsGj]         = useState(false)
   const [editKnightDisclosedDay, setEditKnightDisclosedDay] = useState('')
 
@@ -157,7 +158,13 @@ export default function KnightSection({
             {visibleKnightGuards.map(g => (
               <tr key={g.id} style={{ opacity: g.disclosed_day ? 1 : 0.6 }}>
                 <td>{getNum(g.knight_participant_id)}番</td>
-                <td>{g.target_participant_id ? `${getNum(g.target_participant_id)}番` : '不明'}</td>
+                <td>
+                  {editingKnightId === g.id ? (
+                    <input value={editKnightTargetInput}
+                      onChange={e => setEditKnightTargetInput(e.target.value)}
+                      placeholder="護衛対象（空欄＝不明）" style={{ width: 150 }} />
+                  ) : (g.target_participant_id ? `${getNum(g.target_participant_id)}番` : '不明')}
+                </td>
                 <td>{g.day_number}日目</td>
                 <td>
                   {editingKnightId === g.id ? (
@@ -179,8 +186,9 @@ export default function KnightSection({
                   {editingKnightId === g.id ? (
                     <>
                       <button onClick={async () => {
+                        const target = editKnightTargetInput.trim() ? resolve(editKnightTargetInput) : null
                         await knightGuardsApi.update(g.id, {
-                          target_participant_id: g.target_participant_id,
+                          target_participant_id: target ? target.id : null,
                           is_gj:                 editKnightIsGj,
                           disclosed_day:         editKnightDisclosedDay ? Number(editKnightDisclosedDay) : null,
                         })
@@ -195,6 +203,7 @@ export default function KnightSection({
                     <>
                       <button className="secondary" onClick={() => {
                         setEditingKnightId(g.id)
+                        setEditKnightTargetInput(g.target_participant_id ? String(getNum(g.target_participant_id)) : '')
                         setEditKnightIsGj(g.is_gj)
                         setEditKnightDisclosedDay(g.disclosed_day != null ? String(g.disclosed_day) : '')
                       }}>編集</button>
