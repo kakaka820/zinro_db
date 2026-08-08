@@ -1,3 +1,4 @@
+// client/src/pages/NightKillSection.tsx
 import { useState, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import type { Participant, NightKill } from '../types'
@@ -72,7 +73,7 @@ const NightKillSection = forwardRef<NightKillSectionHandle, Props>(function Nigh
 
     setNParticipantId('')
     setNIsGj(false)
-    onRefresh()
+    await onRefresh()
   }
 
 
