@@ -34,6 +34,12 @@ const NightKillSection = forwardRef<NightKillSectionHandle, Props>(function Nigh
     return participants.find(p => p.player_name === trimmed) ?? null
   }
 
+  // 「番号.名前」形式で表示する（GJ＝対象なしの場合はGJ表記）
+  const formatParticipant = (p?: Participant | null) => {
+    if (!p) return 'GJ'
+    return p.participant_number != null ? `${p.participant_number}.${p.player_name}` : p.player_name
+  }
+
   const submitNightKill = async () => {
     const target = (!nIsGj && nParticipantId.trim()) ? resolveParticipant(nParticipantId) : null
     await api.post('/night-kills', {
@@ -158,7 +164,7 @@ useImperativeHandle(ref, () => ({
                   </>
                 ) : (
                   <>
-                    <td>{participants.find(p => String(p.id) === String(n.participant_id))?.player_name ?? 'GJ'}</td>
+                    <td>{formatParticipant(participants.find(p => String(p.id) === String(n.participant_id)))}</td>
                     <td style={{ display: 'flex', gap: 4 }}>
                       <button className="secondary" onClick={() => startEdit(n)}>編集</button>
                       <button className="secondary" onClick={() => deleteNightKill(n.id)}>削除</button>
