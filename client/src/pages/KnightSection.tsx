@@ -27,8 +27,9 @@ export default function KnightSection({
   const [editKnightIsGj,         setEditKnightIsGj]         = useState(false)
   const [editKnightDisclosedDay, setEditKnightDisclosedDay] = useState('')
 
-  // 本物の騎士COを自動選択
+  // 本物の騎士COを自動選択（すでに有効な選択がある場合は上書きしない＝偽COも選び続けられる）
   useEffect(() => {
+    if (knightCoId && knights.some(co => String(co.id) === knightCoId)) return
     const real = knights.find(co => !isFake(co))
     if (real) setKnightCoId(String(real.id))
   }, [knights])
