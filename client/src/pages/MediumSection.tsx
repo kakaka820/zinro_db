@@ -30,8 +30,9 @@ export default function MediumSection({
   const [editMediumResult,       setEditMediumResult]       = useState<'white' | 'black'>('white')
   const [editMediumDisclosedDay, setEditMediumDisclosedDay] = useState('')
 
-  // 本物の霊媒師COを自動選択
+  // 本物の霊媒師COを自動選択（すでに有効な選択がある場合は上書きしない＝偽COも選び続けられる）
   useEffect(() => {
+    if (mediumCoId && mediums.some(co => String(co.id) === mediumCoId)) return
     const real = mediums.find(co => !isFake(co))
     if (!real) return
     setMediumCoId(String(real.id))
@@ -39,7 +40,6 @@ export default function MediumSection({
     setMediumDisclosedDay(d => d || String(Math.max(real.co_day ?? 1, mediumDay +1)))
   }, [mediums])
 
-  // 霊媒結果を自動記入
 // 霊媒結果を自動記入（真霊媒のみ）
 useEffect(() => {
   if (!executions.length) return
@@ -48,6 +48,7 @@ useEffect(() => {
   if (!realCo) return
 
   const autoFill = async () => {
+    let inserted = false
     for (const execution of executions) {
       // すでにこの処刑日の記録があればスキップ
       const alreadyExists = mediumResults.some(
@@ -71,15 +72,17 @@ useEffect(() => {
           game_id:               Number(gameId),
           medium_participant_id: realCo.participant_id,
           target_participant_id: target.id,
-          day_number:             execution.day_number,
+          day_number:            execution.day_number,
           disclosed_day,
           result,
         })
+        inserted = true
       } catch (err) {
         console.error('霊媒結果の自動記入に失敗しました', err)
       }
     }
-    onRefresh()
+    // 実際に何か追加した時だけ再読み込みする（無限ループ防止）
+    if (inserted) onRefresh()
   }
 
   autoFill()
