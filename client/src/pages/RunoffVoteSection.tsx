@@ -37,10 +37,11 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
       const voterNum = participants.find(p => p.id === v.voter_id)?.participant_number
       if (voterNum == null) continue
       const target = String(v.target_id)
+      const label = v.is_discard ? `${voterNum}@` : String(voterNum)
       if (v.vote_type === 'runoff') {
-        rm[target] = [...(rm[target] ?? []), String(voterNum)]
+        rm[target] = [...(rm[target] ?? []), label]
       } else if (v.vote_type === 'runoff2') {
-        r2m[target] = [...(r2m[target] ?? []), String(voterNum)]
+        r2m[target] = [...(r2m[target] ?? []), label]
       }
     }
     setRunoffMatrix(rm); setRunoff2Matrix(r2m)
@@ -66,9 +67,12 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
       for (const [targetIdStr, voterNums] of Object.entries(matrixData)) {
         for (const voterNumStr of voterNums ?? []) {
           if (!voterNumStr.trim()) continue
-          const voter = resolveParticipant(voterNumStr.trim())
+          // 末尾に「@」が付いていたら捨て票として扱う（例: 5@ → 5番の投票を捨て票扱い）
+          const trimmed = voterNumStr.trim()
+          const isDiscard = trimmed.endsWith('@')
+          const voter = resolveParticipant(isDiscard ? trimmed.slice(0, -1) : trimmed)
           if (!voter) { alert(`「${voterNumStr}」が見つかりません`); return }
-          // 既存の投票があれば、表では編集できない項目（捨て票・受けた順番）を保持する
+          // 既存の投票があれば、表では編集できない項目（受けた順番）を保持する
           const existing = votes.find(v =>
             v.voter_id === voter.id &&
             v.target_id === Number(targetIdStr) &&
@@ -79,7 +83,7 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
             voter_id: voter.id, target_id: Number(targetIdStr),
             vote_order: null,
             receive_order: existing?.receive_order ?? null,
-            is_discard: existing?.is_discard ?? false,
+            is_discard: isDiscard,
           })
         }
       }
@@ -147,4 +151,3 @@ useImperativeHandle(ref, () => ({
 })
  
 export default RunoffVoteSection
- 
