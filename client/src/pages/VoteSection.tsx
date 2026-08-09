@@ -87,7 +87,9 @@ const makeSubmitter = (
     }
     // 未入力の状態で保存ボタンを押しても、既存の投票を削除しない。
     // 表の初期ロード前に「まとめて保存」を押した場合も同様。
-    if (toSubmit.length === 0) return
+    // ただし、その日のデータを一度でも読み込んだ後（＝クリアボタン等で意図的に空にした場合）は、
+    // 空の表の送信＝「全部削除する」という意思表示とみなして送信する。
+    if (toSubmit.length === 0 && syncedDayRef.current !== day) return
     await api.post('/votes/replace', {
       game_id: Number(gameId), day_number: day, vote_type: voteType, votes: toSubmit,
     })
