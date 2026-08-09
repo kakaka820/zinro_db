@@ -130,9 +130,12 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
  
 useImperativeHandle(ref, () => ({
     async flush() {
-      if (!hasRunoffExecution) return
+      // 表示判定(hasRunoffExecution)には依存しない。
+      // ExecutionSectionの保存直後は、この値がまだ最新のpropsに更新されていない
+      // タイミングで呼ばれる可能性があり、それに頼ると保存自体がスキップされてしまうため。
+      // 実際に保存するかどうかは makeSubmitter 内部の判定（入力内容の有無・dirtyRef）に任せる。
       await makeSubmitter('runoff', runoffMatrix)()
-      if (showRunoff2) await makeSubmitter('runoff2', runoff2Matrix)()
+      await makeSubmitter('runoff2', runoff2Matrix)()
     },
   }))
  
