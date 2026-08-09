@@ -101,11 +101,11 @@ export default function ExecutionKillTable({
 
               const execLabel = exec ? String(getNum(exec.participant_id)) : null
               const killLabel = kill ? (kill.participant_id == null ? 'GJ' : String(getNum(kill.participant_id))) : null
-              const guardLabel = guard
-                ? (guardTargetDisclosed && guard.target_participant_id != null
-                    ? String(getNum(guard.target_participant_id))
-                    : (guard.is_gj ? 'GJ' : null))
-                : null
+              // 護衛の枠には対象の番号だけを出す（GJという文字はここには出さない＝噛みの枠側で表現する）
+              const guardLabel =
+                guard && guardTargetDisclosed && guard.target_participant_id != null
+                  ? String(getNum(guard.target_participant_id))
+                  : null
 
               return (
                 <TriDiagonalHeader
