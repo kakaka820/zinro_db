@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
 import type { Participant, Vote } from '../types'
@@ -27,7 +27,13 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
  
  
  
+  const syncedDayRef = useRef<number | null>(null)
   useEffect(() => {
+    syncedDayRef.current = null   // 日が変わったら、その日で改めて一度だけ復元し直す
+  }, [day])
+
+  useEffect(() => {
+  if (syncedDayRef.current === day) return
   const nm: Record<string, string[]> = {}
   const order: Record<number, string> = {}
   for (const v of votes) {
@@ -42,7 +48,8 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
   }
   setNormalMatrix(nm)
   setNormalVoteOrder(order)
-}, [votes])
+  syncedDayRef.current = day
+}, [votes, day])
  
 // 通常投票の一括登録（決選投票はRunoffVoteSectionへ移動）
 const makeSubmitter = (
