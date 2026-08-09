@@ -15,7 +15,7 @@ export default (pool: DbPool) => {
        JOIN game_participants voter ON voter.id = v.voter_id
        JOIN game_participants target ON target.id = v.target_id
        WHERE v.game_id = $1 AND v.day_number = $2
-       ORDER BY v.vote_order ASC NULLS LAST`,
+       ORDER BY v.vote_order ASC NULLS LAST, v.id ASC`,
       [req.params.gameId, req.params.dayNumber]
     );
     res.json(result.rows);
