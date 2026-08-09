@@ -77,9 +77,9 @@ export default function ExecutionKillTable({
     ...rowCell, fontWeight: 'bold', background: '#fafafa', minWidth: 60,
   }
 
-  // 霊媒師CO済みの参加者を co_day 順に取得
+  // 霊媒師CO済みの参加者を co_day 順に取得（CO自体、選択日までに行われていなければ列を作らない）
   const mediumCOs = coEvents
-    .filter(c => c.claimed_role_name === '霊媒師')
+    .filter(c => c.claimed_role_name === '霊媒師' && c.co_day != null && c.co_day <= viewDay)
     .sort((a, b) => (a.co_day ?? 999) - (b.co_day ?? 999))
 
   return (
@@ -125,7 +125,8 @@ export default function ExecutionKillTable({
             <tr key={co.id}>
               <td style={nameCell}>{co.participant_number ?? '?'}</td>
               {days.map(d => {
-                const result = d <= viewDay ? mediumResults.find(
+                // 霊結果は処刑の翌日にならないと村に共有されないので、選択日の前日までしか見せない。
+                const result = d <= viewDay - 1 ? mediumResults.find(
                   r => r.medium_participant_id === co.participant_id &&
                        r.day_number === d && r.disclosed_day != null
                 ) : undefined
