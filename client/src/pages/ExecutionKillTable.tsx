@@ -89,11 +89,13 @@ export default function ExecutionKillTable({
           <tr>
             <th></th>
             {days.map(d => {
+              // 「◯日目時点」＝その日の昼までの情報、という意味なので、
+              // 吊り（昼に起きる）は選択日まで、噛み・護衛（夜に起きる）は選択日の前日までしか見せない。
               const exec = d <= viewDay ? executions.find(e => e.day_number === d && e.participant_id != null) : undefined
-              const kill = d <= viewDay ? nightKills.find(n => n.day_number === d) : undefined
-              // 護衛成功の事実（is_gj）は噛み結果と同じく「その日が来れば常に公開情報」として扱う。
+              const kill = d <= viewDay - 1 ? nightKills.find(n => n.day_number === d) : undefined
+              // 護衛成功の事実（is_gj）は噛み結果と同じく「夜が来れば」公開情報として扱う。
               // 護衛"対象"の氏名だけが秘匿情報なので、disclosed_day はそちらのみをゲートする。
-              const guard = d <= viewDay ? knightGuards.find(g => g.day_number === d) : undefined
+              const guard = d <= viewDay - 1 ? knightGuards.find(g => g.day_number === d) : undefined
               const guardTargetDisclosed =
                 !!guard && guard.disclosed_day != null && guard.disclosed_day <= viewDay
 
