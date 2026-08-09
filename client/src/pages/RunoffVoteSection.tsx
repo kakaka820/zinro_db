@@ -149,8 +149,6 @@ useImperativeHandle(ref, () => ({
         participants={participants}
         matrixInput={runoffMatrix}
         setMatrixInput={setRunoffMatrixTracked}
-        onSubmit={makeSubmitter('runoff', runoffMatrix)}
-        submitting={submitting === 'runoff'}
         day={day}
         voteOrderInput={{}}
         setVoteOrderInput={() => {}}
@@ -171,8 +169,6 @@ useImperativeHandle(ref, () => ({
             participants={participants}
             matrixInput={runoff2Matrix}
             setMatrixInput={setRunoff2MatrixTracked}
-            onSubmit={makeSubmitter('runoff2', runoff2Matrix)}
-            submitting={submitting === 'runoff2'}
             day={day}
             voteOrderInput={{}}
             setVoteOrderInput={() => {}}
