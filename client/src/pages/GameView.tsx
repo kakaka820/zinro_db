@@ -59,6 +59,10 @@ function VoteMatrix({ participants, votes, label, showVoteOrder }: VoteMatrixPro
             {/* 上エリア：下詰めで受票者番号 */}
             {Array.from({ length: maxReceived }, (_, rowFromTop) => {
               const slotIndex = maxReceived - 1 - rowFromTop
+              // ラベル行の直上が1人目、そこから数えて5人目・10人目…の位置に太線を入れる
+              const thickTop = (slotIndex + 1) % 5 === 0
+                ? { borderTop: '3px solid #555' }
+                : {}
               return (
                 <tr key={`u${rowFromTop}`}>
                   {sorted.map(p => {
@@ -68,6 +72,7 @@ function VoteMatrix({ participants, votes, label, showVoteOrder }: VoteMatrixPro
                     return (
                                             <td key={p.id} style={{
                         ...cell,
+                        ...thickTop,
                         ...(vote?.is_discard ? { background: '#ddd' } : {}),
                       }}>
                         {vote ? getNum(vote.voter_id) : ''}
