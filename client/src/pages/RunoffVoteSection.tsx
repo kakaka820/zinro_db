@@ -100,8 +100,10 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
           })
         }
       }
-      // 空の表を保存しても、既存の決選投票を削除しない。
-      if (toSubmit.length === 0) return
+      // 空の表を保存しても、既存の決選投票を削除しない（初期ロード前の誤爆防止）。
+      // ただし、その日のデータを一度でも読み込んだ後（＝クリアボタン等で意図的に空にした場合）は、
+      // 空の表の送信＝「全部削除する」という意思表示とみなして送信する。
+      if (toSubmit.length === 0 && syncedDayRef.current !== day) return
       await api.post('/votes/replace', {
         game_id: Number(gameId), day_number: day, vote_type: voteType, votes: toSubmit,
       })
