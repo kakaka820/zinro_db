@@ -21,12 +21,15 @@ type VoteMatrixInputProps = {
   day:            number
   voteOrderInput:    Record<number, string>
   setVoteOrderInput: React.Dispatch<React.SetStateAction<Record<number, string>>>
+  // 投票順の行を表示するかどうか（通常投票の1日目のみ想定。決選投票では表示しない）
+  showVoteOrder?: boolean
 }
 
 export default function VoteMatrixInput({
   title, participants, matrixInput, setMatrixInput,
   onSubmit, submitting, day,
   voteOrderInput, setVoteOrderInput,
+  showVoteOrder = false,
 }: VoteMatrixInputProps) {
   const sortedP = [...participants].sort(
     (a, b) => (a.participant_number ?? 999) - (b.participant_number ?? 999)
@@ -117,7 +120,7 @@ const handleKeyDown = (
                 </td>
               ))}
             </tr>
-           {day === 1 && Object.keys(voteOrderInput).length >= 0 && Object.keys(voteOrderInput) !== undefined && (
+           {showVoteOrder && day === 1 && (
               <tr>
                 {sortedP.map(p => (
                   <td key={p.id} style={cell}>
