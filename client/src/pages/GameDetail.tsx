@@ -183,6 +183,7 @@ const goToNextDay = async () => {
             participants={participants}
             day={day}
             executions={executions}
+            nightKills={nightKills}
             votes={votes}
             onRefresh={loadVotes}
             draftIsRunoff={draftExecutionType === 'runoff_execution'}
