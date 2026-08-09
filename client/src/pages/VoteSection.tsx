@@ -123,6 +123,7 @@ useImperativeHandle(ref, () => ({
       day={day}
       voteOrderInput={normalVoteOrder}
       setVoteOrderInput={setNormalVoteOrder}
+      showVoteOrder
     />
     </div>
   )
