@@ -345,8 +345,9 @@ const [execKillViewMode, setExecKillViewMode] = useState<'list' | 'table'>('tabl
                 {knightCOs.map(co => {
                   // GJの事実（is_gj）は噛み結果同様に公開情報として扱い、day_number <= day なら常に一覧に出す。
                   // 護衛"対象"の氏名だけ秘匿情報なので、行ごとに disclosed_day <= day で個別に隠す。
+                  // 護衛は夜の情報なので、選択日（＝昼時点）の前日までしか見せない
                   const guards = knightGuards.filter(
-                    g => g.knight_participant_id === co.participant_id && g.day_number <= day
+                    g => g.knight_participant_id === co.participant_id && g.day_number <= day - 1
                   )
                   const targetDisclosed = (g: KnightGuard) =>
                     g.disclosed_day != null && g.disclosed_day <= day
