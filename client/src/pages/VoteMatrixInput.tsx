@@ -1,8 +1,9 @@
 import type { Participant, Vote } from '../types'
 
 import type { KeyboardEvent } from 'react'
- function focusCell(row: number, col: number) {
-   const el = document.querySelector<HTMLInputElement>(
+ function focusCell(fromEl: HTMLInputElement, row: number, col: number) {
+   const scope = fromEl.closest('table') ?? document
+   const el = scope.querySelector<HTMLInputElement>(
      `[data-matrix-cell="${row}-${col}"]`
    )
    if (el) { el.focus(); el.select() }
@@ -58,7 +59,7 @@ const handleKeyDown = (
    row: number,
  ) => {
    const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
-   if (!arrows.includes(e.key) && e.key !== 'Enter') return
+   if (!arrows.includes(e.key) && e.key !== 'Enter' && e.key !== 'Tab') return
    e.preventDefault()
    const cols = sortedP.length
    let nextCol = colIdx
@@ -67,7 +68,17 @@ const handleKeyDown = (
    if (e.key === 'ArrowRight') nextCol = Math.min(cols - 1, colIdx + 1)
    if (e.key === 'ArrowUp')    nextRow = Math.min(ROWS - 1, row + 1)
    if (e.key === 'ArrowDown' || e.key === 'Enter')  nextRow = Math.max(0, row - 1)
-   focusCell(nextRow, nextCol)
+   // Tab: 右へ、右端まで来たら次の行の左端へ折り返す。Shift+Tabはその逆（左へ、左端なら前の行の右端へ）。
+   if (e.key === 'Tab') {
+     if (!e.shiftKey) {
+       if (colIdx < cols - 1) { nextCol = colIdx + 1 }
+       else { nextCol = 0; nextRow = Math.max(0, row - 1) }
+     } else {
+       if (colIdx > 0) { nextCol = colIdx - 1 }
+       else { nextCol = cols - 1; nextRow = Math.min(ROWS - 1, row + 1) }
+     }
+   }
+   focusCell(e.currentTarget, nextRow, nextCol)
  }
 
 
