@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
-import type { Participant, Vote, Execution } from '../types'
+import type { Participant, Vote, Execution, NightKill } from '../types'
  
 type Props = {
   gameId:       string
   participants: Participant[]
   day:          number
   executions:   Execution[]
+  nightKills:   NightKill[]
   votes:        Vote[]
   onRefresh:    () => void
   draftIsRunoff?: boolean
@@ -20,13 +21,31 @@ export type RunoffVoteSectionHandle = {
 }
  
 const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function RunoffVoteSection(
-  { gameId, participants, day, executions, votes, onRefresh, draftIsRunoff }, ref
+  { gameId, participants, day, executions, nightKills, votes, onRefresh, draftIsRunoff }, ref
 ) {
   const [runoffMatrix,  setRunoffMatrix]  = useState<Record<string, string[]>>({})
   const [runoff2Matrix, setRunoff2Matrix] = useState<Record<string, string[]>>({})
   const [showRunoff2,   setShowRunoff2]   = useState(false)
   const [submitting,    setSubmitting]    = useState<'runoff' | 'runoff2' | null>(null)
+  const [onlySurvivors, setOnlySurvivors] = useState(false)
  
+  // その日の時点で生きているかどうか（前日までの吊り・噛みで欠けていないか）。
+  // ParticipantSectionのisAlive判定と同じ基準に揃えている。
+  const isAlive = (pid: number) =>
+    !executions.some(e => e.participant_id === pid && e.day_number < day) &&
+    !nightKills.some(n => n.participant_id === pid && n.day_number < day)
+
+  const survivors = participants.filter(p => isAlive(p.id))
+  const survivorNumbers = survivors
+    .map(p => p.participant_number)
+    .filter((n): n is number => n != null)
+    .sort((a, b) => a - b)
+
+  // 「残りの人だけ表示」がONの時に表に渡す参加者一覧。
+  // 下書き（matrixInput、参加者IDをキーに保持）はこの絞り込みの影響を受けないので、
+  // 表示をOFFに戻せば非表示にしていた人の入力もそのまま残っている。
+  const displayParticipants = onlySurvivors ? survivors : participants
+
   // 保存済みの吊り結果だけでなく、まだ保存前の下書き選択（プルダウン）が
   // 「決選吊り」になっている場合も表示対象に含める。
   const hasRunoffExecution =
@@ -144,9 +163,23 @@ useImperativeHandle(ref, () => ({
   return (
     <div className="card" id="runoff-vote-section">
       <h2>{day}日目：決選投票</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 10, fontSize: 13 }}>
+        <span style={{ color: '#444' }}>
+          現在の生存者番号：
+          {survivorNumbers.length > 0 ? survivorNumbers.join(', ') : 'なし'}
+        </span>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={onlySurvivors}
+            onChange={e => setOnlySurvivors(e.target.checked)}
+          />
+          残りの人だけ表示
+        </label>
+      </div>
       <VoteMatrixInput
         title="決選投票"
-        participants={participants}
+        participants={displayParticipants}
         matrixInput={runoffMatrix}
         setMatrixInput={setRunoffMatrixTracked}
         day={day}
@@ -166,7 +199,7 @@ useImperativeHandle(ref, () => ({
           <hr style={{ margin: '12px 0' }} />
           <VoteMatrixInput
             title="2回目決選投票"
-            participants={participants}
+            participants={displayParticipants}
             matrixInput={runoff2Matrix}
             setMatrixInput={setRunoff2MatrixTracked}
             day={day}
