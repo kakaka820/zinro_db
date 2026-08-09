@@ -27,7 +27,6 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
   const [runoff2Matrix, setRunoff2Matrix] = useState<Record<string, string[]>>({})
   const [showRunoff2,   setShowRunoff2]   = useState(false)
   const [submitting,    setSubmitting]    = useState<'runoff' | 'runoff2' | null>(null)
-  const [onlySurvivors, setOnlySurvivors] = useState(false)
  
   // その日の時点で生きているかどうか（前日までの吊り・噛みで欠けていないか）。
   // ParticipantSectionのisAlive判定と同じ基準に揃えている。
@@ -35,16 +34,11 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
     !executions.some(e => e.participant_id === pid && e.day_number < day) &&
     !nightKills.some(n => n.participant_id === pid && n.day_number < day)
 
-  const survivors = participants.filter(p => isAlive(p.id))
-  const survivorNumbers = survivors
+  const survivorNumbers = participants
+    .filter(p => isAlive(p.id))
     .map(p => p.participant_number)
     .filter((n): n is number => n != null)
     .sort((a, b) => a - b)
-
-  // 「残りの人だけ表示」がONの時に表に渡す参加者一覧。
-  // 下書き（matrixInput、参加者IDをキーに保持）はこの絞り込みの影響を受けないので、
-  // 表示をOFFに戻せば非表示にしていた人の入力もそのまま残っている。
-  const displayParticipants = onlySurvivors ? survivors : participants
 
   // 保存済みの吊り結果だけでなく、まだ保存前の下書き選択（プルダウン）が
   // 「決選吊り」になっている場合も表示対象に含める。
@@ -163,23 +157,13 @@ useImperativeHandle(ref, () => ({
   return (
     <div className="card" id="runoff-vote-section">
       <h2>{day}日目：決選投票</h2>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 10, fontSize: 13 }}>
-        <span style={{ color: '#444' }}>
-          現在の生存者番号：
-          {survivorNumbers.length > 0 ? survivorNumbers.join(', ') : 'なし'}
-        </span>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={onlySurvivors}
-            onChange={e => setOnlySurvivors(e.target.checked)}
-          />
-          残りの人だけ表示
-        </label>
+      <div style={{ marginBottom: 10, fontSize: 13, color: '#444' }}>
+        現在の生存者番号：
+        {survivorNumbers.length > 0 ? survivorNumbers.join(', ') : 'なし'}
       </div>
       <VoteMatrixInput
         title="決選投票"
-        participants={displayParticipants}
+        participants={participants}
         matrixInput={runoffMatrix}
         setMatrixInput={setRunoffMatrixTracked}
         day={day}
@@ -199,7 +183,7 @@ useImperativeHandle(ref, () => ({
           <hr style={{ margin: '12px 0' }} />
           <VoteMatrixInput
             title="2回目決選投票"
-            participants={displayParticipants}
+            participants={participants}
             matrixInput={runoff2Matrix}
             setMatrixInput={setRunoff2MatrixTracked}
             day={day}
