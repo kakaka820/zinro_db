@@ -103,22 +103,29 @@ const handleKeyDown = (
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse' }}>
           <tbody>
-            {Array.from({ length: ROWS }, (_, i) => ROWS - 1 - i).map(row => (
-              <tr key={row}>
-               {sortedP.map((p, colIdx) => (
-                  <td key={p.id} style={cell}>
-                    <input
-                      type="text"
-                      value={getCell(p.id, row)}
-                      onChange={e => setCell(p.id, row, e.target.value)}
-                      onKeyDown={e => handleKeyDown(e, colIdx, row)}
-       data-matrix-cell={`${row}-${colIdx}`}
-                      style={{ display: 'block', width: '100%', height: '100%', textAlign: 'center', fontSize: 12, border: 'none', padding: '4px 0', boxSizing: 'border-box' }}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {Array.from({ length: ROWS }, (_, i) => ROWS - 1 - i).map(row => {
+              // 一番下（ラベル行の直上）が1人目、そこから数えて5人目・10人目…の位置に太線を入れる
+              const position = row + 1
+              const thickTop = position % 5 === 0
+                ? { borderTop: '3px solid #555' }
+                : {}
+              return (
+                <tr key={row}>
+                 {sortedP.map((p, colIdx) => (
+                    <td key={p.id} style={{ ...cell, ...thickTop }}>
+                      <input
+                        type="text"
+                        value={getCell(p.id, row)}
+                        onChange={e => setCell(p.id, row, e.target.value)}
+                        onKeyDown={e => handleKeyDown(e, colIdx, row)}
+         data-matrix-cell={`${row}-${colIdx}`}
+                        style={{ display: 'block', width: '100%', height: '100%', textAlign: 'center', fontSize: 12, border: 'none', padding: '4px 0', boxSizing: 'border-box' }}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
             <tr>
               {sortedP.map(p => (
                 <td key={p.id} style={labelCell}>
