@@ -33,16 +33,19 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
     executions.some(e => e.day_number === day && e.execution_type === 'runoff_execution') ||
     !!draftIsRunoff
  
-  // その日についてまだ votes から一度も復元していない時だけ実行する。
-  // こうしないと、他セクション（通常投票など）の保存で votes が更新されるたびにここが反応し、
-  // 「まだ保存していない決選投票の入力」が、保存前のサーバーデータで上書き・消去されてしまう。
-  const syncedDayRef = useRef<number | null>(null)
+  // 「編集中(未保存の変更がある)かどうか」を追跡する。
+  // 編集中でなければ votes が更新されるたびに何度でも復元してよい
+  // （他セクションの保存による再取得でも、正しく最新状態に追従できる）。
+  // 編集中の間だけ、他セクションの保存に巻き込まれて votes が更新されても上書きしないようにする。
+  const dirtyRunoffRef  = useRef(false)
+  const dirtyRunoff2Ref = useRef(false)
+
   useEffect(() => {
-    syncedDayRef.current = null   // 日が変わったら、その日で改めて一度だけ復元し直す
+    dirtyRunoffRef.current  = false   // 日が変わったら未編集の状態に戻す
+    dirtyRunoff2Ref.current = false
   }, [day])
 
   useEffect(() => {
-    if (syncedDayRef.current === day) return
     const rm: Record<string, string[]> = {}
     const r2m: Record<string, string[]> = {}
     for (const v of votes) {
@@ -56,10 +59,20 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
         r2m[target] = [...(r2m[target] ?? []), label]
       }
     }
-    setRunoffMatrix(rm); setRunoff2Matrix(r2m)
+    if (!dirtyRunoffRef.current)  setRunoffMatrix(rm)
+    if (!dirtyRunoff2Ref.current) setRunoff2Matrix(r2m)
     if (votes.some(v => v.vote_type === 'runoff2')) setShowRunoff2(true)
-    syncedDayRef.current = day
   }, [votes, participants, day])
+
+  // ユーザーがセルを編集した/クリアした時に呼ぶ。以後、votesが更新されても上書きしない。
+  const setRunoffMatrixTracked: typeof setRunoffMatrix = updater => {
+    dirtyRunoffRef.current = true
+    setRunoffMatrix(updater)
+  }
+  const setRunoff2MatrixTracked: typeof setRunoff2Matrix = updater => {
+    dirtyRunoff2Ref.current = true
+    setRunoff2Matrix(updater)
+  }
  
   const resolveParticipant = (input: string) => {
     const trimmed = input.trim()
@@ -101,12 +114,14 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
         }
       }
       // 空の表を保存しても、既存の決選投票を削除しない（初期ロード前の誤爆防止）。
-      // ただし、その日のデータを一度でも読み込んだ後（＝クリアボタン等で意図的に空にした場合）は、
+      // ただし、ユーザーが実際に編集（クリア含む）した後は、
       // 空の表の送信＝「全部削除する」という意思表示とみなして送信する。
-      if (toSubmit.length === 0 && syncedDayRef.current !== day) return
+      const dirtyRef = voteType === 'runoff' ? dirtyRunoffRef : dirtyRunoff2Ref
+      if (toSubmit.length === 0 && !dirtyRef.current) return
       await api.post('/votes/replace', {
         game_id: Number(gameId), day_number: day, vote_type: voteType, votes: toSubmit,
       })
+      dirtyRef.current = false   // 保存できたので、以後は votes の更新に素直に追従してよい
       await onRefresh()
     } finally {
       setSubmitting(null)
@@ -130,7 +145,7 @@ useImperativeHandle(ref, () => ({
         title="決選投票"
         participants={participants}
         matrixInput={runoffMatrix}
-        setMatrixInput={setRunoffMatrix}
+        setMatrixInput={setRunoffMatrixTracked}
         onSubmit={makeSubmitter('runoff', runoffMatrix)}
         submitting={submitting === 'runoff'}
         day={day}
@@ -152,7 +167,7 @@ useImperativeHandle(ref, () => ({
             title="2回目決選投票"
             participants={participants}
             matrixInput={runoff2Matrix}
-            setMatrixInput={setRunoff2Matrix}
+            setMatrixInput={setRunoff2MatrixTracked}
             onSubmit={makeSubmitter('runoff2', runoff2Matrix)}
             submitting={submitting === 'runoff2'}
             day={day}
