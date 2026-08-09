@@ -27,13 +27,18 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
  
  
  
-  const syncedDayRef = useRef<number | null>(null)
+  // 「編集中(未保存の変更がある)かどうか」を追跡する。
+  // 編集中でなければ votes が更新されるたびに何度でも復元してよい
+  // （他セクションの保存による再取得でも、正しく最新状態に追従できる）。
+  // 編集中の間だけ、他セクションの保存に巻き込まれて votes が更新されても上書きしないようにする。
+  const dirtyRef = useRef(false)
+
   useEffect(() => {
-    syncedDayRef.current = null   // 日が変わったら、その日で改めて一度だけ復元し直す
+    dirtyRef.current = false   // 日が変わったら未編集の状態に戻す
   }, [day])
 
   useEffect(() => {
-  if (syncedDayRef.current === day) return
+  if (dirtyRef.current) return
   const nm: Record<string, string[]> = {}
   const order: Record<number, string> = {}
   for (const v of votes) {
@@ -48,8 +53,17 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
   }
   setNormalMatrix(nm)
   setNormalVoteOrder(order)
-  syncedDayRef.current = day
 }, [votes, day])
+
+  // ユーザーがセルを編集した/クリアした時に呼ぶ。以後、votesが更新されても上書きしない。
+  const setNormalMatrixTracked: typeof setNormalMatrix = updater => {
+    dirtyRef.current = true
+    setNormalMatrix(updater)
+  }
+  const setNormalVoteOrderTracked: typeof setNormalVoteOrder = updater => {
+    dirtyRef.current = true
+    setNormalVoteOrder(updater)
+  }
  
 // 通常投票の一括登録（決選投票はRunoffVoteSectionへ移動）
 const makeSubmitter = (
@@ -87,12 +101,13 @@ const makeSubmitter = (
     }
     // 未入力の状態で保存ボタンを押しても、既存の投票を削除しない。
     // 表の初期ロード前に「まとめて保存」を押した場合も同様。
-    // ただし、その日のデータを一度でも読み込んだ後（＝クリアボタン等で意図的に空にした場合）は、
+    // ただし、ユーザーが実際に編集（クリア含む）した後は、
     // 空の表の送信＝「全部削除する」という意思表示とみなして送信する。
-    if (toSubmit.length === 0 && syncedDayRef.current !== day) return
+    if (toSubmit.length === 0 && !dirtyRef.current) return
     await api.post('/votes/replace', {
       game_id: Number(gameId), day_number: day, vote_type: voteType, votes: toSubmit,
     })
+    dirtyRef.current = false   // 保存できたので、以後は votes の更新に素直に追従してよい
     await onRefresh()
   } finally {
     setSubmitting(null)
@@ -126,12 +141,12 @@ useImperativeHandle(ref, () => ({
       title="通常投票"
       participants={participants}
       matrixInput={normalMatrix}
-      setMatrixInput={setNormalMatrix}
+      setMatrixInput={setNormalMatrixTracked}
       onSubmit={makeSubmitter('normal', normalMatrix, normalVoteOrder)}
       submitting={submitting === 'normal'}
       day={day}
       voteOrderInput={normalVoteOrder}
-      setVoteOrderInput={setNormalVoteOrder}
+      setVoteOrderInput={setNormalVoteOrderTracked}
       showVoteOrder
     />
     </div>
