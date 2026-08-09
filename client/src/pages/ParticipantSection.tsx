@@ -137,6 +137,7 @@ const assignRoles = async () => {
             placeholder="プレイヤー名を入力"
             required
           />
+          {/* 候補ドロップダウン（不要になったので非表示化。復活させたい場合はこのブロックのコメントを外す）
           {pShowList && pFiltered.length > 0 && (
             <div style={{
               position: 'absolute', top: '100%', left: 0,
@@ -158,6 +159,7 @@ const assignRoles = async () => {
               ))}
             </div>
           )}
+          */}
         </div>
         <input
           type="number" min="1"
