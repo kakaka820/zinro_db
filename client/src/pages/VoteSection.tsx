@@ -142,8 +142,6 @@ useImperativeHandle(ref, () => ({
       participants={participants}
       matrixInput={normalMatrix}
       setMatrixInput={setNormalMatrixTracked}
-      onSubmit={makeSubmitter('normal', normalMatrix, normalVoteOrder)}
-      submitting={submitting === 'normal'}
       day={day}
       voteOrderInput={normalVoteOrder}
       setVoteOrderInput={setNormalVoteOrderTracked}
