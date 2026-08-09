@@ -53,7 +53,7 @@ const [normalVoteOrder, setNormalVoteOrder] = useState<Record<number, string>>({
   }
   setNormalMatrix(nm)
   setNormalVoteOrder(order)
-}, [votes, day])
+}, [votes, participants, day])
 
   // ユーザーがセルを編集した/クリアした時に呼ぶ。以後、votesが更新されても上書きしない。
   const setNormalMatrixTracked: typeof setNormalMatrix = updater => {
