@@ -17,8 +17,6 @@ type VoteMatrixInputProps = {
   matrixInput:    Record<number, string[]>
   setMatrixInput: React.Dispatch<React.SetStateAction<Record<number, string[]>>>
   title?: string
-  onSubmit:       () => void
- submitting:     boolean
   day:            number
   voteOrderInput:    Record<number, string>
   setVoteOrderInput: React.Dispatch<React.SetStateAction<Record<number, string>>>
@@ -28,7 +26,7 @@ type VoteMatrixInputProps = {
 
 export default function VoteMatrixInput({
   title, participants, matrixInput, setMatrixInput,
-  onSubmit, submitting, day,
+  day,
   voteOrderInput, setVoteOrderInput,
   showVoteOrder = false,
 }: VoteMatrixInputProps) {
@@ -94,14 +92,11 @@ const handleKeyDown = (
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-        {title && <span style={{ fontWeight: 'bold', fontSize: 14 }}>{title}</span>}
-<button type="button" onClick={onSubmit} disabled={submitting}>
-  {submitting ? '登録中…' : '一括登録'}
-</button>
-<button type="button" className="secondary"
-  onClick={() => setMatrixInput({})} disabled={submitting}>クリア</button>
-      </div>
+      {title && (
+        <div style={{ marginBottom: 8 }}>
+          <span style={{ fontWeight: 'bold', fontSize: 14 }}>{title}</span>
+        </div>
+      )}
       <p style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
         各列の参加者番号の上のセルに、投票した人の番号を入力してください（捨て票は末尾に@を付ける。例: 5@）
       </p>
