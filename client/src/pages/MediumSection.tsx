@@ -31,6 +31,9 @@ export default function MediumSection({
     saveMessageTimer.current = setTimeout(() => setSaveMessage(''), 3000)
   }
 
+  // 自動記入が失敗した日を可視化するためのエラー表示（今までconsole.errorのみで握りつぶされていた）
+  const [autoFillError, setAutoFillError] = useState('')
+
   // ── 追加フォーム ──
   const [mediumCoId,         setMediumCoId]         = useState('')
   const [mediumTargetInput,  setMediumTargetInput]  = useState('')
@@ -77,6 +80,7 @@ useEffect(() => {
 
   const autoFill = async () => {
     let inserted = false
+    const failedDays: number[] = []
     for (const execution of executions) {
       // 開示日 = 処刑日 + 1
       const disclosed_day = execution.day_number + 1
@@ -111,8 +115,15 @@ useEffect(() => {
         inserted = true
       } catch (err) {
         console.error('霊媒結果の自動記入に失敗しました', err)
+        failedDays.push(execution.day_number)
       }
     }
+    // 保存に失敗した日があれば画面上にも表示する（今までは握りつぶされて気づけなかった）
+    setAutoFillError(
+      failedDays.length > 0
+        ? `⚠️ ${failedDays.join('・')}日目の処刑分の霊媒結果の自動記入に失敗しました。手動で追加してください。`
+        : ''
+    )
     // 実際に何か追加した時だけ再読み込みする（無限ループ防止）
     if (inserted) onRefresh()
   }
@@ -180,6 +191,9 @@ useEffect(() => {
           <span style={{ color: '#080', fontWeight: 'bold', fontSize: 14 }}>{saveMessage}</span>
         )}
       </h2>
+      {autoFillError && (
+        <p style={{ color: '#c00', fontWeight: 'bold', fontSize: 13 }}>{autoFillError}</p>
+      )}
 
       <form onSubmit={addMediumResult} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <select value={mediumCoId} onChange={e => {
