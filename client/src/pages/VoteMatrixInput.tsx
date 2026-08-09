@@ -37,11 +37,14 @@ export default function VoteMatrixInput({
   )
   const ROWS = Math.max(3, Math.ceil(participants.length / 2), maxFilled + 1)
 
-  const getCell = (tid: number, row: number) => matrixInput[tid]?.[ROWS - 1 - row] ?? ''
+  // 行番号→配列インデックスは固定（ROWSに依存させない）。
+  // こうしておかないと、入力中にROWSが変化した瞬間、今フォーカスしてる欄が
+  // 別の配列インデックスを指すことになり、2文字目以降が別のマスに書き込まれてしまう。
+  const getCell = (tid: number, row: number) => matrixInput[tid]?.[row] ?? ''
   const setCell = (tid: number, row: number, val: string) =>
     setMatrixInput(prev => {
       const col = [...(prev[tid] ?? Array(ROWS).fill(''))]
-      col[ROWS - 1 - row] = val
+      col[row] = val
       return { ...prev, [tid]: col }
     })
 
@@ -59,8 +62,8 @@ const handleKeyDown = (
    let nextRow = row
    if (e.key === 'ArrowLeft')  nextCol = Math.max(0, colIdx - 1)
    if (e.key === 'ArrowRight') nextCol = Math.min(cols - 1, colIdx + 1)
-   if (e.key === 'ArrowUp')    nextRow = Math.max(0, row - 1)
-   if (e.key === 'ArrowDown' || e.key === 'Enter')  nextRow = Math.min(ROWS - 1, row + 1)
+   if (e.key === 'ArrowUp')    nextRow = Math.min(ROWS - 1, row + 1)
+   if (e.key === 'ArrowDown' || e.key === 'Enter')  nextRow = Math.max(0, row - 1)
    focusCell(nextRow, nextCol)
  }
 
@@ -91,7 +94,7 @@ const handleKeyDown = (
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse' }}>
           <tbody>
-            {Array.from({ length: ROWS }, (_, row) => (
+            {Array.from({ length: ROWS }, (_, i) => ROWS - 1 - i).map(row => (
               <tr key={row}>
                {sortedP.map((p, colIdx) => (
                   <td key={p.id} style={cell}>
