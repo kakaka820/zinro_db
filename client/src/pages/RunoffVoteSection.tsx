@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { api } from '../api'
 import VoteMatrixInput from './VoteMatrixInput'
 import type { Participant, Vote, Execution } from '../types'
@@ -33,7 +33,16 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
     executions.some(e => e.day_number === day && e.execution_type === 'runoff_execution') ||
     !!draftIsRunoff
  
+  // その日についてまだ votes から一度も復元していない時だけ実行する。
+  // こうしないと、他セクション（通常投票など）の保存で votes が更新されるたびにここが反応し、
+  // 「まだ保存していない決選投票の入力」が、保存前のサーバーデータで上書き・消去されてしまう。
+  const syncedDayRef = useRef<number | null>(null)
   useEffect(() => {
+    syncedDayRef.current = null   // 日が変わったら、その日で改めて一度だけ復元し直す
+  }, [day])
+
+  useEffect(() => {
+    if (syncedDayRef.current === day) return
     const rm: Record<string, string[]> = {}
     const r2m: Record<string, string[]> = {}
     for (const v of votes) {
@@ -49,7 +58,8 @@ const RunoffVoteSection = forwardRef<RunoffVoteSectionHandle, Props>(function Ru
     }
     setRunoffMatrix(rm); setRunoff2Matrix(r2m)
     if (votes.some(v => v.vote_type === 'runoff2')) setShowRunoff2(true)
-  }, [votes, participants])
+    syncedDayRef.current = day
+  }, [votes, participants, day])
  
   const resolveParticipant = (input: string) => {
     const trimmed = input.trim()
